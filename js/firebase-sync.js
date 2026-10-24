@@ -8,6 +8,7 @@ import { getFirestore, collection, getDocs, doc, setDoc }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
+const $p = sel => document.querySelector(sel);
 const PREFIX = "fluxo";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -180,7 +181,6 @@ onAuthStateChanged(auth, user => {
 });
 
 /* ================= Perfil: avatar no cabeçalho + popup ================= */
-const $p = sel => document.querySelector(sel);
 const CV = 240;                       // área de recorte em px
 let pfImg = null, pfZoom = 1, pfX = 0, pfY = 0;
 let pfModo = "ver";                   // "ver" | "ajustar"
