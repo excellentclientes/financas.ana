@@ -16,7 +16,6 @@ const provider = new GoogleAuthProvider();
 
 const loginEl = document.getElementById("login");
 const loginMsg = document.getElementById("login-msg");
-let started = false;
 let uidAtual = null;
 let usuario = null;
 const FOTO_KEY = "fluxo_perfil_foto";
@@ -27,11 +26,14 @@ const origRemoveItem = Storage.prototype.removeItem;
 const timers = {};
 
 function agendarEscrita(key, value) {
+  escritasPendentes = true;
   clearTimeout(timers[key]);
   timers[key] = setTimeout(() => {
-    if (!uidAtual) return;
+    timers[key] = null;
+    if (!uidAtual) { escritasPendentes = Object.values(timers).some(Boolean); return; }
     setDoc(doc(db, "users", uidAtual, "fluxo", key), { value, atualizado: Date.now() })
-      .catch(err => console.error("Erro ao salvar no Firebase:", err));
+      .catch(err => console.error("Erro ao salvar no Firebase:", err))
+      .finally(() => { escritasPendentes = Object.values(timers).some(Boolean); });
   }, 300);
 }
 
@@ -58,29 +60,75 @@ async function carregarDaNuvem(uid) {
   Object.entries(nuvem).forEach(([k, v]) => origSetItem.call(localStorage, k, v));
 }
 
-// ---------- carregar o app depois de sincronizar ----------
+// ---------- sessão em cache (abre na hora, sem esperar a nuvem) ----------
+const SESSAO_UID = "sessao_uid";
+const SESSAO_USER = "sessao_user";
+const origSet = (k, v) => origSetItem.call(localStorage, k, v);
+
+function salvarSessao(user) {
+  origSet(SESSAO_UID, user.uid);
+  origSet(SESSAO_USER, JSON.stringify({
+    displayName: user.displayName || "", email: user.email || "", photoURL: user.photoURL || ""
+  }));
+}
+
+function limparSessao() {
+  origRemoveItem.call(localStorage, SESSAO_UID);
+  origRemoveItem.call(localStorage, SESSAO_USER);
+}
+
+function usuarioEmCache() {
+  try {
+    const u = JSON.parse(localStorage.getItem(SESSAO_USER) || "null");
+    if (u && localStorage.getItem(SESSAO_UID)) return u;
+  } catch (e) {}
+  return null;
+}
+
+// ---------- iniciar o app ----------
+let appIniciado = false;
+let sincronizando = false;
+let escritasPendentes = false;
+
 function iniciarApp() {
+  if (appIniciado) return;
+  appIniciado = true;
   const s = document.createElement("script");
   s.src = "js/app.js";
   document.body.appendChild(s);
 }
 
-async function entrar(user) {
-  uidAtual = user.uid;
-  usuario = user;
-  loginEl.hidden = true;
-  if (started) return;
-  started = true;
-  atualizarAvatar();
+// Compara a nuvem com o navegador; se mudou algo (ex.: outro aparelho), atualiza e recarrega.
+async function sincronizarEmSegundoPlano(uid) {
+  sincronizando = true;
   try {
-    await Promise.race([
-      carregarDaNuvem(user.uid),
-      new Promise((_, rej) => setTimeout(() => rej(new Error("Tempo esgotado ao carregar do Firestore")), 12000))
-    ]);
+    const snap = await getDocs(collection(db, "users", uid, "fluxo"));
+    const nuvem = {};
+    snap.forEach(d => { nuvem[d.id] = d.data().value; });
+
+    if (escritasPendentes) return;          // há alterações locais ainda não enviadas: não sobrescreve
+
+    let mudou = false;
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(PREFIX) && !(k in nuvem)) { origRemoveItem.call(localStorage, k); mudou = true; }
+    }
+    Object.entries(nuvem).forEach(([k, v]) => {
+      if (localStorage.getItem(k) !== v) { origSet(k, v); mudou = true; }
+    });
+    if (mudou) location.reload();           // recarrega com os dados atualizados
   } catch (err) {
-    // Segue com o que já está no navegador e avisa no console
-    console.error("Firebase:", err);
+    console.error("Firebase (sincronização):", err);
+  } finally {
+    sincronizando = false;
   }
+}
+
+function entrarComUsuario(user) {
+  usuario = user;
+  uidAtual = user.uid;
+  loginEl.hidden = true;
+  salvarSessao(user);
   instalarEspelho();
   atualizarAvatar();
   iniciarApp();
@@ -97,13 +145,34 @@ document.getElementById("login-btn").addEventListener("click", async () => {
 });
 
 window.fluxoSair = async () => {
+  limparSessao();
   await signOut(auth);
   location.reload();
 };
 
+// 1) Já existe sessão no navegador: abre na hora, com os dados locais
+const emCache = usuarioEmCache();
+if (emCache) {
+  usuario = emCache;
+  uidAtual = localStorage.getItem(SESSAO_UID);
+  loginEl.hidden = true;
+  instalarEspelho();
+  atualizarAvatar();
+  iniciarApp();
+}
+
+// 2) Confirma o login com o Firebase e sincroniza em segundo plano
 onAuthStateChanged(auth, user => {
-  if (user) entrar(user);
-  else { uidAtual = null; usuario = null; loginEl.hidden = false; }
+  if (user) {
+    if (!emCache) entrarComUsuario(user);
+    else { uidAtual = user.uid; salvarSessao(user); }
+    sincronizarEmSegundoPlano(user.uid);
+  } else {
+    limparSessao();
+    uidAtual = null; usuario = null;
+    if (emCache) location.reload();     // sessão expirou: volta para o login
+    else loginEl.hidden = false;
+  }
 });
 
 /* ================= Perfil: avatar no cabeçalho + popup ================= */
