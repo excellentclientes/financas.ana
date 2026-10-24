@@ -507,12 +507,15 @@ main{flex:1;min-height:0;overflow:auto;width:100%;display:flex;flex-direction:co
 </div>
 <dialog id="perfdlg" class="pf">
  <div class="pf-in">
-  <div class="pf-top"><span>Seu perfil</span><button class="ic" type="button" onclick="$('#perfdlg').close()" aria-label="Fechar">✕</button></div>
+  <div class="pf-top"><span>Seu perfil</span><button class="ic" type="button" onclick="perfFechar()" aria-label="Fechar">✕</button></div>
   <div class="pf-body">
-   <canvas id="pf-cv" width="240" height="240" class="pf-cv" aria-label="Pré-visualização da foto"></canvas>
-   <p class="pf-hint">Arraste a imagem para posicionar e use o zoom para ajustar.</p>
-   <input type="range" id="pf-zoom" class="pf-zoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom">
-   <div class="pf-row">
+   <canvas id="pf-cv" width="240" height="240" class="pf-cv" title="Clique para ajustar a foto" aria-label="Foto de perfil"></canvas>
+   <p class="pf-hint" id="pf-hint">Clique na foto para ajustar o enquadramento.</p>
+   <div id="pf-adj" class="pf-adj" hidden>
+    <input type="range" id="pf-zoom" class="pf-zoom" min="1" max="3" step="0.01" value="1" aria-label="Zoom">
+    <p class="pf-hint">Arraste a imagem para posicionar.</p>
+   </div>
+   <div class="pf-row" id="pf-view">
     <label class="pf-up">Escolher foto<input type="file" id="pf-file" accept="image/*" hidden></label>
     <button class="pf-ghost" type="button" onclick="perfRemove()">Remover foto</button>
    </div>
@@ -520,7 +523,11 @@ main{flex:1;min-height:0;overflow:auto;width:100%;display:flex;flex-direction:co
   </div>
   <div class="pf-foot">
    <button class="pf-out" type="button" onclick="fluxoSair()">Sair da conta</button>
-   <button class="btn p" type="button" onclick="perfApply()">Aplicar</button>
+   <div id="pf-foot-view"><button class="pf-ghost" type="button" onclick="perfFechar()">Fechar</button></div>
+   <div id="pf-foot-adj" hidden class="pf-row2">
+    <button class="pf-ghost" type="button" onclick="perfCancelar()">Cancelar</button>
+    <button class="btn p" type="button" onclick="perfApply()">Aplicar</button>
+   </div>
   </div>
  </div>
 </dialog>
@@ -563,6 +570,11 @@ dialog.pf::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
 .pf-foot{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 18px;border-top:1px solid #eef2f0;margin-top:8px}
 .pf-out{background:none;border:0;color:#b42318;font:inherit;font-weight:600;font-size:14px;cursor:pointer;padding:8px 10px;border-radius:10px}
 .pf-out:hover{background:#fdecea}
+.pf-row2{display:flex;gap:10px}
+.pf-foot [hidden]{display:none!important}
+.pf-adj{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px}
+.pf-adj[hidden]{display:none}
+.pf-cv{cursor:pointer}
 </style>
 <script type="module" src="js/firebase-sync.js"></script>
 </body>
