@@ -377,6 +377,11 @@ dialog.gfd{width:min(380px,94vw);padding:0;border-radius:20px}
 #vL .tbs table{border-collapse:separate !important;border-spacing:0}
 #vL .tbs thead tr{position:sticky;top:0;z-index:4}
 #vL .tbs thead th{position:sticky;top:0;background:#fafbfa;border-bottom:1px solid var(--line)}
+/* Rolagem no cartão inteiro: o cabeçalho e o rodapé ficam presos */
+#vL>.tw{overflow:auto !important;height:calc(100vh - 250px) !important}
+#vL .tbs{overflow:visible !important;height:auto !important;max-height:none !important}
+#vL>.tw .tbs thead th{top:0 !important}
+#vL>.tw .foot{position:sticky;bottom:0;z-index:6;background:#fff}
 @media(max-width:820px){#vL>.tw{height:calc(100vh - 230px) !important}}
 </style>
 <header><div class="top">
