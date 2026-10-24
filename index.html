@@ -528,7 +528,7 @@ dialog.gfd{width:min(380px,94vw);padding:0;border-radius:20px}
 <dialog id="dlg"><form onsubmit="return save(event)">
  <div class="dh"><h2 id="dt">Novo lançamento</h2><button type="button" class="ic" onclick="dlg.close()" aria-label="Fechar">✕</button></div>
  <div class="db">
-  <div class="fg"><label>Tipo</label><select id="f_tipo" onchange="fillCat()"><option>Despesa</option><option>Receita</option></select></div>
+  <div class="fg"><label>Tipo</label><select id="f_tipo" onchange="fillCat();fgVis()"><option>Despesa</option><option>Receita</option></select></div>
   <div class="fg"><label>Status</label><select id="f_status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
   <div class="fg w"><label>Descrição</label><input id="f_desc" required placeholder="Ex.: Supermercado do mês"></div>
   <div class="fg"><label>Categoria</label><select id="f_cat" onchange="fillSub()"></select></div>
