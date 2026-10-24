@@ -69,11 +69,15 @@ async function entrar(user) {
   loginEl.hidden = true;
   if (started) return;
   started = true;
+  atualizarAvatar();
   try {
-    await carregarDaNuvem(user.uid);
+    await Promise.race([
+      carregarDaNuvem(user.uid),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("Tempo esgotado ao carregar do Firestore")), 12000))
+    ]);
   } catch (err) {
-    console.error(err);
-    alert("Não foi possível carregar seus dados do Firebase. Verifique a conexão e as regras do Firestore.");
+    // Segue com o que já está no navegador e avisa no console
+    console.error("Firebase:", err);
   }
   instalarEspelho();
   atualizarAvatar();
@@ -102,8 +106,10 @@ onAuthStateChanged(auth, user => {
 
 /* ================= Perfil: avatar no cabeçalho + popup ================= */
 const $p = sel => document.querySelector(sel);
-const CV = 240;               // tamanho da área de recorte (px)
-let pfImg = null, pfZoom = 1, pfX = 0, pfY = 0, pfArrastando = null;
+const CV = 240;                       // área de recorte em px
+let pfImg = null, pfZoom = 1, pfX = 0, pfY = 0;
+let pfModo = "ver";                   // "ver" | "ajustar"
+let pfArr = null, pfMoveu = false;
 
 function iniciais(nome) {
   return nome.split(/\s+/).filter(Boolean).slice(0, 2).map(p => p[0].toUpperCase()).join("") || "?";
@@ -142,20 +148,48 @@ function desenharRecorte() {
   c.drawImage(pfImg, g.x, g.y, g.w, g.h);
 }
 
-function carregarImagemPerfil(src) {
+function mostrarModo(modo) {
+  pfModo = modo;
+  const ajustar = modo === "ajustar";
+  $p("#pf-adj").hidden = !ajustar;
+  $p("#pf-view").hidden = ajustar;
+  $p("#pf-foot-view").hidden = ajustar;
+  $p("#pf-foot-adj").hidden = !ajustar;
+  $p("#pf-hint").textContent = ajustar ? "Ajuste o enquadramento e clique em Aplicar." : "Clique na foto para ajustar o enquadramento.";
+  $p("#pf-cv").style.cursor = ajustar ? "grab" : "pointer";
+}
+
+function carregarImagemPerfil(src, emAjuste) {
   const img = new Image();
-  img.onload = () => { pfImg = img; pfZoom = 1; pfX = 0; pfY = 0; $p("#pf-zoom").value = 1; desenharRecorte(); };
+  img.onload = () => {
+    pfImg = img; pfZoom = 1; pfX = 0; pfY = 0;
+    $p("#pf-zoom").value = 1;
+    desenharRecorte();
+    if (emAjuste) mostrarModo("ajustar");
+  };
   img.src = src;
 }
 
 window.perfilOpen = () => {
-  const nome = usuario ? (usuario.displayName || "") : "";
-  $p("#pf-name").textContent = usuario ? (usuario.email || nome) : "";
+  $p("#pf-name").textContent = usuario ? (usuario.email || "") : "";
+  mostrarModo("ver");
   pfImg = null;
   const atual = localStorage.getItem(FOTO_KEY);
-  if (atual) carregarImagemPerfil(atual);
-  else { desenharRecorte(); }
+  if (atual) carregarImagemPerfil(atual, false);
+  else if (usuario && usuario.photoURL) carregarImagemPerfil(usuario.photoURL, false);
+  else desenharRecorte();
   $p("#perfdlg").showModal();
+};
+
+window.perfFechar = () => $p("#perfdlg").close();
+
+window.perfCancelar = () => {
+  // volta a mostrar a foto salva, sem alterações
+  mostrarModo("ver");
+  const atual = localStorage.getItem(FOTO_KEY);
+  if (atual) carregarImagemPerfil(atual, false);
+  else if (usuario && usuario.photoURL) carregarImagemPerfil(usuario.photoURL, false);
+  else { pfImg = null; desenharRecorte(); }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -166,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const f = file.files[0];
     if (!f || !f.type.startsWith("image/")) return;
     const r = new FileReader();
-    r.onload = () => carregarImagemPerfil(r.result);
+    r.onload = () => carregarImagemPerfil(r.result, true);
     r.readAsDataURL(f);
     file.value = "";
   });
@@ -177,24 +211,34 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   cv.addEventListener("pointerdown", e => {
-    if (!pfImg) return;
-    pfArrastando = { x: e.clientX, y: e.clientY, ox: pfX, oy: pfY };
+    pfArr = { x: e.clientX, y: e.clientY, ox: pfX, oy: pfY };
+    pfMoveu = false;
     cv.setPointerCapture(e.pointerId);
   });
+
   cv.addEventListener("pointermove", e => {
-    if (!pfArrastando) return;
-    const k = CV / cv.getBoundingClientRect().width;   // compensa o tamanho exibido
-    pfX = pfArrastando.ox + (e.clientX - pfArrastando.x) * k;
-    pfY = pfArrastando.oy + (e.clientY - pfArrastando.y) * k;
+    if (!pfArr || pfModo !== "ajustar" || !pfImg) return;
+    const k = CV / cv.getBoundingClientRect().width;
+    const dx = (e.clientX - pfArr.x) * k, dy = (e.clientY - pfArr.y) * k;
+    if (Math.abs(dx) + Math.abs(dy) > 3) pfMoveu = true;
+    pfX = pfArr.ox + dx;
+    pfY = pfArr.oy + dy;
     desenharRecorte();
   });
-  const soltar = () => { pfArrastando = null; };
-  cv.addEventListener("pointerup", soltar);
-  cv.addEventListener("pointercancel", soltar);
+
+  cv.addEventListener("pointerup", () => {
+    // clique simples na foto (sem arrastar) entra no modo de ajuste
+    if (pfArr && !pfMoveu && pfModo === "ver" && (pfImg || usuario)) {
+      if (!pfImg) return;
+      mostrarModo("ajustar");
+    }
+    pfArr = null;
+  });
+  cv.addEventListener("pointercancel", () => { pfArr = null; });
 });
 
 window.perfApply = () => {
-  if (!pfImg) { $p("#perfdlg").close(); return; }
+  if (!pfImg) return;
   const SAIDA = 256, k = SAIDA / CV;
   const out = document.createElement("canvas");
   out.width = out.height = SAIDA;
@@ -203,15 +247,17 @@ window.perfApply = () => {
   c.fillRect(0, 0, SAIDA, SAIDA);
   const g = geometriaRecorte();
   c.drawImage(pfImg, g.x * k, g.y * k, g.w * k, g.h * k);
-  // setItem passa pelo espelho e vai para o Firestore
-  localStorage.setItem(FOTO_KEY, out.toDataURL("image/jpeg", 0.9));
+  localStorage.setItem(FOTO_KEY, out.toDataURL("image/jpeg", 0.9));   // vai para o Firestore
   atualizarAvatar();
-  $p("#perfdlg").close();
+  mostrarModo("ver");
+  carregarImagemPerfil(out.toDataURL("image/jpeg", 0.9), false);
 };
 
 window.perfRemove = () => {
   localStorage.setItem(FOTO_KEY, "");
-  pfImg = null;
-  desenharRecorte();
   atualizarAvatar();
+  mostrarModo("ver");
+  pfImg = null;
+  if (usuario && usuario.photoURL) carregarImagemPerfil(usuario.photoURL, false);
+  else desenharRecorte();
 };
