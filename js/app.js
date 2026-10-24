@@ -220,6 +220,13 @@ function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Obje
  $('#f_status').options[1].text=t==='Receita'?'Recebido':'Pago'}
 function fillSub(s){$('#f_sub').innerHTML=opts(CATS[$('#f_tipo').value][$('#f_cat').value]||[]);if(s)$('#f_sub').value=s}
 let editing=null;
+function fgVis(){
+ const cartao=!!$('#f_cartao').value, despesa=$('#f_tipo').value==='Despesa';
+ const comp=$('#f_compra').closest('.fg'), parc=$('#f_parc').closest('.fg');
+ comp.hidden=!despesa;
+ parc.hidden=!(despesa&&cartao);
+}
+$('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
  editing=n||null;$('#dt').textContent=n?`Editar lançamento ${String(n).padStart(4,'0')}`:'Novo lançamento';
@@ -230,7 +237,7 @@ function openF(n){
  const x=x0||{tipo:'Despesa',status:'pendente',desc:'',valor:'',qtd:1,venc:TODAY,pgto:'',compra:TODAY,parc:'1/1',conta:CONTAS[0]||'',cartao:''};
  $('#f_tipo').value=x.tipo;fillCat(x.cat,x.sub);
  $('#f_status').value=x.status;$('#f_desc').value=x.desc;$('#f_valor').value=x.valor;$('#f_qtd').value=x.qtd;$('#f_venc').value=x.venc;
- $('#f_pgto').value=x.pgto;$('#f_compra').value=x.compra;$('#f_parc').value=x.parc;$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;
+ $('#f_pgto').value=x.pgto;$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();
  $('#dlg').showModal();
 }
 function save(e){
@@ -238,6 +245,8 @@ function save(e){
  if(!editing&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos')){$('#dlg').close();return false}
  if(!CONTAS.includes($('#f_conta').value)){toast('Escolha uma conta bancária ativa');return false}
  const o={tipo:$('#f_tipo').value,status:$('#f_status').value,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:parseFloat($('#f_valor').value)||0,qtd:parseInt($('#f_qtd').value)||1,venc:$('#f_venc').value,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
+ if(o.tipo!=='Despesa'){o.compra=o.venc;o.parc='1/1';o.cartao=''}
+ else if(!o.cartao){o.parc='1/1'}
  if(o.status==='pago'&&!o.pgto)o.pgto=o.venc;if(o.status==='pendente')o.pgto='';
  if(editing){Object.assign(D.find(i=>i.n===editing),o)}else{o.n=Math.max(0,...D.map(i=>i.n))+1;D.push(o)}
  persist();months();render();$('#dlg').close();toast(editing?'Lançamento atualizado':'Lançamento salvo');return false;
