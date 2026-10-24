@@ -4,7 +4,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, getDocs, doc, setDoc }
+import { getFirestore, collection, getDocs, doc, setDoc, onSnapshot }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
@@ -99,36 +99,56 @@ function iniciarApp() {
   document.body.appendChild(s);
 }
 
-// Compara a nuvem com o navegador; se mudou algo (ex.: outro aparelho), atualiza e recarrega.
-async function sincronizarEmSegundoPlano(uid) {
-  sincronizando = true;
-  try {
-    const snap = await getDocs(collection(db, "users", uid, "fluxo"));
-    const nuvem = {};
-    snap.forEach(d => { nuvem[d.id] = d.data().value; });
+// ---------- tempo real: qualquer alteração na nuvem chega aqui ----------
+let ouvindo = false;
+let recarregarAoFechar = false;
 
-    if (escritasPendentes) return;          // há alterações locais ainda não enviadas: não sobrescreve
+function recarregarPagina() {
+  location.reload();
+}
+
+function aplicarAtualizacao() {
+  // Se há um pop-up aberto, espera fechar para não perder o que está sendo digitado
+  if (document.querySelector("dialog[open]")) { recarregarAoFechar = true; return; }
+  recarregarPagina();
+}
+
+document.addEventListener("close", () => {
+  if (recarregarAoFechar && !document.querySelector("dialog[open]")) {
+    recarregarAoFechar = false;
+    recarregarPagina();
+  }
+}, true);
+
+function ouvirNuvem(uid) {
+  if (ouvindo) return;
+  ouvindo = true;
+  let primeira = true;
+  onSnapshot(collection(db, "users", uid, "fluxo"), snap => {
+    // Alterações feitas por este aparelho não precisam recarregar nada
+    if (snap.metadata.hasPendingWrites) return;
+
+    if (primeira) {
+      primeira = false;
+      // Dados que existem só no navegador são enviados à nuvem (nunca apagados)
+      const ids = new Set(snap.docs.map(d => d.id));
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(PREFIX) && !ids.has(k)) agendarEscrita(k, localStorage.getItem(k));
+      }
+    }
 
     let mudou = false;
-    // Dados que existem só no navegador: envia para a nuvem (nunca apaga localmente)
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith(PREFIX) && !(k in nuvem)) agendarEscrita(k, localStorage.getItem(k));
-    }
-    // Dados que mudaram na nuvem (ex.: outro aparelho) atualizam o navegador
-    Object.entries(nuvem).forEach(([k, v]) => {
-      if (localStorage.getItem(k) !== v) { origSet(k, v); mudou = true; }
+    snap.docChanges().forEach(ch => {
+      if (ch.type === "removed") return;
+      const k = ch.doc.id, v = ch.doc.data().value;
+      if (typeof v !== "string" || localStorage.getItem(k) === v) return;
+      if (escritasPendentes) return;           // alteração local ainda não enviada: mantém a local
+      origSet(k, v);
+      mudou = true;
     });
-    // Recarrega uma única vez por aba para aplicar os dados novos (evita loop de recarregamento)
-    if (mudou && !sessionStorage.getItem("fluxo_recarregou")) {
-      sessionStorage.setItem("fluxo_recarregou", "1");
-      location.reload();
-    }
-  } catch (err) {
-    console.error("Firebase (sincronização):", err);
-  } finally {
-    sincronizando = false;
-  }
+    if (mudou) aplicarAtualizacao();
+  }, err => console.error("Firebase (tempo real):", err));
 }
 
 function entrarComUsuario(user) {
@@ -173,7 +193,7 @@ onAuthStateChanged(auth, user => {
   if (user) {
     if (!emCache) entrarComUsuario(user);
     else { uidAtual = user.uid; salvarSessao(user); }
-    sincronizarEmSegundoPlano(user.uid);
+    ouvirNuvem(user.uid);
   } else {
     limparSessao();
     uidAtual = null; usuario = null;

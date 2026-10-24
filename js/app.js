@@ -300,7 +300,7 @@ const PAL=['#0f766e','#e11d48','#f59e0b','#6366f1','#0ea5e9','#84cc16','#d946ef'
 const mshort=m=>new Date(m.slice(0,4),m.slice(5,7)-1,1).toLocaleDateString('pt-BR',{month:'short'}).replace('.','')+'/'+m.slice(2,4);
 const kfmt=v=>Math.abs(v)>=1000?(v/1000).toFixed(Math.abs(v)>=10000?0:1).replace('.',',')+'k':String(Math.round(v));
 const sumBy=(a,f)=>{const o={};a.forEach(x=>{const k=f(x);o[k]=(o[k]||0)+x.valor});return Object.entries(o).sort((p,q)=>q[1]-p[1])};
-function setView(v){['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
+function setView(v){['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;sessionStorage.setItem('fluxo_view',v);$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
 function gfCount(){const n=['from','to','tipo','status','cat','sub','conta','cartao'].filter(k=>G[k]).length;const e=$('#gf-n');if(e){e.textContent=n;e.hidden=!n}}
 function gfClear(){['from','to','tipo','status','cat','sub','conta','cartao'].forEach(k=>G[k]='');gfCount();grender()}
 const GF_ROWS=[['from','Período inicial','gm1'],['to','Período final','gm2'],['tipo','Tipo','gt'],['status','Status','gs'],['cat','Categoria','gcat'],['sub','Subcategoria','gsub'],['conta','Conta','gcon'],['cartao','Cartão de crédito','gcar']];
@@ -678,3 +678,5 @@ function pdfPlan(){
  const n=doc.getNumberOfPages();for(let i=1;i<=n;i++){doc.setPage(i);doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(140);doc.text(`Fluxo · Planejamento ${PY}`,M,H-18);doc.text(`Página ${i} de ${n}`,W-M,H-18,{align:'right'})}
  doc.save(`planejamento-${PY}.pdf`);toast('Relatório PDF gerado')}
 months();render();
+// Mantém a aba aberta quando a página é atualizada pela sincronização
+(()=>{const sv=sessionStorage.getItem('fluxo_view');if(sv&&sv!=='l')try{setView(sv)}catch(e){}})();
