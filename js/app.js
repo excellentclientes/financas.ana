@@ -176,11 +176,20 @@ function setQ(v){$('#q').value=v;render();$('#q').focus()}
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}});
 
 function filtered(tab=TAB){
- const Q=getQ(),t=$('#ft').value,m=$('#fm').value;
- return D.filter(x=>(!t||x.tipo===t)&&(!tab||(tab==='pago'?st(x)==='pago':st(x)!=='pago'))&&(!m||x.venc.startsWith(m))&&matchQ(x,Q)).sort((a,b)=>a.venc.localeCompare(b.venc)||a.n-b.n);
+ const Q=getQ(),t=$('#ft').value,m=$('#fm').value,yr=$('#fy').value;
+ return D.filter(x=>(!t||x.tipo===t)&&(!tab||(tab==='pago'?st(x)==='pago':st(x)!=='pago'))&&(!m||x.venc.startsWith(m))&&(!yr||x.venc.startsWith(yr))&&matchQ(x,Q)).sort((a,b)=>a.venc.localeCompare(b.venc)||a.n-b.n);
 }
-function months(){const cur=$('#fm').value,ms=[...new Set(D.map(x=>x.venc.slice(0,7)))].sort().reverse();
- $('#fm').innerHTML='<option value="">Todos os meses</option>'+ms.map(m=>`<option value="${m}">${mlabel(m)}</option>`).join('');$('#fm').value=cur}
+function months(){
+ const y=$('#fy').value,cur=$('#fm').value,curY=y;
+ const anos=[...new Set(D.map(x=>x.venc.slice(0,4)))].sort().reverse();
+ $('#fy').innerHTML='<option value="">Todos os anos</option>'+anos.map(a=>`<option value="${a}">${a}</option>`).join('');
+ $('#fy').value=anos.includes(curY)?curY:'';
+ const yy=$('#fy').value;
+ const ms=[...new Set(D.map(x=>x.venc.slice(0,7)))].filter(m=>!yy||m.startsWith(yy)).sort().reverse();
+ $('#fm').innerHTML='<option value="">Todos os meses</option>'+ms.map(m=>`<option value="${m}">${mlabel(m)}</option>`).join('');
+ $('#fm').value=ms.includes(cur)?cur:'';
+}
+function fyChange(){months();render()}
 const sum=(a,f)=>a.filter(f).reduce((s,x)=>s+x.valor,0);
 
 function render(){
