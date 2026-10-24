@@ -37,8 +37,10 @@ function agendarEscrita(key, value) {
 
 function instalarEspelho() {
   Storage.prototype.setItem = function (key, value) {
+    // Só envia à nuvem quando o valor realmente mudou (evita tempestade de gravações)
+    const mudou = this === localStorage && String(key).startsWith(PREFIX) && localStorage.getItem(key) !== String(value);
     origSetItem.call(this, key, value);
-    if (this === localStorage && String(key).startsWith(PREFIX)) agendarEscrita(key, value);
+    if (mudou) agendarEscrita(key, String(value));
   };
 }
 
