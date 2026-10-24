@@ -86,7 +86,9 @@ function trRender(){
  $('#trA').innerHTML=`<table class="ct"><thead><tr><th>Data</th><th>Conta Bancária - Origem</th><th>Conta Bancária - Destino</th><th>Descrição</th><th class="r">Valor</th><th>Status</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="empty" style="padding:22px">Nenhuma transferência cadastrada.</td></tr>'}</tbody></table>`;
  $('#ctT').textContent=TR.length+(TR.length===1?' transferência':' transferências');
 }
-function trOpen(id){TRE=id||null;const t=id?TR.find(x=>x.id===id):null;const ativos=bkAtivos();
+function trOpen(id){
+ if(!id&&semContaAtiva('Cadastre uma conta bancária antes de criar transferências'))return;
+ TRE=id||null;const t=id?TR.find(x=>x.id===id):null;const ativos=bkAtivos();
  if(!ativos.length&&!t){toast('Cadastre pelo menos uma conta ativa');return}
  const o=opts(ativos.map(b=>b.nome));
  $('#trt').textContent=t?'Editar transferência':'Nova transferência';
@@ -219,6 +221,7 @@ function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Obje
 function fillSub(s){$('#f_sub').innerHTML=opts(CATS[$('#f_tipo').value][$('#f_cat').value]||[]);if(s)$('#f_sub').value=s}
 let editing=null;
 function openF(n){
+ if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
  editing=n||null;$('#dt').textContent=n?`Editar lançamento ${String(n).padStart(4,'0')}`:'Novo lançamento';
  const x0=n?D.find(i=>i.n===n):null,cur=x0&&x0.conta;
  const contaOpts=CONTAS.slice();if(cur&&!contaOpts.includes(cur))contaOpts.push(cur);
@@ -232,6 +235,7 @@ function openF(n){
 }
 function save(e){
  e.preventDefault();
+ if(!editing&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos')){$('#dlg').close();return false}
  if(!CONTAS.includes($('#f_conta').value)){toast('Escolha uma conta bancária ativa');return false}
  const o={tipo:$('#f_tipo').value,status:$('#f_status').value,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:parseFloat($('#f_valor').value)||0,qtd:parseInt($('#f_qtd').value)||1,venc:$('#f_venc').value,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
  if(o.status==='pago'&&!o.pgto)o.pgto=o.venc;if(o.status==='pendente')o.pgto='';
@@ -240,7 +244,15 @@ function save(e){
 }
 function setStatus(n,v){const x=D.find(i=>i.n===n);x.status=v;x.pgto=v==='pago'?(x.pgto||TODAY):'';persist();render();toast(v==='pago'?(x.tipo==='Receita'?'Marcado como recebido':'Marcado como pago'):'Voltou para pendente')}
 function del(n){if(confirm('Excluir este lançamento?')){D=D.filter(i=>i.n!==n);persist();months();render();toast('Lançamento excluído')}}
-function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),2200)}
+function toast(t){
+ let e=document.getElementById('toast-pop');
+ if(!e){e=document.createElement('div');e.id='toast-pop';e.setAttribute('popover','manual');document.body.appendChild(e)}
+ e.textContent=t;
+ try{e.hidePopover()}catch(_){}
+ try{e.showPopover()}catch(_){}
+ clearTimeout(e._t);e._t=setTimeout(()=>{try{e.hidePopover()}catch(_){}},2600);
+}
+function semContaAtiva(msg){if(bkAtivos().length)return false;toast(msg);return true}
 
 function pdf(){
  if(!window.jspdf){alert('Não foi possível carregar o gerador de PDF. Verifique a conexão com a internet.');return}
@@ -366,7 +378,8 @@ function ccRender(){
  box.innerHTML=`<table class="pt" style="width:100%;min-width:${tw}px"><colgroup><col style="width:${W0}px">${'<col style="width:80px">'.repeat(12)}</colgroup><thead><tr><th class="pl-t" style="left:0">Cartão</th>${MS.map((n,m)=>`<th class="m${m===cur?' cur':''}" title="${MN[m]}">${n}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
  box.scrollLeft=sl;$('#ctB').textContent='Total no ano: R$ '+pm(rd(tot.reduce((a,b)=>a+b,0)));
 }
-function ccOpen(id){KE=id||null;const c=id?CARDS.find(x=>x.id===id):null;$('#kdt').textContent=c?'Editar cartão':'Novo cartão';$('#k_n').value=c?c.nome:'';$('#k_l').value=c?String(c.limite).replace('.',','):'';$('#kdlg').showModal();$('#k_n').focus()}
+function ccOpen(id){
+ if(!id&&semContaAtiva('Cadastre uma conta bancária antes de adicionar cartões'))return;KE=id||null;const c=id?CARDS.find(x=>x.id===id):null;$('#kdt').textContent=c?'Editar cartão':'Novo cartão';$('#k_n').value=c?c.nome:'';$('#k_l').value=c?String(c.limite).replace('.',','):'';$('#kdlg').showModal();$('#k_n').focus()}
 function ccSave(e){e.preventDefault();const n=nm($('#k_n').value),l=parseMoney($('#k_l').value);
  if(!n)return false;if(!isFinite(l)||l<0){toast('Informe um limite válido');return false}
  if(CARDS.some(c=>c.id!==KE&&same(c.nome,n))){toast('Já existe um cartão com esse nome');return false}
