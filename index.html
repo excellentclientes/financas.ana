@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fluxo · Sistema Financeiro</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style id="colcss"></style>
+<style>
+:root{--bg:#f3f5f4;--card:#fff;--ink:#14201e;--mut:#667571;--line:#e5eae8;--pri:#0f766e;--pri2:#e6f4f1;--ok:#047857;--okb:#e3f6ee;--bad:#be123c;--badb:#fde8ee;--warn:#b45309;--warnb:#fdf1dc;--r:14px}
+*{box-sizing:border-box;margin:0}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top{max-width:1440px;margin:auto;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;margin-right:auto}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--pri);display:grid;place-items:center;color:#fff;font-size:17px}
+.brand small{display:block;font-weight:500;color:var(--mut);font-size:12px;margin-top:-2px}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 15px;border-radius:10px;font-weight:600;display:inline-flex;gap:7px;align-items:center}
+.btn:hover{border-color:var(--pri);color:var(--pri)}
+.btn.p{background:var(--pri);border-color:var(--pri);color:#fff}.btn.p:hover{background:#0b5f58;color:#fff}
+:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+main{max-width:1440px;margin:auto;padding:20px}
+h2{font-size:15px;font-weight:700}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.kpi span{color:var(--mut);font-size:13px;font-weight:500}
+.kpi b{display:block;font-size:24px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+.kpi i{font-style:normal;font-size:12px;color:var(--mut)}
+.kpi.main{background:var(--pri);border-color:var(--pri);color:#fff}.kpi.main span,.kpi.main i{color:#cdece8}
+.g2{display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:14px}
+.bar{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;margin-top:11px;font-size:13px}
+.bar div{height:8px;background:var(--pri2);border-radius:9px;overflow:hidden}.bar div i{display:block;height:100%;background:var(--pri);border-radius:9px}
+.bar b{font-weight:600}
+.months{display:flex;gap:10px;align-items:flex-end;height:150px;margin-top:12px}
+.mc{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;font-size:12px;color:var(--mut)}
+.mc .p{display:flex;gap:4px;align-items:flex-end;height:110px;width:100%;justify-content:center}
+.mc .p i{width:42%;max-width:22px;border-radius:6px 6px 2px 2px;min-height:3px}
+.leg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:8px}.leg u{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;text-decoration:none}
+.tabs{display:flex;gap:4px;margin:20px 0 0;background:#e6ecea;padding:4px;border-radius:12px;width:fit-content;max-width:100%;overflow-x:auto}
+.tabs button{border:0;background:none;padding:8px 16px;border-radius:9px;font-weight:600;color:var(--mut);display:flex;gap:8px;align-items:center;white-space:nowrap}
+.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.tabs em{font-style:normal;font-size:11px;background:#d6dfdc;padding:1px 8px;border-radius:99px}
+.tabs button.on em{background:var(--pri);color:#fff}
+.hint{display:none;font-size:12px;color:var(--mut);margin:0 0 8px}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 12px;align-items:center}
+.filters input,.filters select,.fg input,.fg select{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);min-width:0}
+.filters input{flex:1;min-width:180px}
+.filters #q,.filters #gq{padding-left:36px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667571' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 12px center}
+.shint{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:12px;color:var(--mut);margin:-4px 0 12px}
+.chip{border:1px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-size:12px;padding:3px 10px;border-radius:99px}
+.chip:hover{border-color:var(--pri);color:var(--pri);background:var(--pri2)}
+mark{background:#fde68a;color:inherit;border-radius:3px;padding:0 1px}
+.btn.pdf:hover{border-color:#e11d48;color:#be123c;background:#fff5f7}
+.pdfi{flex:none;display:block}
+.tw{overflow-x:auto;padding:0}
+table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}td:nth-child(10){white-space:normal;min-width:150px}th:first-child,td:first-child{padding-left:14px}
+th{text-align:left;font-size:12px;color:var(--mut);font-weight:600;padding:12px 8px;border-bottom:1px solid var(--line);background:#fafbfa}
+td{padding:11px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border:0}tbody tr:hover{background:#fafcfb}
+td small{display:block;color:var(--mut);font-size:12px}
+.num{color:var(--mut);font-variant-numeric:tabular-nums}
+.v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}.th-r{text-align:right}
+.rec{color:var(--ok)}.des{color:var(--bad)}
+.tag{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.tag.Receita,.tag.pago.R{background:var(--okb);color:var(--ok)}.tag.Despesa{background:var(--badb);color:var(--bad)}
+.tag.pago{background:var(--okb);color:var(--ok)}.tag.pendente{background:var(--warnb);color:var(--warn)}.tag.atrasado{background:var(--badb);color:var(--bad)}
+.act{position:sticky;right:0;background:#fff;box-shadow:-1px 0 0 var(--line);white-space:nowrap}
+th:last-child{position:sticky;right:0;background:#fafbfa}
+select.tag{border:0;font:inherit;font-size:12px;font-weight:600;cursor:pointer;padding:5px 6px;border-radius:99px}
+.ic{border:0;background:none;padding:6px;border-radius:8px;color:var(--mut)}.ic:hover{background:var(--pri2);color:var(--pri)}
+.empty{padding:40px;text-align:center;color:var(--mut)}
+.foot{display:flex;justify-content:space-between;padding:12px 16px;color:var(--mut);font-size:13px;border-top:1px solid var(--line)}
+dialog{margin:auto;border:0;border-radius:18px;padding:0;width:min(640px,94vw);max-height:92vh;box-shadow:0 20px 60px rgba(10,30,28,.25)}
+dialog::backdrop{background:rgba(10,25,23,.45)}
+.dh{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.db{padding:18px 22px;display:grid;grid-template-columns:1fr 1fr;gap:14px;overflow:auto;max-height:68vh}
+.fg label{display:block;font-size:12px;font-weight:600;color:var(--mut);margin-bottom:5px}.fg input,.fg select{width:100%}.fg.w{grid-column:1/-1}
+.df{padding:14px 22px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg label{flex:1;margin:0;text-align:center;padding:9px;cursor:pointer;font-size:13px;color:var(--ink)}
+.seg input{display:none}.seg input:checked+span{display:block}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-weight:600;opacity:0;pointer-events:none;transition:.25s}.toast.on{opacity:1}
+@media(max-width:980px){.kpis{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}}
+@media(max-width:820px){
+ main{padding:12px}.top{padding:10px 14px}.btn span.t{display:none}
+ .tabs{width:100%}.tabs button{flex:1;justify-content:center;padding:9px 8px}
+ table{font-size:12px}th,td{padding:10px 9px}
+ th:first-child,td:first-child{position:sticky;left:0;z-index:1;background:#fff;box-shadow:1px 0 0 var(--line)}
+ th:first-child{background:#fafbfa}
+ .kpi b{font-size:19px}.kpi{padding:13px 14px}.db{grid-template-columns:1fr}.bar{grid-template-columns:90px 1fr auto}
+ .filters select{flex:1}
+.gfilt{display:grid !important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin:14px 0 10px;align-items:center}.gfilt .wide{grid-column:1/-1;flex:none}.gfilt .per{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}.gfilt select,.gfilt input{width:100%;min-width:0;flex:none;height:40px;font-size:13.5px}@media(max-width:900px){.gfilt{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.gfilt{grid-template-columns:1fr}}
+}
+
+.views{display:flex;gap:4px;background:#e6ecea;padding:4px;border-radius:12px;width:fit-content;margin-bottom:16px}
+.views button{border:0;background:none;padding:8px 18px;border-radius:9px;font-weight:600;color:var(--mut);display:flex;gap:8px;align-items:center}
+.views button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+#vG[hidden],#vL[hidden]{display:none}
+.gchips{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:12px;color:var(--mut);margin:-2px 0 14px}
+.chip.on{background:var(--pri2);border-color:var(--pri);color:var(--pri)}
+.gg{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.gg .w2{grid-column:1/-1}
+.gg .bar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar.sel{cursor:pointer}.bar.sel:hover{opacity:1!important}.bar.dim{opacity:.4}
+.dn{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:8px}.dn svg{width:170px;height:170px;flex:none}
+.lg2{flex:1;min-width:150px;font-size:13px}
+.lgr{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:8px;cursor:pointer}.lgr:hover{background:var(--pri2)}
+.lgr u{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}.lgr b{margin-left:auto;font-weight:600;white-space:nowrap}.lgr em{font-style:normal;color:var(--mut);font-size:12px}
+.stk{display:flex;height:16px;border-radius:9px;overflow:hidden;margin:12px 0 8px;background:var(--pri2)}.stk i{cursor:pointer;min-width:2px}
+.rk{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.rk:last-child{border:0}
+.rk small{display:block;color:var(--mut);font-size:12px}.rk .v{white-space:nowrap}
+@media(max-width:980px){.gg{grid-template-columns:1fr}}
+
+/* ===== Gráficos modernos ===== */
+.gg{grid-template-columns:repeat(6,1fr);gap:14px}
+.gg .c2{grid-column:span 2}.gg .c4{grid-column:span 4}
+.gc{position:relative;overflow:hidden;padding:15px 16px 18px;isolation:isolate}
+
+.gc h2{display:flex;align-items:center;gap:8px;font-size:13.5px}
+.gc h2::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--gl);box-shadow:0 0 0 3px color-mix(in srgb,var(--gl) 22%,transparent),0 0 12px var(--gl)}
+.gc .bar{grid-template-columns:92px 1fr auto;margin-top:10px;font-size:12.5px}
+.gc .bar div{height:7px;background:#edf2f0}
+.gc .bar div i{background:linear-gradient(90deg,var(--gl),color-mix(in srgb,var(--gl) 50%,#fff));box-shadow:0 0 10px -1px var(--gl)}
+.gc .rk{padding:7px 0;font-size:12.5px}
+.gc .lgr{padding:4px 6px;font-size:12.5px}
+.ch svg{display:block;width:100%;height:auto;max-height:210px}
+.gc .dn{gap:10px;margin-top:6px;flex-wrap:nowrap}
+.gc .dn svg{width:128px;height:128px;filter:drop-shadow(0 8px 10px rgba(99,102,241,.28))}
+.gc .lg2{min-width:0}
+.gc .stk{height:12px;box-shadow:0 4px 14px -2px rgba(245,158,11,.45)}
+@media(max-width:980px){.gg{grid-template-columns:1fr 1fr}.gg .c4{grid-column:1/-1}.gg .c2{grid-column:span 1}}
+@media(max-width:620px){.gg{grid-template-columns:1fr}.gg .c2,.gg .c4{grid-column:1/-1}.gc .dn{flex-wrap:wrap}}
+
+/* ===== Layout fixo: tabela com rolagem interna ===== */
+html,body{height:100%}
+body{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+header{position:static;flex:none}
+main{flex:1;min-height:0;overflow:auto;width:100%;display:flex;flex-direction:column}
+.views{flex:none}
+#vL{flex:1;min-height:0;display:flex;flex-direction:column}
+#vL>*{flex:none}
+#vL>.tw{flex:1;min-height:260px;display:flex;flex-direction:column;overflow:hidden}
+.tbs{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.tw .foot{flex:none;background:#fff}
+.tbs th{position:sticky;top:0;z-index:2}
+.tbs th:last-child{top:0;z-index:3}
+.hint{display:none!important}
+.months{height:120px}.mc .p{height:80px}
+@media(max-width:820px){
+ main{padding:10px}
+.pl-top{top:-10px!important;padding-top:20px!important}
+ .views{margin-bottom:8px}
+ .kpis{grid-template-columns:1fr 1fr;gap:8px}
+ .kpi{padding:8px 12px}.kpi b{font-size:16px;margin-top:1px}.kpi i{display:none}.kpi span{font-size:12px}
+ .g2{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;margin-top:8px;padding-bottom:2px}
+ .g2>.card{flex:0 0 88%;scroll-snap-align:start;height:138px;overflow:auto;padding:10px 14px}
+ .g2 .bar{margin-top:7px}.months{height:84px;margin-top:6px}.mc .p{height:56px}.g2 .leg{margin-top:4px}
+ .tabs{margin-top:10px}
+ .filters{margin:8px 0}.filters input{flex:1 1 100%}.filters select{flex:1 1 40%}
+ #vL>.tw{min-height:300px}
+ /* tabela vira lista de cartões */
+ .tbs table,.tbs tbody,.tbs tr,.tbs td{display:block}
+ .tbs table{white-space:normal}.tbs thead{display:none}
+ .tbs tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+ .tbs tbody tr:last-child{border-bottom:0}
+ .tbs td,.tbs td:first-child{position:static;box-shadow:none;background:none;padding:0;border:0;min-width:0;white-space:normal;text-align:left;font-size:13px}
+ .tbs td:nth-child(10){min-width:0}
+ .tbs td::before{content:attr(data-l);display:block;font-size:10.5px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.03em;margin-bottom:1px}
+ .tbs td.act::before{display:none}
+ .tbs td:nth-child(10){grid-column:1/-1;order:1;font-size:14.5px}.tbs td:nth-child(10)::before{display:none}
+ .tbs td:nth-child(11){order:2;font-size:16px}
+ .tbs td:nth-child(12){order:3}
+ .tbs td:nth-child(2){order:4}.tbs td:nth-child(3){order:5}.tbs td:nth-child(4){order:6}
+ .tbs td:nth-child(6){order:7}.tbs td:nth-child(7){order:8}.tbs td:nth-child(5){order:9}
+ .tbs td:nth-child(8){order:10}.tbs td:nth-child(9){order:11}.tbs td:nth-child(1){order:12}
+ .tbs td.act{order:13;grid-column:1/-1;display:flex;justify-content:flex-end;gap:6px;box-shadow:none;background:none;border-top:1px solid var(--line);padding-top:6px}
+ .tbs td.empty{grid-column:1/-1}
+}
+
+/* ===== ajustes: mais linhas visíveis ===== */
+.trow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;max-width:100%}
+.trow .tabs{margin:0;min-width:0}
+.trow .btn{padding:8px 13px;white-space:nowrap}
+#vL.cmp .kpis,#vL.cmp .g2{display:none}
+@media(min-width:821px){
+ #vL>.tw{min-height:610px}
+ #vL .filters{margin:10px 0}
+ .tbs td{padding:8px 8px}.tbs th{padding:10px 8px}
+ .kpi{padding:11px 16px}.kpi b{font-size:21px;margin-top:2px}
+ .g2{margin-top:10px}.g2 .card{padding:12px 16px}.g2 .bar{margin-top:8px}
+ .months{height:104px;margin-top:6px}.mc .p{height:72px}
+}
+@media(max-width:820px){.trow{margin-top:10px}.trow .tabs{flex:1}}
+[hidden]{display:none!important}
+.ph{padding:28px;text-align:center}.ph p{color:var(--mut);margin-top:6px}
+.views{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}.views button{white-space:nowrap}
+.views button svg{width:17px;height:17px;flex:none}
+.top{gap:10px}
+.top .brand{margin-right:0;flex:1 1 0;min-width:max-content;white-space:nowrap}
+.brand small{white-space:nowrap}
+.acts{display:flex;gap:8px;flex:1 1 0;min-width:max-content;justify-content:flex-end}
+.acts .btn{padding:7px 12px;font-size:13px;white-space:nowrap}
+.acts .pdfi{width:18px;height:18px}
+.acts #hnew{min-width:172px;justify-content:center}
+@media(max-width:820px){.acts #hnew{min-width:0}}
+.top .views{margin:0;flex:none;padding:3px;gap:2px}
+.top .views button{padding:7px 11px;font-size:13px;gap:6px}
+.top .views button svg{width:16px;height:16px}
+@media(max-width:1280px){.top .brand{flex:1 1 auto}.acts{flex:none}.top .views{order:3;flex:1 1 100%;width:100%}}
+#vL{overflow-y:auto;overflow-x:hidden}
+.stky{position:sticky;top:0;z-index:6;background:var(--bg);margin-top:0;padding-top:14px}
+.stky .trow{margin-top:0}
+.ct{width:100%;min-width:780px;border-collapse:separate;border-spacing:0}
+.ct th,.ct td{padding:12px 14px;text-align:left;white-space:nowrap;border-top:1px solid var(--line)}
+.ct th{background:#fafbfa;color:var(--mut);font-weight:600;font-size:13px}
+.ct .r{text-align:right;font-variant-numeric:tabular-nums}
+.ct td.nm{font-weight:700}
+.ct tr.tot td{background:#e9f1ef;border-top:2px solid #b9d4cf;font-weight:700}
+.ct td.neg{color:var(--bad)}
+.ub{display:flex;align-items:center;gap:10px;min-width:190px}
+.ub span{flex:1;height:8px;border-radius:99px;background:var(--pri2);overflow:hidden}
+.ub span i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2dd4bf,var(--pri))}
+.ub span i.mid{background:linear-gradient(90deg,#fbbf24,#d97706)}
+.ub span i.hi{background:linear-gradient(90deg,#fb7185,var(--bad))}
+.ub b{width:52px;text-align:right;font-size:12.5px;font-variant-numeric:tabular-nums}
+.cchs{display:block;margin:0 0 14px;min-width:0}
+#cch1{flex:none;width:100%;max-width:none;padding:14px 18px}
+.cch{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 18px 9px;min-width:0;max-width:100%;overflow-x:auto}
+.cch h4{font-size:13px;font-weight:600;color:var(--mut);margin:0 0 8px;display:flex;justify-content:space-between;gap:12px;white-space:nowrap}
+.cch .lg{display:flex;align-items:center;gap:5px;font-weight:500}
+.cch .lg u{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:6px}
+.cpr{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px 32px}@media(max-width:1100px){.cpr{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.cpr{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px}}@media(max-width:460px){.cpr{grid-template-columns:1fr}}.cpr-h{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-bottom:5px}.cpr-h s{text-decoration:none;font-weight:600;color:var(--tx,#14201e)}.cpr-h b{font-weight:500;color:var(--mut);white-space:nowrap;font-variant-numeric:tabular-nums}.cpr .ub{min-width:0}.cpr .ub span{height:10px}.cpr .ub b{width:56px}
+.cb{display:flex;align-items:flex-end;gap:22px}
+.cb.m{gap:9px}
+.cb .g{display:flex;flex-direction:column;align-items:center;gap:2px}
+.cb .bb{display:flex;align-items:flex-end;gap:4px;height:84px}
+.cb i{display:block;width:26px;border-radius:3px 3px 0 0;transform-origin:bottom;animation:cgrow .7s cubic-bezier(.2,.8,.2,1)}
+.cb.m i{width:22px}
+.cb s{text-decoration:none;font-size:11px;color:var(--mut);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1}
+@keyframes cgrow{from{transform:scaleY(0)}}
+@media(max-width:1100px){.cchs{display:none}}
+.pt td.cv{text-align:right;font-variant-numeric:tabular-nums}
+.pt td.cv i{color:#b8c3bf;font-style:normal}
+.pt td.cv.cur{background:var(--pri2)}
+#cwB tr.pl-tot td,#cwB tr.pl-tot td.pl-t{background:#e9f1ef;border-top:2px solid #b9d4cf}
+#cwB tr.pl-tot td.cur{background:#d3ece7}
+.kmini{display:none;flex:1;justify-content:center;gap:10px;min-width:0;padding:0 16px}
+.stky.scr .kmini{display:flex}
+.kmini .km{background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 13px;line-height:1.25;white-space:nowrap}
+.kmini .km.main{background:var(--pri);border-color:var(--pri);color:#fff}
+.kmini .km span{display:block;font-size:12px;color:var(--mut);font-weight:500}
+.kmini .km.main span{color:#cdece8}
+.kmini .km b{font-size:16px;font-weight:800}
+@media(max-width:1280px){.stky.scr .kmini{display:none}}
+#vL>.tw{flex:none;height:calc(100% - var(--stk,130px))}
+.cfgb svg{width:17px;height:17px;flex:none}.cfgb{white-space:nowrap}
+.cfgp{color:var(--mut);font-size:13px}
+.cfg-i{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-weight:600;background:#fff}
+.cfg-i input{accent-color:var(--pri);width:16px;height:16px}
+.cfg-i:has(input:checked){border-color:var(--pri);background:var(--pri2)}
+.cfgtabs{display:flex;gap:4px;background:#e6ecea;padding:4px;border-radius:12px;width:fit-content;margin:0 22px}
+.cfgtabs button{border:0;background:none;padding:7px 16px;border-radius:9px;font-weight:600;color:var(--mut)}
+.cfgtabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.cfgp{padding:10px 22px 0!important}
+.db.cats{grid-template-columns:1fr;gap:12px}
+.cseg{display:flex;gap:4px;background:#e6ecea;padding:3px;border-radius:10px;width:fit-content}
+.cseg button{border:0;background:none;padding:6px 14px;border-radius:8px;font-weight:600;color:var(--mut);font-size:13px}
+.cseg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.addrow{display:flex;gap:8px}.addrow input,.inl{font:inherit;padding:8px 11px;border:1px solid var(--line);border-radius:10px;min-width:0;flex:1;background:#fff;color:var(--ink)}
+.addrow .btn{padding:8px 13px;white-space:nowrap}
+.addrow .btn svg,.sub button svg,.cat-h button svg{width:14px;height:14px;display:block}
+.cat{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+.cat-h{display:flex;align-items:center;gap:6px}.cat-h b{font-size:14px}.cat-h .cnt{color:var(--mut);font-size:12px;margin-right:auto;margin-left:4px}
+.cat-h .inl{flex:none;width:200px;font-weight:700}
+.cat-h button,.sub button{border:0;background:none;color:var(--mut);padding:4px;border-radius:7px;display:grid;place-items:center}
+.cat-h button:hover,.sub button:hover{background:var(--pri2);color:var(--pri)}
+.cat-h button[data-a=dc]:hover,.sub button[data-a=ds]:hover{background:var(--badb);color:var(--bad)}
+.subs{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.sub{display:inline-flex;align-items:center;gap:2px;background:var(--pri2);color:var(--pri);border-radius:99px;padding:3px 5px 3px 12px;font-size:12.5px;font-weight:600}
+.sub .inl{padding:3px 8px;width:140px;flex:none;font-size:12.5px}
+#cdlg[open],#pcdlg[open]{display:flex;flex-direction:column;overflow:hidden;height:min(720px,92vh);max-height:92vh}
+#cdlg>*,#pcdlg>*{flex:none}
+#cdlg>.db,#pcdlg>.db{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;align-content:start}
+#cdlg>.df,#pcdlg>.df{border-top:1px solid var(--line);background:#fff}
+.cfgrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 22px;flex-wrap:wrap}.cfgrow .cfgtabs{margin:0}
+.pl-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px;position:sticky;top:-20px;z-index:20;background:var(--bg);padding:30px 0 12px}
+.pl-top h2{font-size:18px}.pl-top p{color:var(--mut);font-size:13px}
+.pl-act{display:flex;gap:8px;margin-left:auto;align-items:center}
+.pl-act select{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.pl-act .btn svg{width:16px;height:16px;flex:none}
+.pl-card{padding:0;margin-bottom:14px;overflow:hidden}.bst{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;background:#fde8e8;color:#b42318}.bst.on{background:#dcf5ef;color:#0f766e}.bst.wait{background:#fef3c7;color:#92400e}.bk-off{opacity:.5}
+.pl-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 18px 10px}
+.pl-h span{color:var(--mut);font-size:12.5px}
+.pw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pt{border-collapse:separate;border-spacing:0;table-layout:fixed}
+.pt th,.pt td{padding:10px 8px;white-space:nowrap}
+.pt td:nth-child(n){white-space:nowrap;min-width:0}
+.pt th{border-top:1px solid var(--line)}
+.pt th.m{text-align:right}
+.pt th.cur{background:var(--pri);color:#fff}
+.pt .pl-t,.pt .pl-c,.pt .pl-s,.pt th.pl-t,.pt th.pl-c,.pt th.pl-s{position:sticky;background:#fff;z-index:2}
+.pt th.pl-t,.pt th.pl-c,.pt th.pl-s{background:#fafbfa;z-index:3}
+.pt .pl-t{left:0}.pt .pl-c{left:80px;font-weight:700;overflow:hidden;text-overflow:ellipsis}.pt .pl-s{left:190px;box-shadow:1px 0 0 var(--line)}
+.pl-sw{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.pl-sw span{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pl-sw button{border:0;background:none;color:var(--mut);padding:3px;border-radius:7px;opacity:0;display:grid;place-items:center}
+.pl-sw button svg{width:14px;height:14px;display:block}
+.pl-sw button:hover{background:var(--badb);color:var(--bad)}
+.pt tr:hover .pl-sw button{opacity:1}
+@media(hover:none){.pl-sw button{opacity:1}}
+.pt td.pl-v{text-align:right;font-variant-numeric:tabular-nums;cursor:pointer}
+.pt td.pl-v i{color:#b8c3bf;font-style:normal}
+.pt td.pl-v.cur{background:var(--pri2)}
+.pt td.pl-v:hover{background:#d3ece7}
+.pt tr.pl-tot td{font-weight:700;background:#fafbfa;border-top:1px solid var(--line);cursor:default}
+.pt tr.pl-tot td.pl-s,.pt tr.pl-tot td.pl-t{background:#fafbfa}
+.pt tr.pl-tot td.cur{background:#d3ece7}
+.tag.Saldo{background:var(--pri2);color:var(--pri)}
+.pt td.sd{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;cursor:default}
+.pt td.sd.neg{color:var(--bad)}.pt td.sd.pos{color:var(--ok)}
+.plk{display:flex;gap:10px;margin:0;flex:1;justify-content:center;min-width:0;flex-wrap:wrap}
+.plk .kpi{padding:7px 14px;min-width:150px}
+.plk .kpi b{font-size:17px;margin-top:0}
+.plk .kpi span{font-size:12px}
+.plk .kpi i{font-size:11px}
+@media(max-width:620px){.plk{flex:1 1 100%}.plk .kpi{flex:1;min-width:0;padding:6px 10px}.plk .kpi b{font-size:14px}}
+.pt td.sd.cur{background:var(--pri2)}
+.pt tr.pl-tot td.sd.cur{background:#d3ece7}
+#pwR tr.pl-tot td,#pwR tr.pl-tot td.pl-s,#pwD tr.pl-tot td,#pwD tr.pl-tot td.pl-s,#pwS tr.pl-tot td,#pwS tr.pl-tot td.pl-s{background:#e9f1ef;border-top:2px solid #b9d4cf}
+#pwR tr.pl-tot td.cur,#pwD tr.pl-tot td.cur,#pwS tr.pl-tot td.cur{background:#d3ece7}
+.pt .pl-c{font-weight:600}
+@media(max-width:820px){.pt th,.pt td{position:static!important;box-shadow:none!important}}
+</style>
+<body>
+<header><div class="top">
+ <div class="brand"><div class="logo">◈</div><div>Fluxo<small>Gestão financeira</small></div></div>
+ <nav class="views" aria-label="Seções do sistema"><button data-v="l" class="on" onclick="setView('l')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-1.8L12 21l-3-1.8L6 21z"/><path d="M9.5 8h5M9.5 12h5"/></svg>Lançamentos</button><button data-v="p" onclick="setView('p')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M8 3v4M16 3v4M4 10h16M9.5 15l2 2 3.5-4"/></svg>Planejamento</button><button data-v="c" onclick="setView('c')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3.5"/><path d="M2.5 10h19M6.5 15h4"/></svg>Cartão de Crédito</button><button data-v="t" onclick="setView('t')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h15M15.5 4.5 19 8l-3.5 3.5M20 16H5M8.5 12.5 5 16l3.5 3.5"/></svg>Transferências</button><button data-v="b" onclick="setView('b')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5z"/><path d="M5.5 12v5M10 12v5M14 12v5M18.5 12v5M3 20.5h18"/></svg>Conta bancária</button><button data-v="g" onclick="setView('g')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5"/></svg>Gráficos</button></nav>
+ <div class="acts">
+ <button class="btn" onclick="fluxoSair()" title="Sair da conta">Sair</button>
+ <button class="btn pdf" onclick="VIEW==='p'?pdfPlan():VIEW==='c'?pdfCard():VIEW==='t'?pdfTr():VIEW==='b'?pdfBk():VIEW==='g'?pdfGr():pdf()" title="Gerar relatório em PDF"><svg class="pdfi" width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 2h8l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" fill="#fff" stroke="#c3cdca" stroke-width="1.2"/><path d="M14 2v4a1 1 0 0 0 1 1h4" stroke="#c3cdca" stroke-width="1.2" stroke-linejoin="round"/><rect x="1" y="11.5" width="16" height="8" rx="2" fill="#e11d48"/><text x="9" y="17.6" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="6.2" font-weight="800" fill="#fff">PDF</text></svg><span class="t">Relatório PDF</span></button>
+ <button class="btn p" id="hnew" onclick="VIEW==='p'?plOpen():VIEW==='c'?ccOpen():VIEW==='t'?trOpen():VIEW==='b'?bkOpen():openF()">＋ <span class="t">Novo lançamento</span></button>
+
+ </div>
+</div></header>
+
+<main>
+ 
+<div id="vL">
+ <section class="kpis" id="kpis"></section>
+ <section class="g2">
+  <div class="card"><h2>Despesas por categoria</h2><div id="cats"></div></div>
+  <div class="card"><h2>Receitas × despesas por mês</h2><div class="months" id="months"></div>
+   <div class="leg"><span><u style="background:#0f766e"></u>Receitas</span><span><u style="background:#e11d48"></u>Despesas</span></div></div>
+ </section>
+
+ <div class="stky" id="stky">
+ <div class="trow"><div class="tabs"><button data-t="pendente" onclick="setTab('pendente')">Pendentes <em>0</em></button><button data-t="pago" onclick="setTab('pago')">Pagos / Recebidos <em>0</em></button><button data-t="" onclick="setTab('')">Todos <em>0</em></button></div><div class="kmini" id="kmini"></div><button class="btn cfgb" onclick="openCols()" title="Escolher as colunas da tabela"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="t">Configurar tabela</span></button></div>
+ <div class="filters">
+  <input id="q" type="search" placeholder="Pesquise qualquer coisa: descrição, valor, data, mês, conta, status…" oninput="render()" autocomplete="off" aria-label="Pesquisar em todas as colunas">
+  <select id="fm" onchange="render()"></select>
+  <select id="ft" onchange="render()"><option value="">Todos os tipos</option><option>Receita</option><option>Despesa</option></select>
+ </div>
+ </div>
+ <p class="hint">↔ Deslize a tabela para o lado para ver todas as colunas</p>
+ <div class="card tw">
+  <div class="tbs"><table>
+   <thead><tr><th>Nº</th><th>Tipo</th><th>Vencimento</th><th>Pgto / Receb.</th><th>Parcela</th><th>Conta / Cartão</th><th>Categoria</th><th>Compra</th><th>Qtd</th><th>Descrição</th><th class="th-r">Valor</th><th>Status</th><th></th></tr></thead>
+   <tbody id="tb"></tbody>
+  </table></div>
+  <div class="foot"><span id="cnt"></span><span id="tot"></span></div>
+ </div>
+</div>
+<div id="vP" hidden>
+ <div class="pl-top"><div><h2>Planejamento</h2><p>Valores realizados por subcategoria, mês a mês.</p></div>
+  <div class="kpis plk" id="plk"></div>
+  <div class="pl-act"><select id="pyr" onchange="PY=+this.value;plRender(1)" aria-label="Ano"></select><button class="btn cfgb" onclick="pcOpen()" title="Cadastrar categorias e subcategorias do planejamento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="t">Configurar tabela</span></button></div></div>
+ <div class="card pl-card"><div class="pl-h"><h2>Receitas</h2><span id="ptR"></span></div><div class="pw" id="pwR"></div></div>
+ <div class="card pl-card"><div class="pl-h"><h2>Despesas</h2><span id="ptD"></span></div><div class="pw" id="pwD"></div></div>
+ <div class="card pl-card"><div class="pl-h"><h2>Saldo</h2><span id="ptS"></span></div><div class="pw" id="pwS"></div></div>
+</div>
+<div id="vC" hidden>
+ <div class="pl-top"><div><h2>Cartão de Crédito</h2><p>Limite de cada cartão e valores a pagar mês a mês.</p></div>
+  <div class="pl-act"><select id="kyr" onchange="KY=+this.value;ccRender()" aria-label="Ano"></select></div></div>
+<div class="cchs"><div class="cch" id="cch1"></div></div>
+ <div class="card pl-card"><div class="pl-h"><h2>Cartões</h2><span id="ctA"></span></div><div class="pw" id="cwA"></div></div>
+ <div class="card pl-card"><div class="pl-h"><h2>A pagar por mês</h2><span id="ctB"></span></div><div class="pw" id="cwB"></div></div>
+</div>
+<div id="vT" hidden><div class="card pl-card"><div class="pl-h"><h2>Transferências</h2><span id="ctT"></span></div><div class="pw" id="trA"></div></div></div>
+<div id="vB" hidden><div class="card pl-card"><div class="pl-h"><h2>Conta bancária</h2><span id="ctBk"></span></div><div class="pw" id="bkA"></div></div></div>
+<div id="vG" hidden>
+ <div class="filters gfilt">
+  <input id="gq" class="wide" type="search" placeholder="Pesquisa inteligente nos gráficos: nubank outubro >500, cat:lazer…" oninput="gset('q',this.value)" autocomplete="off" aria-label="Pesquisar nos gráficos">
+  <div class="per"><select id="gm1" onchange="gset('from',this.value)" aria-label="Período de início"></select><select id="gm2" onchange="gset('to',this.value)" aria-label="Período de fim"></select></div>
+  <select id="gt" onchange="gset('tipo',this.value)" aria-label="Tipo"><option value="">Todos os tipos</option><option>Receita</option><option>Despesa</option></select>
+  <select id="gs" onchange="gset('status',this.value)" aria-label="Status"><option value="">Todos os status</option><option value="pago">Pago / Recebido</option><option value="pendente">Pendente</option><option value="atrasado">Atrasado</option></select>
+  <select id="gcat" onchange="gset('cat',this.value)" aria-label="Categoria"></select>
+  <select id="gsub" onchange="gset('sub',this.value)" aria-label="Subcategoria"></select>
+  <select id="gcon" onchange="gset('conta',this.value)" aria-label="Conta"></select>
+  <select id="gcar" onchange="gset('cartao',this.value)" aria-label="Cartão"></select>
+ </div>
+ <div class="gchips" id="gchips"></div>
+ <section class="kpis" id="gkpis"></section>
+ <section class="gg">
+  <div class="card gc c4" style="--gl:#0f766e"><h2>Receitas × despesas por mês</h2><div id="g_mes" class="ch"></div><div class="leg"><span><u style="background:#14b8a6"></u>Receitas</span><span><u style="background:#f43f5e"></u>Despesas</span><span>· clique num mês para filtrar</span></div></div>
+  <div class="card gc c2" style="--gl:#6366f1"><h2 id="g_t1"></h2><div id="g_cat"></div></div>
+  <div class="card gc c2" style="--gl:#0ea5e9"><h2 id="g_t2"></h2><div id="g_sub"></div></div>
+  <div class="card gc c2" style="--gl:#0f766e"><h2 id="g_t3"></h2><div id="g_acc"></div></div>
+  <div class="card gc c2" style="--gl:#d946ef"><h2 id="g_t4"></h2><div id="g_car"></div></div>
+  <div class="card gc c2" style="--gl:#f59e0b"><h2 id="g_t5"></h2><div id="g_sta"></div></div>
+  <div class="card gc c2" style="--gl:#e11d48"><h2>Maiores lançamentos</h2><div id="g_top"></div></div>
+  <div class="card gc c2" style="--gl:#14b8a6"><h2>Saldo acumulado</h2><div id="g_sal" class="ch"></div></div>
+ </section>
+</div>
+</main>
+
+<dialog id="cdlg">
+ <div class="dh"><h2>Configurar tabela</h2><button type="button" class="ic" onclick="$('#cdlg').close()" aria-label="Fechar">✕</button></div>
+ <div class="cfgrow"><div class="cfgtabs"><button type="button" data-k="k" class="on" onclick="cfgTab('k')">Categorias</button><button type="button" data-k="c" onclick="cfgTab('c')">Colunas</button></div><div class="cseg" id="cseg"><button type="button" data-t="Despesa" class="on" onclick="setCT('Despesa')">Despesas</button><button type="button" data-t="Receita" onclick="setCT('Receita')">Receitas</button></div></div>
+ <p class="cfgp" id="cfgp">Cadastre as categorias e as subcategorias usadas nos lançamentos.</p>
+ <div class="db" id="cbody" hidden></div>
+ <div class="db cats" id="catbody"></div>
+ <div class="df"><button type="button" class="btn" id="rbtn" onclick="resetCols()" hidden>Restaurar padrão</button><button type="button" class="btn p" onclick="$('#cdlg').close()">Concluir</button></div>
+</dialog>
+<dialog id="pcdlg">
+ <div class="dh"><h2>Configurar tabela</h2><button type="button" class="ic" onclick="$('#pcdlg').close()" aria-label="Fechar">✕</button></div>
+ <p class="cfgp">Cadastre as categorias e subcategorias do Planejamento. São independentes das usadas em Lançamentos.</p>
+ <div class="cfgrow" style="justify-content:flex-start"><div class="cseg" id="pcseg"><button type="button" data-t="Despesa" class="on" onclick="setPT('Despesa')">Despesas</button><button type="button" data-t="Receita" onclick="setPT('Receita')">Receitas</button></div></div>
+ <div class="db cats" id="pcbody"></div>
+ <div class="df"><button type="button" class="btn p" onclick="$('#pcdlg').close()">Concluir</button></div>
+</dialog>
+<dialog id="pdlg"><form onsubmit="return plSave(event)">
+ <div class="dh"><h2 id="pdt">Novo cadastro</h2><button type="button" class="ic" onclick="$('#pdlg').close()" aria-label="Fechar">✕</button></div>
+ <p class="cfgp" id="p_y"></p>
+ <div class="db">
+  <div class="fg"><label>Tipo</label><select id="p_t" onchange="plFillCats()"><option>Receita</option><option>Despesa</option></select></div>
+  <div class="fg"><label>Mês</label><select id="p_m"></select></div>
+  <div class="fg"><label>Categoria</label><select id="p_c" required onchange="plFillSubs()"></select></div>
+  <div class="fg"><label>Subcategoria</label><select id="p_s" required></select></div>
+  <div class="fg w"><label>Realizado (R$)</label><input id="p_v" inputmode="decimal" required autocomplete="off" placeholder="0,00"></div>
+ </div>
+ <div class="df"><button type="button" class="btn" id="p_del" onclick="plDelVal()" hidden style="margin-right:auto">Remover valor</button><button type="button" class="btn" onclick="$('#pdlg').close()">Cancelar</button><button class="btn p">Salvar</button></div>
+</form></dialog>
+<dialog id="bkdlg"><form onsubmit="return bkSave(event)">
+ <div class="dh"><h2 id="bkt">Nova conta bancária</h2><button type="button" class="ic" onclick="$('#bkdlg').close()" aria-label="Fechar">✕</button></div>
+ <div class="db">
+  <div class="fg w"><label>Conta Bancária</label><input id="bk_n" maxlength="40" required autocomplete="off" placeholder="Ex.: Nubank"></div>
+  <div class="fg"><label>Saldo Inicial (R$)</label><input id="bk_s" inputmode="decimal" required autocomplete="off" placeholder="0,00"></div>
+  <div class="fg"><label>Data Saldo Inicial</label><input id="bk_d" type="date" required></div>
+  <div class="fg w"><label>Status</label><select id="bk_st"><option>Ativo</option><option>Inativo</option></select></div>
+ </div>
+ <div class="df"><button type="button" class="btn" onclick="$('#bkdlg').close()">Cancelar</button><button class="btn p">Salvar</button></div>
+</form></dialog>
+<dialog id="trdlg"><form onsubmit="return trSave(event)">
+ <div class="dh"><h2 id="trt">Nova transferência</h2><button type="button" class="ic" onclick="$('#trdlg').close()" aria-label="Fechar">✕</button></div>
+ <div class="db">
+  <div class="fg"><label>Data</label><input id="tr_d" type="date" required></div>
+  <div class="fg"><label>Valor (R$)</label><input id="tr_v" inputmode="decimal" required autocomplete="off" placeholder="0,00"></div>
+  <div class="fg"><label>Conta Bancária - Origem</label><select id="tr_o" required></select></div>
+  <div class="fg"><label>Conta Bancária - Destino</label><input id="tr_t" maxlength="60" required autocomplete="off" placeholder="Ex.: João - Bradesco"></div>
+  <div class="fg w"><label>Descrição</label><input id="tr_desc" maxlength="80" autocomplete="off" placeholder="Ex.: Reserva para cartão"></div>
+  <div class="fg"><label>Status</label><select id="tr_st"><option>Concluída</option><option>Pendente</option></select></div>
+ </div>
+ <div class="df"><button type="button" class="btn" onclick="$('#trdlg').close()">Cancelar</button><button class="btn p">Salvar</button></div>
+</form></dialog>
+<dialog id="kdlg"><form onsubmit="return ccSave(event)">
+ <div class="dh"><h2 id="kdt">Novo cartão</h2><button type="button" class="ic" onclick="$('#kdlg').close()" aria-label="Fechar">✕</button></div>
+ <div class="db">
+  <div class="fg w"><label>Nome do cartão</label><input id="k_n" maxlength="40" required autocomplete="off" placeholder="Ex.: Nubank Mastercard"></div>
+  <div class="fg w"><label>Limite (R$)</label><input id="k_l" inputmode="decimal" required autocomplete="off" placeholder="0,00"></div>
+ </div>
+ <div class="df"><button type="button" class="btn" onclick="$('#kdlg').close()">Cancelar</button><button class="btn p">Salvar</button></div>
+</form></dialog>
+<dialog id="dlg"><form onsubmit="return save(event)">
+ <div class="dh"><h2 id="dt">Novo lançamento</h2><button type="button" class="ic" onclick="dlg.close()" aria-label="Fechar">✕</button></div>
+ <div class="db">
+  <div class="fg"><label>Tipo</label><select id="f_tipo" onchange="fillCat()"><option>Despesa</option><option>Receita</option></select></div>
+  <div class="fg"><label>Status</label><select id="f_status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+  <div class="fg w"><label>Descrição</label><input id="f_desc" required placeholder="Ex.: Supermercado do mês"></div>
+  <div class="fg"><label>Categoria</label><select id="f_cat" onchange="fillSub()"></select></div>
+  <div class="fg"><label>Subcategoria</label><select id="f_sub"></select></div>
+  <div class="fg"><label>Valor (R$)</label><input id="f_valor" type="number" step="0.01" min="0" required></div>
+  <div class="fg"><label>Quantidade</label><input id="f_qtd" type="number" min="1" value="1"></div>
+  <div class="fg"><label>Data de vencimento</label><input id="f_venc" type="date" required></div>
+  <div class="fg"><label>Data de pagamento / recebimento</label><input id="f_pgto" type="date"></div>
+  <div class="fg"><label>Data da compra</label><input id="f_compra" type="date"></div>
+  <div class="fg"><label>Parcela</label><input id="f_parc" placeholder="1/1" value="1/1"></div>
+  <div class="fg"><label>Conta bancária</label><select id="f_conta"></select></div>
+  <div class="fg"><label>Cartão de crédito</label><select id="f_cartao"></select></div>
+ </div>
+ <div class="df"><button type="button" class="btn" onclick="dlg.close()">Cancelar</button><button class="btn p">Salvar lançamento</button></div>
+</form></dialog>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<div id="login" class="login" hidden>
+ <div class="login-card">
+  <div class="logo login-logo">◈</div>
+  <h2>Fluxo</h2>
+  <p>Entre com sua conta Google para acessar seus dados.</p>
+  <button class="btn p" id="login-btn" type="button">Entrar com Google</button>
+  <small id="login-msg"></small>
+ </div>
+</div>
+<style>
+.login{position:fixed;inset:0;background:#f2f5f4;display:flex;align-items:center;justify-content:center;z-index:9999}
+.login[hidden]{display:none}
+.login-card{background:#fff;border:1px solid #e5eae8;border-radius:16px;padding:36px 32px;width:min(360px,calc(100vw - 32px));text-align:center;box-shadow:0 8px 30px rgba(15,118,110,.08)}
+.login-logo{margin:0 auto 12px}
+.login h2{margin:0 0 6px}
+.login p{color:#667571;font-size:14px;margin:0 0 22px}
+.login small{display:block;margin-top:14px;color:#b42318;font-size:12.5px;min-height:14px}
+</style>
+<script type="module" src="js/firebase-sync.js"></script>
+</body>
+</html>
