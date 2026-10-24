@@ -532,15 +532,16 @@ const pcN=(t,c,sb)=>PL.filter(r=>r.t===t&&r.c===c&&(sb==null||r.s===sb)).reduce(
 function pcOpen(){$('#pcdlg').showModal();pcRender()}
 function setPT(t){PT=t;pcRender()}
 function pcRender(){const t=PT,C=PC[t];document.querySelectorAll('#pcseg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
- $('#pcbody').innerHTML=`<div class="addrow"><input id="pncat" placeholder="Nova categoria de ${t.toLowerCase()}…" maxlength="40"><button type="button" class="btn p" data-a="ac">${I_PL}Adicionar categoria</button></div>`
+ $('#pcadd').innerHTML=`<div class="addrow"><input id="pncat" placeholder="Nova categoria de ${t.toLowerCase()}…" maxlength="40"><button type="button" class="btn p" data-a="ac">${I_PL}Adicionar categoria</button></div>`
  +(Object.keys(C).sort(pt).map(c=>`<div class="cat" data-c="${esc(c)}"><div class="cat-h"><b>${esc(c)}</b><span class="cnt">${C[c].length} subcategoria${C[c].length===1?'':'s'}</span><button type="button" data-a="rc" title="Renomear categoria" aria-label="Renomear categoria">${I_ED}</button><button type="button" data-a="dc" title="Excluir categoria" aria-label="Excluir categoria">${I_DEL}</button></div>
   <div class="subs">${C[c].slice().sort(pt).map(sb=>`<span class="sub" data-s="${esc(sb)}"><i style="font-style:normal">${esc(sb)}</i><button type="button" data-a="rs" title="Renomear" aria-label="Renomear subcategoria">${I_ED}</button><button type="button" data-a="ds" title="Excluir" aria-label="Excluir subcategoria">${I_X}</button></span>`).join('')}</div>
   <div class="addrow"><input placeholder="Nova subcategoria…" maxlength="40"><button type="button" class="btn" data-a="as">${I_PL}Adicionar</button></div></div>`).join('')||'<p class="cfgp" style="padding:4px 2px!important">Nenhuma categoria cadastrada ainda.</p>')}
+$('#pcdlg').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.target.className==='inl')return;const b=e.target.closest('.addrow');if(b){e.preventDefault();b.querySelector('button').click()}});
 function pcDone(focusCat){plSync();plRender();pcRender();
  if(focusCat){const el=[...document.querySelectorAll('#pcbody .cat')].find(x=>x.dataset.c===focusCat);const i=el&&el.querySelector('.addrow input');if(i)i.focus()}}
-$('#pcbody').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.target.className==='inl')return;const b=e.target.closest('.addrow');if(b){e.preventDefault();b.querySelector('button').click()}});
-$('#pcbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,t=PT,C=PC[t],card=b.closest('.cat'),c=card&&card.dataset.c,sc=b.closest('.sub'),sb=sc&&sc.dataset.s;
- if(a==='ac'){const i=$('#pncat'),v=nm(i.value);if(!v)return i.focus();if(Object.keys(C).some(k=>same(k,v)))return toast('Essa categoria já existe');C[v]=[];return pcDone()}
+
+$('#pcdlg').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,t=PT,C=PC[t],card=b.closest('.cat'),c=card&&card.dataset.c,sc=b.closest('.sub'),sb=sc&&sc.dataset.s;
+ if(a==='ac'){const i=$('#pncat'),v=nm(i.value);if(!v)return i.focus();if(Object.keys(C).some(k=>same(k,v)))return toast('Essa categoria já existe');C[v]=[];pcDone();$('#pncat')&&$('#pncat').focus();return}
  if(a==='as'){const i=card.querySelector('.addrow input'),v=nm(i.value);if(!v)return i.focus();if(C[c].some(k=>same(k,v)))return toast('Essa subcategoria já existe nesta categoria');C[c].push(v);return pcDone(c)}
  if(a==='rc')return inl(card.querySelector('.cat-h b'),c,v=>{v=nm(v);if(!v||v===c)return pcRender();if(Object.keys(C).some(k=>k!==c&&same(k,v)))return toast('Essa categoria já existe'),pcRender();const n={};Object.keys(C).forEach(k=>n[k===c?v:k]=C[k]);PC[t]=n;PL.forEach(r=>{if(r.t===t&&r.c===c)r.c=v});pcDone()},pcRender);
  if(a==='rs')return inl(sc.querySelector('i'),sb,v=>{v=nm(v);if(!v||v===sb)return pcRender();if(C[c].some(k=>k!==sb&&same(k,v)))return toast('Essa subcategoria já existe nesta categoria'),pcRender();C[c]=C[c].map(x=>x===sb?v:x);PL.forEach(r=>{if(r.t===t&&r.c===c&&r.s===sb)r.s=v});pcDone()},pcRender);
