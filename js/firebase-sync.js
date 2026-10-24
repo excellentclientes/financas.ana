@@ -33,7 +33,7 @@ function agendarEscrita(key, value) {
     timers[key] = null;
     if (!uidAtual) { escritasPendentes = Object.values(timers).some(Boolean); return; }
     setDoc(doc(db, "users", uidAtual, "fluxo", key), { value, atualizado: Date.now() })
-      .catch(err => console.error("Erro ao salvar no Firebase:", err))
+      .catch(err => console.error("Erro ao salvar no Firebase (dados NÃO foram enviados):", err))
       .finally(() => { escritasPendentes = Object.values(timers).some(Boolean); });
   }, 300);
 }
@@ -110,10 +110,12 @@ async function sincronizarEmSegundoPlano(uid) {
     if (escritasPendentes) return;          // há alterações locais ainda não enviadas: não sobrescreve
 
     let mudou = false;
+    // Dados que existem só no navegador: envia para a nuvem (nunca apaga localmente)
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const k = localStorage.key(i);
-      if (k && k.startsWith(PREFIX) && !(k in nuvem)) { origRemoveItem.call(localStorage, k); mudou = true; }
+      if (k && k.startsWith(PREFIX) && !(k in nuvem)) agendarEscrita(k, localStorage.getItem(k));
     }
+    // Dados que mudaram na nuvem (ex.: outro aparelho) atualizam o navegador
     Object.entries(nuvem).forEach(([k, v]) => {
       if (localStorage.getItem(k) !== v) { origSet(k, v); mudou = true; }
     });
