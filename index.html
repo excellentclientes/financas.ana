@@ -333,11 +333,11 @@ main{flex:1;min-height:0;overflow:auto;width:100%;display:flex;flex-direction:co
 </style>
 <body>
 <style>
-/* Cabeçalho: perfil com largura fixa, para o nome não empurrar o menu */
-.top .pf-brand{flex:0 1 230px;min-width:0;max-width:230px;margin-right:auto}
+/* Cabeçalho: perfil e ações dividem o espaço livre igualmente, menu fica no centro */
+.top .pf-brand{flex:1 1 0;min-width:0;max-width:none;margin-right:0}
 .pf-txt{min-width:0;flex:1}
 .pf-txt b{max-width:100%;font-size:14px}
-@media(max-width:1280px){.top .pf-brand{flex:0 1 auto;max-width:none;min-width:0}}
+@media(max-width:1280px){.top .pf-brand{flex:1 1 auto}}
 </style>
 <header><div class="top">
  <button class="pf-brand" id="perfil-btn" onclick="perfilOpen()" aria-label="Abrir perfil"><span class="avatar" id="av"></span><span class="pf-txt"><b id="av-nome">Carregando…</b><small>Gestão financeira</small></span></button>
