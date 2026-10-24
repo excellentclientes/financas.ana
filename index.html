@@ -353,11 +353,16 @@ main{flex:1;min-height:0;overflow:auto;width:100%;display:flex;flex-direction:co
 .gf-btn:hover{background:#f5f8f7}
 .gf-n{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#0f766e;color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
 .gf-n[hidden]{display:none}
-dialog.gfd{width:min(600px,94vw)}
-dialog.gfd .gfilt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-dialog.gfd .gfilt .per{grid-column:1/-1}
-dialog.gfd .gfilt select,dialog.gfd .gfilt input{width:100%;height:40px}
-.gfd .db{padding:18px 20px}
+dialog.gfd{width:min(380px,94vw);padding:0;border-radius:20px}
+.gfd-top{display:flex;align-items:center;gap:8px;padding:16px 16px 10px;border-bottom:1px solid #eef2f0}
+.gfd-top h2{flex:1;margin:0;font-size:16px;text-align:center}
+.gfd-list{max-height:min(420px,60vh);overflow:auto;padding:6px}
+.gfd-row{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border:0;background:none;border-radius:12px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer;text-align:left}
+.gfd-row:hover{background:#f3f7f6}
+.gfd-row small{color:var(--mut);font-size:12.5px;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gfd-row.on{color:#0f766e;font-weight:600}
+.gfd-row .ck{color:#0f766e;font-weight:700}
+.gfd-foot{display:flex;justify-content:space-between;gap:10px;padding:12px 16px;border-top:1px solid #eef2f0}
 </style>
 <header><div class="top">
  <button class="pf-brand" id="perfil-btn" onclick="perfilOpen()" aria-label="Abrir perfil"><span class="avatar" id="av"></span><span class="pf-txt"><b id="av-nome">Carregando…</b><small>Gestão financeira</small></span></button>
@@ -415,28 +420,24 @@ dialog.gfd .gfilt select,dialog.gfd .gfilt input{width:100%;height:40px}
 <div id="vB" hidden><div class="card pl-card"><div class="pl-h"><h2>Conta bancária</h2><span id="ctBk"></span></div><div class="pw" id="bkA"></div></div></div>
 <div id="vG" hidden>
  <div class="gbar">
-  <input id="gq" type="search" placeholder="Pesquisa inteligente nos gráficos: nubank outubro >
-  <button class="gf-btn" type="button" onclick="$('#gfdlg').showModal()" aria-haspopup="dialog">
-   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+  <input id="gq" type="search" placeholder="Pesquisa inteligente nos gráficos: nubank outubro &gt;500, cat:lazer…" oninput="gset('q',this.value)" autocomplete="off" aria-label="Pesquisar nos gráficos">
+  <button class="gf-btn" type="button" onclick="gfAbrir()" aria-haspopup="dialog">
+   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
    Filtros <span class="gf-n" id="gf-n" hidden></span>
   </button>
  </div>
  <dialog id="gfdlg" class="gfd">
-  <div class="dh"><h2>Filtros</h2><button class="ic" type="button" onclick="$('#gfdlg').close()" aria-label="Fechar">✕</button></div>
-  <div class="db">
-   <div class="gfilt">
-    <div class="per"><select id="gm1" onchange="gset('from',this.value)" aria-label="Período de início"></select><select id="gm2" onchange="gset('to',this.value)" aria-label="Período de fim"></select></div>
+  <div class="gfd-top"><button class="ic" id="gf-back" type="button" onclick="gfMenu()" aria-label="Voltar" hidden>←</button><h2 id="gf-title">Filtros</h2><button class="ic" type="button" onclick="$('#gfdlg').close()" aria-label="Fechar">✕</button></div>
+  <div class="gfd-list" id="gf-list"></div>
+  <div class="gfd-foot"><button class="btn" type="button" onclick="gfClear()">Limpar filtros</button><button class="btn p" type="button" onclick="$('#gfdlg').close()">Pronto</button></div>
+  <div hidden>
+   <div class="per"><select id="gm1" onchange="gset('from',this.value)" aria-label="Período de início"></select><select id="gm2" onchange="gset('to',this.value)" aria-label="Período de fim"></select></div>
   <select id="gt" onchange="gset('tipo',this.value)" aria-label="Tipo"><option value="">Todos os tipos</option><option>Receita</option><option>Despesa</option></select>
   <select id="gs" onchange="gset('status',this.value)" aria-label="Status"><option value="">Todos os status</option><option value="pago">Pago / Recebido</option><option value="pendente">Pendente</option><option value="atrasado">Atrasado</option></select>
   <select id="gcat" onchange="gset('cat',this.value)" aria-label="Categoria"></select>
   <select id="gsub" onchange="gset('sub',this.value)" aria-label="Subcategoria"></select>
   <select id="gcon" onchange="gset('conta',this.value)" aria-label="Conta"></select>
   <select id="gcar" onchange="gset('cartao',this.value)" aria-label="Cartão"></select>
-   </div>
-  </div>
-  <div class="df">
-   <button class="btn" type="button" onclick="gfClear()">Limpar filtros</button>
-   <button class="btn p" type="button" onclick="$('#gfdlg').close()">Aplicar</button>
   </div>
  </dialog>
  <div class="gchips" id="gchips"></div>
