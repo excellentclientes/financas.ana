@@ -290,6 +290,21 @@ const sumBy=(a,f)=>{const o={};a.forEach(x=>{const k=f(x);o[k]=(o[k]||0)+x.valor
 function setView(v){['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
 function gfCount(){const n=['from','to','tipo','status','cat','sub','conta','cartao'].filter(k=>G[k]).length;const e=$('#gf-n');if(e){e.textContent=n;e.hidden=!n}}
 function gfClear(){['from','to','tipo','status','cat','sub','conta','cartao'].forEach(k=>G[k]='');gfCount();grender()}
+const GF_ROWS=[['from','Período inicial','gm1'],['to','Período final','gm2'],['tipo','Tipo','gt'],['status','Status','gs'],['cat','Categoria','gcat'],['sub','Subcategoria','gsub'],['conta','Conta','gcon'],['cartao','Cartão de crédito','gcar']];
+function gfTxt(key,selId){const v=G[key];if(!v)return 'Todos';const o=Array.from($('#'+selId).options).find(x=>x.value===v);return o?o.text:v}
+function gfMenu(){
+ $('#gf-title').textContent='Filtros';$('#gf-back').hidden=true;
+ $('#gf-list').onclick=null;
+ $('#gf-list').innerHTML=GF_ROWS.map(([k,l,id])=>{const on=!!G[k];return `<button class="gfd-row${on?' on':''}" type="button" onclick="gfOpcoes('${k}')"><span>${esc(l)}</span><small>${esc(gfTxt(k,id))}</small></button>`}).join('');
+}
+function gfOpcoes(key){
+ const row=GF_ROWS.find(r=>r[0]===key);if(!row)return;
+ const sel=$('#'+row[2]);
+ $('#gf-title').textContent=row[1];$('#gf-back').hidden=false;
+ $('#gf-list').innerHTML=Array.from(sel.options).map(o=>{const on=(o.value===(G[key]||''));return `<button class="gfd-row${on?' on':''}" type="button" data-v="${esc(o.value)}" data-k="${key}"><span>${esc(o.text)}</span>${on?'<span class="ck">✓</span>':''}</button>`}).join('');
+ $('#gf-list').onclick=e=>{const b=e.target.closest('.gfd-row');if(!b)return;gset(b.dataset.k,b.dataset.v);gfMenu()};
+}
+function gfAbrir(){gfMenu();$('#gfdlg').showModal()}
 function gset(k,v){G[k]=v;if(k==='cat')G.sub='';if(k==='from'&&v&&G.to&&v>G.to)G.to=v;if(k==='to'&&v&&G.from&&v<G.from)G.from=v;gfCount();grender()}
 document.getElementById('gfdlg').addEventListener('close',gfCount);
 gfCount();
