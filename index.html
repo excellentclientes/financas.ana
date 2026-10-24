@@ -384,6 +384,12 @@ dialog.gfd{width:min(380px,94vw);padding:0;border-radius:20px}
 #vL>.tw .foot{position:sticky;bottom:0;z-index:6;background:#fff}
 @media(max-width:820px){#vL>.tw{height:calc(100vh - 230px) !important}}
 </style>
+<style>
+/* Filtros da lista: busca compacta ao lado de ano, mês e tipo */
+#vL .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#vL .filters #q.qbusca{flex:0 1 280px;min-width:180px;max-width:320px;height:40px}
+#vL .filters select{height:40px;min-width:150px}
+</style>
 <header><div class="top">
  <button class="pf-brand" id="perfil-btn" onclick="perfilOpen()" aria-label="Abrir perfil"><span class="avatar" id="av"></span><span class="pf-txt"><b id="av-nome">Carregando…</b><small>Gestão financeira</small></span></button>
  <nav class="views" aria-label="Seções do sistema"><button data-v="l" class="on" onclick="setView('l')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-1.8L12 21l-3-1.8L6 21z"/><path d="M9.5 8h5M9.5 12h5"/></svg>Lançamentos</button><button data-v="p" onclick="setView('p')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M8 3v4M16 3v4M4 10h16M9.5 15l2 2 3.5-4"/></svg>Planejamento</button><button data-v="c" onclick="setView('c')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3.5"/><path d="M2.5 10h19M6.5 15h4"/></svg>Cartão de Crédito</button><button data-v="t" onclick="setView('t')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h15M15.5 4.5 19 8l-3.5 3.5M20 16H5M8.5 12.5 5 16l3.5 3.5"/></svg>Transferências</button><button data-v="b" onclick="setView('b')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5z"/><path d="M5.5 12v5M10 12v5M14 12v5M18.5 12v5M3 20.5h18"/></svg>Conta bancária</button><button data-v="g" onclick="setView('g')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5"/></svg>Gráficos</button></nav>
@@ -407,8 +413,9 @@ dialog.gfd{width:min(380px,94vw);padding:0;border-radius:20px}
  <div class="stky" id="stky">
  <div class="trow"><div class="tabs"><button data-t="" onclick="setTab('')">Todos <em>0</em></button><button data-t="pago" onclick="setTab('pago')">Pagos / Recebidos <em>0</em></button><button data-t="pendente" onclick="setTab('pendente')">Pendentes <em>0</em></button></div><div class="kmini" id="kmini"></div><button class="btn cfgb" onclick="openCols()" title="Escolher as colunas da tabela"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="t">Configurar tabela</span></button></div>
  <div class="filters">
-  <input id="q" type="search" placeholder="Pesquise qualquer coisa: descrição, valor, data, mês, conta, status…" oninput="render()" autocomplete="off" aria-label="Pesquisar em todas as colunas">
-  <select id="fm" onchange="render()"></select>
+  <input id="q" class="qbusca" type="search" placeholder="Pesquise qualquer coisa: descrição, valor, data, mês, conta, status…" oninput="render()" autocomplete="off" aria-label="Pesquisar em todas as colunas">
+  <select id="fy" onchange="fyChange()" aria-label="Ano"></select>
+  <select id="fm" onchange="render()" aria-label="Mês"></select>
   <select id="ft" onchange="render()"><option value="">Todos os tipos</option><option>Receita</option><option>Despesa</option></select>
  </div>
  </div>
