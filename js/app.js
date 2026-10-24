@@ -110,7 +110,7 @@ cardsSave();
 const st=x=>x.status==='pago'?'pago':(x.venc<TODAY?'atrasado':'pendente');
 const stLabel=x=>({pago:x.tipo==='Receita'?'Recebido':'Pago',pendente:'Pendente',atrasado:'Atrasado'}[st(x)]);
 
-let TAB='pendente';const TABN={pendente:'Pendentes',pago:'Pagos / Recebidos','':'Todos os status'};
+let TAB='';const TABN={pendente:'Pendentes',pago:'Pagos / Recebidos','':'Todos os status'};
 function setTab(t){TAB=t;render()}
 /* ===== Busca inteligente: pesquisa em todas as colunas ===== */
 const nrm=s=>String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\u00a0/g,' ').toLowerCase();
