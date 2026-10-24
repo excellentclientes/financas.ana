@@ -116,7 +116,11 @@ async function sincronizarEmSegundoPlano(uid) {
     Object.entries(nuvem).forEach(([k, v]) => {
       if (localStorage.getItem(k) !== v) { origSet(k, v); mudou = true; }
     });
-    if (mudou) location.reload();           // recarrega com os dados atualizados
+    // Recarrega uma única vez por aba para aplicar os dados novos (evita loop de recarregamento)
+    if (mudou && !sessionStorage.getItem("fluxo_recarregou")) {
+      sessionStorage.setItem("fluxo_recarregou", "1");
+      location.reload();
+    }
   } catch (err) {
     console.error("Firebase (sincronização):", err);
   } finally {
@@ -264,6 +268,7 @@ window.perfCancelar = () => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  atualizarAvatar();
   const cv = $p("#pf-cv"), zoom = $p("#pf-zoom"), file = $p("#pf-file");
   if (!cv) return;
 
