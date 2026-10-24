@@ -228,7 +228,7 @@ function fgVis(){
  // receita já recebida: a data relevante é a de recebimento, não o vencimento
  $('#f_venc').closest('.fg').hidden=!despesa&&$('#f_status').value==='pago';
 }
-$('#f_status').addEventListener('change',fgVis);
+$('#f_status').addEventListener('change',()=>{if($('#f_status').value==='pago'&&!$('#f_pgto').value)$('#f_pgto').value=TODAY;fgVis()});
 $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
@@ -240,7 +240,7 @@ function openF(n){
  const x=x0||{tipo:'Despesa',status:'pendente',desc:'',valor:'',qtd:1,venc:TODAY,pgto:'',compra:TODAY,parc:'1/1',conta:CONTAS[0]||'',cartao:''};
  $('#f_tipo').value=x.tipo;fillCat(x.cat,x.sub);
  $('#f_status').value=x.status;$('#f_desc').value=x.desc;$('#f_valor').value=x.valor;$('#f_qtd').value=x.qtd;$('#f_venc').value=x.venc;
- $('#f_pgto').value=x.pgto;$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();
+ $('#f_pgto').value=x.pgto||(n?'':TODAY);$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();
  $('#dlg').showModal();
 }
 function save(e){
