@@ -177,17 +177,24 @@ document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&
 
 function filtered(tab=TAB){
  const Q=getQ(),t=$('#ft').value,m=$('#fm').value,yr=$('#fy').value;
- return D.filter(x=>(!t||x.tipo===t)&&(!tab||(tab==='pago'?st(x)==='pago':st(x)!=='pago'))&&(!m||x.venc.startsWith(m))&&(!yr||x.venc.startsWith(yr))&&matchQ(x,Q)).sort((a,b)=>a.venc.localeCompare(b.venc)||a.n-b.n);
+ return D.filter(x=>(!t||x.tipo===t)&&(!tab||(tab==='pago'?st(x)==='pago':st(x)!=='pago'))&&(!m||(yr?x.venc.startsWith(m):x.venc.slice(5,7)===m))&&(!yr||x.venc.startsWith(yr))&&matchQ(x,Q)).sort((a,b)=>a.venc.localeCompare(b.venc)||a.n-b.n);
 }
 function months(){
- const y=$('#fy').value,cur=$('#fm').value,curY=y;
+ const y=$('#fy').value,cur=$('#fm').value;
  const anos=[...new Set(D.map(x=>x.venc.slice(0,4)))].sort().reverse();
  $('#fy').innerHTML='<option value="">Todos os anos</option>'+anos.map(a=>`<option value="${a}">${a}</option>`).join('');
- $('#fy').value=anos.includes(curY)?curY:'';
- const yy=$('#fy').value;
- const ms=[...new Set(D.map(x=>x.venc.slice(0,7)))].filter(m=>!yy||m.startsWith(yy)).sort().reverse();
- $('#fm').innerHTML='<option value="">Todos os meses</option>'+ms.map(m=>`<option value="${m}">${mlabel(m)}</option>`).join('');
- $('#fm').value=ms.includes(cur)?cur:'';
+ const yy=anos.includes(y)?y:'';
+ $('#fy').value=yy;
+ let opts;
+ if(yy){
+  // com ano: meses do ano escolhido (valor AAAA-MM), sem repetir o ano no nome
+  opts=[...new Set(D.filter(x=>x.venc.startsWith(yy)).map(x=>x.venc.slice(0,7)))].sort().reverse().map(m=>[m,MN[+m.slice(5,7)-1]]);
+ }else{
+  // sem ano: nome do mês vale para todos os anos (valor MM)
+  opts=[...new Set(D.map(x=>x.venc.slice(5,7)))].sort().map(mm=>[mm,MN[+mm-1]]);
+ }
+ $('#fm').innerHTML='<option value="">Todos os meses</option>'+opts.map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+ $('#fm').value=opts.some(o=>o[0]===cur)?cur:'';
 }
 function fyChange(){months();render()}
 const sum=(a,f)=>a.filter(f).reduce((s,x)=>s+x.valor,0);
@@ -401,7 +408,7 @@ function ccRender(){
  const yr=$('#kyr'),now=new Date();if(!yr.options.length)for(let y=now.getFullYear()-2;y<=now.getFullYear()+3;y++)yr.add(new Option(y,y));yr.value=KY;
  const cur=KY===now.getFullYear()?now.getMonth():-1,rd=v=>Math.round(v*100)/100,used={},mon={};
  CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
- D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||st(x)==='pago'||!(x.cartao in used))return;used[x.cartao]+=x.valor;if(x.venc.slice(0,4)===String(KY))mon[x.cartao][+x.venc.slice(5,7)-1]+=x.valor});
+ D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;if(st(x)!=='pago'&&x.venc.slice(0,4)===String(KY))mon[x.cartao][+x.venc.slice(5,7)-1]+=x.valor});
  const cs=CARDS.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt')),pc=(g,l)=>l>0?g/l*100:null,
   bar=p=>p==null?'<span style="color:var(--mut)">Sem limite</span>':`<div class="ub"><span><i class="${p>=90?'hi':p>=70?'mid':''}" style="width:${Math.min(100,p)}%"></i></span><b>${p.toFixed(1).replace('.',',')}%</b></div>`;
  let tl=0,tg=0;
@@ -572,7 +579,7 @@ function pdfCard(){
  if(!window.jspdf)return pdfNoJsp();
  const{doc,W,M}=pdfNew('Relatório de Cartões de Crédito',`Ano ${KY}  |  Limite e valores em aberto`);
  const used={},mon={};CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
- D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||st(x)==='pago'||!(x.cartao in used))return;used[x.cartao]+=x.valor;if(x.venc.slice(0,4)===String(KY))mon[x.cartao][+x.venc.slice(5,7)-1]+=x.valor});
+ D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;if(st(x)!=='pago'&&x.venc.slice(0,4)===String(KY))mon[x.cartao][+x.venc.slice(5,7)-1]+=x.valor});
  const tl=CARDS.reduce((a,c)=>a+c.limite,0),tg=CARDS.reduce((a,c)=>a+used[c.nome],0);
  pdfKpis(doc,W,M,100,[['Limite total',tl,PDFC.TL],['Valor em aberto',tg,PDFC.AM],['Limite disponível',tl-tg,PDFC.GR],['Uso do limite',pdfPct(tg,tl),PDFC.RS]]);
  let y=pdfTitle(doc,M,180,'Cartões');
