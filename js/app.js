@@ -177,7 +177,7 @@ document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&
 
 function filtered(tab=TAB){
  const Q=getQ(),t=$('#ft').value,m=$('#fm').value;
- return D.filter(x=>(!t||x.tipo===t)&&(!tab||(tab==='pago'?st(x)==='pago':st(x)!=='pago'))&&(!m||x.venc.startsWith(m))&&matchQ(x,Q)).sort((a,b)=>b.venc.localeCompare(a.venc)||b.n-a.n);
+ return D.filter(x=>(!t||x.tipo===t)&&(!tab||(tab==='pago'?st(x)==='pago':st(x)!=='pago'))&&(!m||x.venc.startsWith(m))&&matchQ(x,Q)).sort((a,b)=>a.venc.localeCompare(b.venc)||a.n-b.n);
 }
 function months(){const cur=$('#fm').value,ms=[...new Set(D.map(x=>x.venc.slice(0,7)))].sort().reverse();
  $('#fm').innerHTML='<option value="">Todos os meses</option>'+ms.map(m=>`<option value="${m}">${mlabel(m)}</option>`).join('');$('#fm').value=cur}
