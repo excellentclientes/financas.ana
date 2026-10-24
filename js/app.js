@@ -454,7 +454,9 @@ function plRender(focus){
 }
 function plFillCats(c){const t=$('#p_t').value,ks=Object.keys(PC[t]).sort(pt);$('#p_c').innerHTML=ks.length?ks.map(k=>`<option>${esc(k)}</option>`).join(''):'<option value="">Nenhuma categoria cadastrada</option>';if(c&&ks.includes(c))$('#p_c').value=c;plFillSubs()}
 function plFillSubs(sb){const t=$('#p_t').value,ss=(PC[t][$('#p_c').value]||[]).slice().sort(pt);$('#p_s').innerHTML=ss.length?ss.map(k=>`<option>${esc(k)}</option>`).join(''):'<option value="">Nenhuma subcategoria cadastrada</option>';if(sb&&ss.includes(sb))$('#p_s').value=sb}
-function plOpen(id,m){const r=id?PL.find(x=>x.id===id):null,now=new Date();
+function plOpen(id,m){
+ if(!id&&!['Despesa','Receita'].some(t=>Object.values(PC[t]).some(a=>a.length))){toast('Configure categoria e subcategoria em “Configurar tabela” antes de planejar');return}
+ const r=id?PL.find(x=>x.id===id):null,now=new Date();
  $('#p_y').textContent='Ano de referência: '+PY+'. Categorias e subcategorias vêm de “Configurar tabela”.';
  $('#p_m').innerHTML=MN.map((n,i)=>`<option value="${i}">${n}</option>`).join('');
  $('#p_t').value=r?r.t:'Despesa';$('#p_m').value=m!=null?m:(PY===now.getFullYear()?now.getMonth():0);
@@ -463,6 +465,7 @@ function plOpen(id,m){const r=id?PL.find(x=>x.id===id):null,now=new Date();
  $('#p_del').hidden=v==null;$('#pdt').textContent=v!=null?'Editar valor':'Novo cadastro';$('#pdlg').showModal();
  (r?$('#p_v'):$('#p_c')).focus()}
 function plSave(e){e.preventDefault();const t=$('#p_t').value,m=+$('#p_m').value,val=parseMoney($('#p_v').value),c=$('#p_c').value,sb=$('#p_s').value;
+ if(!c||!sb){toast('Configure categoria e subcategoria em “Configurar tabela” antes de planejar');return false}
  if(!c||!sb){toast('Cadastre a categoria e a subcategoria em “Configurar tabela”');return false}
  if(!isFinite(val)||val<0){toast('Informe um valor válido');return false}
  const r=PL.find(x=>x.t===t&&x.c===c&&x.s===sb);if(!r){toast('Subcategoria não encontrada');return false}
