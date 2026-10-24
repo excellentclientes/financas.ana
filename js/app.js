@@ -60,7 +60,7 @@ function banksSave(){try{localStorage.setItem('fluxo_banks',JSON.stringify(BANKS
 function trSave_(){try{localStorage.setItem('fluxo_transf',JSON.stringify(TR))}catch(e){}}
 function parseMon(v){return parseMoney(v)}
 syncContas();
-const saldoAtual=b=>b.saldo+D.filter(x=>x.conta===b.nome&&x.tipo==='Receita'&&st(x)==='pago').reduce((a,x)=>a+x.valor,0);
+const saldoAtual=b=>b.saldo+D.filter(x=>x.conta===b.nome&&st(x)==='pago').reduce((a,x)=>a+(x.tipo==='Receita'?x.valor:-x.valor),0);
 const bkAtivos=()=>BANKS.filter(b=>b.status==='Ativo');
 const bkBadge=s=>`<span class="bst ${s==='Ativo'?'on':'off'}">${s}</span>`;
 
