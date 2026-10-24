@@ -299,10 +299,11 @@ function gfMenu(){
 }
 function gfOpcoes(key){
  const row=GF_ROWS.find(r=>r[0]===key);if(!row)return;
+ event&&event.stopPropagation();
  const sel=$('#'+row[2]);
  $('#gf-title').textContent=row[1];$('#gf-back').hidden=false;
  $('#gf-list').innerHTML=Array.from(sel.options).map(o=>{const on=(o.value===(G[key]||''));return `<button class="gfd-row${on?' on':''}" type="button" data-v="${esc(o.value)}" data-k="${key}"><span>${esc(o.text)}</span>${on?'<span class="ck">✓</span>':''}</button>`}).join('');
- $('#gf-list').onclick=e=>{const b=e.target.closest('.gfd-row');if(!b)return;gset(b.dataset.k,b.dataset.v);gfMenu()};
+ $('#gf-list').onclick=e=>{const b=e.target.closest('.gfd-row');if(!b||!b.dataset.k)return;gset(b.dataset.k,b.dataset.v);gfMenu()};
 }
 function gfAbrir(){gfMenu();$('#gfdlg').showModal()}
 function gset(k,v){G[k]=v;if(k==='cat')G.sub='';if(k==='from'&&v&&G.to&&v>G.to)G.to=v;if(k==='to'&&v&&G.from&&v<G.from)G.from=v;gfCount();grender()}
