@@ -345,6 +345,20 @@ main{flex:1;min-height:0;overflow:auto;width:100%;display:flex;flex-direction:co
 #toast-pop::backdrop{background:transparent}
 @keyframes tpIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
 </style>
+<style>
+/* Filtros da aba Gráficos: barra simples + painel */
+.gbar{display:flex;gap:10px;align-items:center;margin:14px 0 10px}
+.gbar input{flex:1;min-width:0;height:42px;font:inherit;font-size:14px;padding:9px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+.gf-btn{display:inline-flex;align-items:center;gap:8px;height:42px;padding:0 16px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;font-weight:600;font-size:14px;color:var(--ink);cursor:pointer;flex:none}
+.gf-btn:hover{background:#f5f8f7}
+.gf-n{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#0f766e;color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.gf-n[hidden]{display:none}
+dialog.gfd{width:min(600px,94vw)}
+dialog.gfd .gfilt{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+dialog.gfd .gfilt .per{grid-column:1/-1}
+dialog.gfd .gfilt select,dialog.gfd .gfilt input{width:100%;height:40px}
+.gfd .db{padding:18px 20px}
+</style>
 <header><div class="top">
  <button class="pf-brand" id="perfil-btn" onclick="perfilOpen()" aria-label="Abrir perfil"><span class="avatar" id="av"></span><span class="pf-txt"><b id="av-nome">Carregando…</b><small>Gestão financeira</small></span></button>
  <nav class="views" aria-label="Seções do sistema"><button data-v="l" class="on" onclick="setView('l')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-1.8L12 21l-3-1.8L6 21z"/><path d="M9.5 8h5M9.5 12h5"/></svg>Lançamentos</button><button data-v="p" onclick="setView('p')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M8 3v4M16 3v4M4 10h16M9.5 15l2 2 3.5-4"/></svg>Planejamento</button><button data-v="c" onclick="setView('c')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3.5"/><path d="M2.5 10h19M6.5 15h4"/></svg>Cartão de Crédito</button><button data-v="t" onclick="setView('t')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h15M15.5 4.5 19 8l-3.5 3.5M20 16H5M8.5 12.5 5 16l3.5 3.5"/></svg>Transferências</button><button data-v="b" onclick="setView('b')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5z"/><path d="M5.5 12v5M10 12v5M14 12v5M18.5 12v5M3 20.5h18"/></svg>Conta bancária</button><button data-v="g" onclick="setView('g')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5"/></svg>Gráficos</button></nav>
@@ -400,16 +414,31 @@ main{flex:1;min-height:0;overflow:auto;width:100%;display:flex;flex-direction:co
 <div id="vT" hidden><div class="card pl-card"><div class="pl-h"><h2>Transferências</h2><span id="ctT"></span></div><div class="pw" id="trA"></div></div></div>
 <div id="vB" hidden><div class="card pl-card"><div class="pl-h"><h2>Conta bancária</h2><span id="ctBk"></span></div><div class="pw" id="bkA"></div></div></div>
 <div id="vG" hidden>
- <div class="filters gfilt">
-  <input id="gq" class="wide" type="search" placeholder="Pesquisa inteligente nos gráficos: nubank outubro >500, cat:lazer…" oninput="gset('q',this.value)" autocomplete="off" aria-label="Pesquisar nos gráficos">
-  <div class="per"><select id="gm1" onchange="gset('from',this.value)" aria-label="Período de início"></select><select id="gm2" onchange="gset('to',this.value)" aria-label="Período de fim"></select></div>
+ <div class="gbar">
+  <input id="gq" type="search" placeholder="Pesquisa inteligente nos gráficos: nubank outubro >
+  <button class="gf-btn" type="button" onclick="$('#gfdlg').showModal()" aria-haspopup="dialog">
+   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+   Filtros <span class="gf-n" id="gf-n" hidden></span>
+  </button>
+ </div>
+ <dialog id="gfdlg" class="gfd">
+  <div class="dh"><h2>Filtros</h2><button class="ic" type="button" onclick="$('#gfdlg').close()" aria-label="Fechar">✕</button></div>
+  <div class="db">
+   <div class="gfilt">
+    <div class="per"><select id="gm1" onchange="gset('from',this.value)" aria-label="Período de início"></select><select id="gm2" onchange="gset('to',this.value)" aria-label="Período de fim"></select></div>
   <select id="gt" onchange="gset('tipo',this.value)" aria-label="Tipo"><option value="">Todos os tipos</option><option>Receita</option><option>Despesa</option></select>
   <select id="gs" onchange="gset('status',this.value)" aria-label="Status"><option value="">Todos os status</option><option value="pago">Pago / Recebido</option><option value="pendente">Pendente</option><option value="atrasado">Atrasado</option></select>
   <select id="gcat" onchange="gset('cat',this.value)" aria-label="Categoria"></select>
   <select id="gsub" onchange="gset('sub',this.value)" aria-label="Subcategoria"></select>
   <select id="gcon" onchange="gset('conta',this.value)" aria-label="Conta"></select>
   <select id="gcar" onchange="gset('cartao',this.value)" aria-label="Cartão"></select>
- </div>
+   </div>
+  </div>
+  <div class="df">
+   <button class="btn" type="button" onclick="gfClear()">Limpar filtros</button>
+   <button class="btn p" type="button" onclick="$('#gfdlg').close()">Aplicar</button>
+  </div>
+ </dialog>
  <div class="gchips" id="gchips"></div>
  <section class="kpis" id="gkpis"></section>
  <section class="gg">
