@@ -387,10 +387,10 @@ function grender(){
  $('#g_t2').textContent=P+' por subcategoria';$('#g_sub').innerHTML=hbars(sumBy(gf(['sub']).filter(x=>x.tipo===DT),x=>x.cat+'|'+x.sub).slice(0,8).map(([k,v])=>[k.split('|')[1],v,k]),'sub',G.sub?G.cat+'|'+G.sub:'');
  $('#g_t3').textContent=P+' por conta';$('#g_acc').innerHTML=hbars(sumBy(gf(['conta']).filter(x=>x.tipo===DT),x=>x.conta),'conta',G.conta);
  $('#g_t4').textContent=P+' por cartão de crédito';$('#g_car').innerHTML=hbars(sumBy(gf(['cartao']).filter(x=>x.tipo===DT&&x.cartao),x=>x.cartao),'cartao',G.cartao);
- $('#g_t5').textContent='Saldo por conta bancária';$('#g_saldo').innerHTML=hbars(bkAtivos().map(b=>[b.nome,saldoAtual(b),b.nome]).sort((a,b)=>b[1]-a[1]),'conta',G.conta);
+ $('#g_t6').textContent='Situação dos saldos';$('#g_saldo').innerHTML=hbars(bkAtivos().map(b=>[b.nome,saldoAtual(b),b.nome]).sort((a,b)=>b[1]-a[1]),'conta',G.conta);
  const SL={pago:DT==='Receita'?'Recebido':'Pago',pendente:'Pendente',atrasado:'Atrasado'},SC={pago:'#047857',pendente:'#f59e0b',atrasado:'#be123c'},sr=gf(['status']).filter(x=>x.tipo===DT),sb={};
  sr.forEach(x=>{const k=st(x);(sb[k]=sb[k]||{v:0,n:0}).v+=x.valor;sb[k].n++});
- $('#g_t5').textContent='Situação das '+P.toLowerCase();
+ $('#g_t5').textContent='Status';
  $('#g_sta').innerHTML=sr.length?`<div class="stk">${Object.keys(SL).filter(k=>sb[k]).map(k=>`<i data-g="status" data-v="${k}" title="${SL[k]}: ${brl(sb[k].v)}" style="flex:${sb[k].v};background:${SC[k]};opacity:${G.status&&G.status!==k?.3:1}"></i>`).join('')}</div>`+Object.keys(SL).map(k=>`<div class="lgr" data-g="status" data-v="${k}" style="opacity:${G.status&&G.status!==k?.4:1}"><u style="background:${SC[k]}"></u>${SL[k]} <em>${sb[k]?sb[k].n:0} lanç.</em><b>${brl(sb[k]?sb[k].v:0)}</b></div>`).join(''):EMPTY;
  $('#g_top').innerHTML=[...L].sort((a,b)=>b.valor-a.valor).slice(0,5).map(x=>`<div class="rk"><div><b style="font-weight:600">${esc(x.desc)}</b><small>${esc(x.cat)} · ${fd(x.venc)} · ${stLabel(x)}</small></div><span class="v ${x.tipo==='Receita'?'rec':'des'}">${x.tipo==='Receita'?'+':'−'} ${brl(x.valor)}</span></div>`).join('')||EMPTY;
  $('#g_sal').innerHTML=gSal(L);
