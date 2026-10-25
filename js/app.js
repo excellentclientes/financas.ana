@@ -278,7 +278,7 @@ function save(e){
  if(o.tipo!=='Despesa'){o.compra=o.venc;o.parc='1/1';o.cartao=''}
  else if(!o.cartao){o.parc='1/1'}
  if(o.tipo==='Receita'&&o.status==='pago'){o.pgto=o.pgto||TODAY;o.venc=o.pgto}
- if(o.status==='pago'&&!o.pgto)o.pgto=o.venc;if(o.status==='pendente')o.pgto='';
+ if(o.status==='pago'&&!o.pgto)o.pgto=TODAY;if(o.status==='pendente')o.pgto='';
  if(editing){Object.assign(D.find(i=>i.n===editing),o)}else{o.n=Math.max(0,...D.map(i=>i.n))+1;D.push(o)}
  persist();months();render();$('#dlg').close();toast(editing?'Lançamento atualizado':'Lançamento salvo');return false;
 }
@@ -419,7 +419,7 @@ function ccRender(){
  const yr=$('#kyr'),now=new Date();if(!yr.options.length)for(let y=now.getFullYear()-2;y<=now.getFullYear()+3;y++)yr.add(new Option(y,y));yr.value=KY;
  const cur=KY===now.getFullYear()?now.getMonth():-1,rd=v=>Math.round(v*100)/100,used={},mon={};
  CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
- D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
+ D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||st(x)!=='pago'||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
  const cs=CARDS.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt')),pc=(g,l)=>l>0?g/l*100:null,
   bar=p=>p==null?'<span style="color:var(--mut)">Sem limite</span>':`<div class="ub"><span><i class="${p>=90?'hi':p>=70?'mid':''}" style="width:${Math.min(100,p)}%"></i></span><b>${p.toFixed(1).replace('.',',')}%</b></div>`;
  let tl=0,tg=0;
@@ -441,7 +441,7 @@ function ccRender(){
 // Fatura: compra antes do dia de pagamento cai na fatura deste mês; a partir do dia, cai na do mês seguinte
 function faturaDe(x){
  const card=CARDS.find(c=>c.nome===x.cartao);
- const base=(x.compra||x.venc);
+ const base=(x.pgto||x.compra||x.venc);
  if(!card||!card.diaPag)return{m:x.venc.slice(0,7)};
  let [y,mo,d]=base.split('-').map(Number);
  if(d>=card.diaPag){mo++;if(mo>12){mo=1;y++}}
@@ -602,7 +602,7 @@ function pdfCard(){
  if(!window.jspdf)return pdfNoJsp();
  const{doc,W,M}=pdfNew('Relatório de Cartões de Crédito',`Ano ${KY}  |  Limite e valores em aberto`);
  const used={},mon={};CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
- D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
+ D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||st(x)!=='pago'||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
  const tl=CARDS.reduce((a,c)=>a+c.limite,0),tg=CARDS.reduce((a,c)=>a+used[c.nome],0);
  pdfKpis(doc,W,M,100,[['Limite total',tl,PDFC.TL],['Valor em aberto',tg,PDFC.AM],['Limite disponível',tl-tg,PDFC.GR],['Uso do limite',pdfPct(tg,tl),PDFC.RS]]);
  let y=pdfTitle(doc,M,180,'Cartões');
