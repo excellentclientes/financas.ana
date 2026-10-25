@@ -212,11 +212,12 @@ const sum=(a,f)=>a.filter(f).reduce((s,x)=>s+x.valor,0);
 
 function render(){
  const L=filtered(''),T=filtered(),rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),pend=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago'),atr=L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length;
- $('#kpis').innerHTML=`<div class="card kpi main"><span>Saldo do período</span><b>${brl(rec-des)}</b><i>${L.length} lançamentos</i></div>
+ const saldoIni=bkAtivos().reduce((a,b)=>a+b.saldo,0);
+ $('#kpis').innerHTML=`<div class="card kpi main" style="cursor:pointer" onclick="setView('b')" title="Ver contas bancárias"><span>Saldo</span><b>${brl(saldoIni+rec-des)}</b><i>${L.length} lançamentos</i></div>
  <div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b><i>${L.filter(x=>x.tipo==='Receita').length} entradas</i></div>
  <div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b><i>${L.filter(x=>x.tipo==='Despesa').length} saídas</i></div>
  <div class="card kpi"><span>Despesas em aberto</span><b>${brl(pend)}</b><i>${atr} em atraso</i></div>`;
- $('#kmini').innerHTML=`<div class="km main"><span>Saldo do período</span><b>${brl(rec-des)}</b></div><div class="km"><span>Receitas</span><b class="rec">${brl(rec)}</b></div><div class="km"><span>Despesas</span><b class="des">${brl(des)}</b></div><div class="km"><span>Despesas em aberto</span><b>${brl(pend)}</b></div>`;
+ $('#kmini').innerHTML=`<div class="km main" style="cursor:pointer" onclick="setView('b')"><span>Saldo</span><b>${brl(saldoIni+rec-des)}</b></div><div class="km"><span>Receitas</span><b class="rec">${brl(rec)}</b></div><div class="km"><span>Despesas</span><b class="des">${brl(des)}</b></div><div class="km"><span>Despesas em aberto</span><b>${brl(pend)}</b></div>`;
  const bc={};L.filter(x=>x.tipo==='Despesa').forEach(x=>bc[x.cat]=(bc[x.cat]||0)+x.valor);
  const top=Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,6),mx=top[0]?top[0][1]:1;
  $('#cats').innerHTML=top.map(([c,v])=>`<div class="bar"><span>${c}</span><div><i style="width:${v/mx*100}%"></i></div><b>${brl(v)}</b></div>`).join('')||'<p class="empty">Sem despesas no filtro.</p>';
