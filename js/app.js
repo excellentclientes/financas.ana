@@ -76,9 +76,20 @@ function bkSave(e){e.preventDefault();const n=nm($('#bk_n').value),sv=parseMon($
  if(BKE){const b=BANKS.find(x=>x.id===BKE);if(b.nome!==n){D.forEach(x=>{if(x.conta===b.nome)x.conta=n});TR.forEach(t=>{if(t.origem===b.nome)t.origem=n});persist();trSave_();b.nome=n}b.saldo=sv;b.data=d;b.status=stt}
  else BANKS.push({id:'b'+Date.now().toString(36),nome:n,saldo:sv,data:d,status:stt});
  banksSave();bkRender();render();trRender();$('#bkdlg').close();toast(BKE?'Conta atualizada':'Conta cadastrada');return false}
+function confirmar(msg,ok='Excluir'){
+ return new Promise(res=>{
+  const d=document.getElementById('confdlg');
+  $('#conf-msg').textContent=msg;$('#conf-ok').textContent=ok;
+  const fim=v=>{d.close();res(v)};
+  $('#conf-ok').onclick=()=>fim(true);
+  $('#conf-no').onclick=()=>fim(false);
+  d.oncancel=e=>{e.preventDefault();fim(false)};
+  d.showModal();$('#conf-no').focus();
+ });
+}
 function bkDel(id){const b=BANKS.find(x=>x.id===id);if(!b)return;const n=D.filter(x=>x.conta===b.nome).length+TR.filter(t=>t.origem===b.nome).length;
  const msg=n?`A conta "${b.nome}" tem ${n} lançamento(s)/transferência(s) vinculados. Excluir mesmo assim? Prefira marcar como Inativa.`:`Excluir a conta "${b.nome}"?`;
- if(confirm(msg)){BANKS=BANKS.filter(x=>x.id!==id);banksSave();bkRender();render();trRender();toast('Conta excluída')}}
+ confirmar(msg).then(ok=>{if(ok){BANKS=BANKS.filter(x=>x.id!==id);banksSave();bkRender();render();trRender();toast('Conta excluída')}})}
 
 function trRender(){
  const nomes=n=>BANKS.some(b=>b.nome===n)?'':' class="bk-off"';
@@ -104,7 +115,7 @@ function trSave(e){e.preventDefault();const v=parseMon($('#tr_v').value),o=$('#t
  const obj={data:$('#tr_d').value,origem:o,destino:t,desc:$('#tr_desc').value.trim(),valor:v,status:$('#tr_st').value};
  if(TRE){Object.assign(TR.find(x=>x.id===TRE),obj)}else TR.push({id:'t'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),...obj});
  trSave_();trRender();$('#trdlg').close();toast(TRE?'Transferência atualizada':'Transferência cadastrada');return false}
-function trDel(id){if(confirm('Excluir esta transferência?')){TR=TR.filter(x=>x.id!==id);trSave_();trRender();toast('Transferência excluída')}}
+function trDel(id){confirmar('Excluir esta transferência?').then(ok=>{if(ok){TR=TR.filter(x=>x.id!==id);trSave_();trRender();toast('Transferência excluída')}})}
 
 cardsSave();
 const st=x=>x.status==='pago'?'pago':(x.venc<TODAY?'atrasado':'pendente');
@@ -272,7 +283,7 @@ function save(e){
  persist();months();render();$('#dlg').close();toast(editing?'Lançamento atualizado':'Lançamento salvo');return false;
 }
 function setStatus(n,v){const x=D.find(i=>i.n===n);x.status=v;x.pgto=v==='pago'?(x.pgto||TODAY):'';persist();render();toast(v==='pago'?(x.tipo==='Receita'?'Marcado como recebido':'Marcado como pago'):'Voltou para pendente')}
-function del(n){if(confirm('Excluir este lançamento?')){D=D.filter(i=>i.n!==n);persist();months();render();toast('Lançamento excluído')}}
+function del(n){confirmar('Excluir este lançamento?').then(ok=>{if(ok){D=D.filter(i=>i.n!==n);persist();months();render();toast('Lançamento excluído')}})}
 function toast(t){
  let e=document.getElementById('toast-pop');
  if(!e){e=document.createElement('div');e.id='toast-pop';e.setAttribute('popover','manual');document.body.appendChild(e)}
@@ -408,7 +419,7 @@ function ccRender(){
  const yr=$('#kyr'),now=new Date();if(!yr.options.length)for(let y=now.getFullYear()-2;y<=now.getFullYear()+3;y++)yr.add(new Option(y,y));yr.value=KY;
  const cur=KY===now.getFullYear()?now.getMonth():-1,rd=v=>Math.round(v*100)/100,used={},mon={};
  CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
- D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;if(st(x)!=='pago'&&x.venc.slice(0,4)===String(KY))mon[x.cartao][+x.venc.slice(5,7)-1]+=x.valor});
+ D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(st(x)!=='pago'&&f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
  const cs=CARDS.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt')),pc=(g,l)=>l>0?g/l*100:null,
   bar=p=>p==null?'<span style="color:var(--mut)">Sem limite</span>':`<div class="ub"><span><i class="${p>=90?'hi':p>=70?'mid':''}" style="width:${Math.min(100,p)}%"></i></span><b>${p.toFixed(1).replace('.',',')}%</b></div>`;
  let tl=0,tg=0;
@@ -427,18 +438,28 @@ function ccRender(){
  box.innerHTML=`<table class="pt" style="width:100%;min-width:${tw}px"><colgroup><col style="width:${W0}px">${'<col style="width:80px">'.repeat(12)}</colgroup><thead><tr><th class="pl-t" style="left:0">Cartão</th>${MS.map((n,m)=>`<th class="m${m===cur?' cur':''}" title="${MN[m]}">${n}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
  box.scrollLeft=sl;$('#ctB').textContent='Total no ano: R$ '+pm(rd(tot.reduce((a,b)=>a+b,0)));
 }
+// Fatura: compra antes do dia de pagamento cai na fatura deste mês; a partir do dia, cai na do mês seguinte
+function faturaDe(x){
+ const card=CARDS.find(c=>c.nome===x.cartao);
+ const base=(x.compra||x.venc);
+ if(!card||!card.diaPag)return{m:x.venc.slice(0,7)};
+ let [y,mo,d]=base.split('-').map(Number);
+ if(d>=card.diaPag){mo++;if(mo>12){mo=1;y++}}
+ return{m:`${y}-${String(mo).padStart(2,'0')}`};
+}
 function ccOpen(id){
- if(!id&&semContaAtiva('Cadastre uma conta bancária antes de adicionar cartões'))return;KE=id||null;const c=id?CARDS.find(x=>x.id===id):null;$('#kdt').textContent=c?'Editar cartão':'Novo cartão';$('#k_n').value=c?c.nome:'';$('#k_l').value=c?String(c.limite).replace('.',','):'';$('#kdlg').showModal();$('#k_n').focus()}
+ if(!id&&semContaAtiva('Cadastre uma conta bancária antes de adicionar cartões'))return;KE=id||null;const c=id?CARDS.find(x=>x.id===id):null;$('#kdt').textContent=c?'Editar cartão':'Novo cartão';$('#k_n').value=c?c.nome:'';$('#k_l').value=c?String(c.limite).replace('.',','):'';$('#k_dia').value=c&&c.diaPag?c.diaPag:'';$('#kdlg').showModal();$('#k_n').focus()}
 function ccSave(e){e.preventDefault();const n=nm($('#k_n').value),l=parseMoney($('#k_l').value);
  if(!n)return false;if(!isFinite(l)||l<0){toast('Informe um limite válido');return false}
  if(CARDS.some(c=>c.id!==KE&&same(c.nome,n))){toast('Já existe um cartão com esse nome');return false}
- const lim=Math.round(l*100)/100;
- if(KE){const c=CARDS.find(x=>x.id===KE);if(c.nome!==n){D.forEach(x=>{if(x.cartao===c.nome)x.cartao=n});if(G.cartao===c.nome)G.cartao=n;persist();c.nome=n}c.limite=lim}
- else CARDS.push({id:'c'+Date.now().toString(36),nome:n,limite:lim});
+ const lim=Math.round(l*100)/100;const dia=parseInt($('#k_dia').value,10);
+ if(!(dia>=1&&dia<=31)){toast('Informe o dia de pagamento da fatura (1 a 31)');return false}
+ if(KE){const c=CARDS.find(x=>x.id===KE);if(c.nome!==n){D.forEach(x=>{if(x.cartao===c.nome)x.cartao=n});if(G.cartao===c.nome)G.cartao=n;persist();c.nome=n}c.limite=lim;c.diaPag=dia}
+ else CARDS.push({id:'c'+Date.now().toString(36),nome:n,limite:lim,diaPag:dia});
  cardsSave();ccRender();render();$('#kdlg').close();toast(KE?'Cartão atualizado':'Cartão cadastrado');return false}
 function ccDel(id){const c=CARDS.find(x=>x.id===id);if(!c)return;const n=D.filter(x=>x.cartao===c.nome).length;
  if(n)return toast(`"${c.nome}" está em uso em ${n} lançamento${n===1?'':'s'}`);
- if(confirm(`Excluir o cartão "${c.nome}"?`)){CARDS=CARDS.filter(x=>x.id!==id);cardsSave();ccRender();toast('Cartão excluído')}}
+ confirmar(`Excluir o cartão "${c.nome}"?`).then(ok=>{if(ok){CARDS=CARDS.filter(x=>x.id!==id);cardsSave();ccRender();toast('Cartão excluído')}})}
 $('#cwA').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;b.dataset.a==='e'?ccOpen(b.dataset.i):ccDel(b.dataset.i)});
 function saveCats(){try{localStorage.setItem('fluxo_cats',JSON.stringify(CATS))}catch(e){}}
 function cfgTab(k){document.querySelectorAll('.cfgtabs button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));$('#cbody').hidden=k!=='c';$('#catbody').hidden=k!=='k';$('#rbtn').hidden=k!=='c';$('#cseg').hidden=k!=='k';$('#cfgp').textContent=k==='c'?'Escolha quais colunas aparecem na tabela de lançamentos.':'Cadastre as categorias e as subcategorias usadas nos lançamentos.';if(k==='k')renderCats()}
@@ -457,7 +478,7 @@ $('#catbody').addEventListener('click',e=>{const b=e.target.closest('[data-a]');
  if(a==='as'){const i=card.querySelector('.addrow input'),v=i.value.trim();if(!v)return i.focus();if(dup(C[c],v))return toast('Essa subcategoria já existe nesta categoria');C[c].push(v);return catsChanged(0)}
  if(a==='rc')return inl(card.querySelector('.cat-h b'),c,v=>{if(!v||v===c)return renderCats();if(dup(Object.keys(C),v,c))return toast('Essa categoria já existe'),renderCats();const n={};Object.keys(C).forEach(k=>n[k===c?v:k]=C[k]);CATS[t]=n;D.forEach(x=>{if(x.tipo===t&&x.cat===c)x.cat=v});catsChanged(1)});
  if(a==='rs')return inl(sc.querySelector('i'),sb,v=>{if(!v||v===sb)return renderCats();if(dup(C[c],v,sb))return toast('Essa subcategoria já existe nesta categoria'),renderCats();C[c]=C[c].map(x=>x===sb?v:x);D.forEach(x=>{if(x.tipo===t&&x.cat===c&&x.sub===sb)x.sub=v});catsChanged(1)});
- if(a==='dc'){const n=D.filter(x=>x.tipo===t&&x.cat===c).length;if(n)return toast(`"${c}" está em uso em ${n} lançamento${n===1?'':'s'}`);if(Object.keys(C).length<2)return toast('Mantenha ao menos uma categoria');if(confirm(`Excluir a categoria "${c}"?`)){delete C[c];catsChanged(0)}return}
+ if(a==='dc'){const n=D.filter(x=>x.tipo===t&&x.cat===c).length;if(n)return toast(`"${c}" está em uso em ${n} lançamento${n===1?'':'s'}`);if(Object.keys(C).length<2)return toast('Mantenha ao menos uma categoria');confirmar(`Excluir a categoria "${c}"?`).then(ok=>{if(ok){delete C[c];catsChanged(0)}});return}
  if(a==='ds'){const n=D.filter(x=>x.tipo===t&&x.cat===c&&x.sub===sb).length;if(n)return toast(`"${sb}" está em uso em ${n} lançamento${n===1?'':'s'}`);if(C[c].length<2)return toast('Cada categoria precisa de ao menos uma subcategoria');C[c]=C[c].filter(x=>x!==sb);catsChanged(0)}
 });
 const MN=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],MS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -545,8 +566,8 @@ $('#pcdlg').addEventListener('click',e=>{const b=e.target.closest('[data-a]');if
  if(a==='as'){const i=card.querySelector('.addrow input'),v=nm(i.value);if(!v)return i.focus();if(C[c].some(k=>same(k,v)))return toast('Essa subcategoria já existe nesta categoria');C[c].push(v);return pcDone(c)}
  if(a==='rc')return inl(card.querySelector('.cat-h b'),c,v=>{v=nm(v);if(!v||v===c)return pcRender();if(Object.keys(C).some(k=>k!==c&&same(k,v)))return toast('Essa categoria já existe'),pcRender();const n={};Object.keys(C).forEach(k=>n[k===c?v:k]=C[k]);PC[t]=n;PL.forEach(r=>{if(r.t===t&&r.c===c)r.c=v});pcDone()},pcRender);
  if(a==='rs')return inl(sc.querySelector('i'),sb,v=>{v=nm(v);if(!v||v===sb)return pcRender();if(C[c].some(k=>k!==sb&&same(k,v)))return toast('Essa subcategoria já existe nesta categoria'),pcRender();C[c]=C[c].map(x=>x===sb?v:x);PL.forEach(r=>{if(r.t===t&&r.c===c&&r.s===sb)r.s=v});pcDone()},pcRender);
- if(a==='dc'){const n=pcN(t,c);if(confirm(`Excluir a categoria "${c}"${n?` e os ${n} valor${n===1?'':'es'} lançado${n===1?'':'s'} nela`:''}?`)){delete C[c];pcDone()}return}
- if(a==='ds'){const n=pcN(t,c,sb);if(confirm(`Excluir a subcategoria "${sb}"${n?` e os ${n} valor${n===1?'':'es'} lançado${n===1?'':'s'} nela`:''}?`)){C[c]=C[c].filter(x=>x!==sb);pcDone()}}
+ if(a==='dc'){const n=pcN(t,c);confirmar(`Excluir a categoria "${c}"${n?` e os ${n} valor${n===1?'':'es'} lançado${n===1?'':'s'} nela`:''}?`).then(ok=>{if(ok){delete C[c];pcDone()}});return}
+ if(a==='ds'){const n=pcN(t,c,sb);confirmar(`Excluir a subcategoria "${sb}"${n?` e os ${n} valor${n===1?'':'es'} lançado${n===1?'':'s'} nela`:''}?`).then(ok=>{if(ok){C[c]=C[c].filter(x=>x!==sb);pcDone()}})}
 });
 
 /* ===== Relatórios PDF das demais abas ===== */
@@ -581,7 +602,7 @@ function pdfCard(){
  if(!window.jspdf)return pdfNoJsp();
  const{doc,W,M}=pdfNew('Relatório de Cartões de Crédito',`Ano ${KY}  |  Limite e valores em aberto`);
  const used={},mon={};CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
- D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;if(st(x)!=='pago'&&x.venc.slice(0,4)===String(KY))mon[x.cartao][+x.venc.slice(5,7)-1]+=x.valor});
+ D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(st(x)!=='pago'&&f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
  const tl=CARDS.reduce((a,c)=>a+c.limite,0),tg=CARDS.reduce((a,c)=>a+used[c.nome],0);
  pdfKpis(doc,W,M,100,[['Limite total',tl,PDFC.TL],['Valor em aberto',tg,PDFC.AM],['Limite disponível',tl-tg,PDFC.GR],['Uso do limite',pdfPct(tg,tl),PDFC.RS]]);
  let y=pdfTitle(doc,M,180,'Cartões');
