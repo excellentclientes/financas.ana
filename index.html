@@ -427,9 +427,10 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
 .cfd-btn.cfd-del:hover{background:#912018}
 </style>
 <style>
-/* Cards de situação e maiores lançamentos: mesma altura, sem espaço vazio */
-.gc-tall{min-height:300px;display:flex;flex-direction:column}
+/* Status e Maiores lançamentos ocupam duas linhas, descendo até o fim do Saldo acumulado */
+.gc-tall{display:flex;flex-direction:column}
 .gc-tall>div:last-child{flex:1}
+#gcard-sta,#gcard-top{grid-row:span 2}
 </style>
 <style>
 /* Rosca de despesas por categoria maior */
