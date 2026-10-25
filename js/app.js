@@ -60,7 +60,7 @@ function banksSave(){try{localStorage.setItem('fluxo_banks',JSON.stringify(BANKS
 function trSave_(){try{localStorage.setItem('fluxo_transf',JSON.stringify(TR))}catch(e){}}
 function parseMon(v){return parseMoney(v)}
 syncContas();
-const saldoAtual=b=>b.saldo+D.filter(x=>x.conta===b.nome&&st(x)==='pago').reduce((a,x)=>a+(x.tipo==='Receita'?x.valor:-x.valor),0);
+const saldoAtual=b=>b.saldo+D.filter(x=>x.conta===b.nome&&st(x)==='pago'&&!(x.tipo==='Despesa'&&x.cartao)).reduce((a,x)=>a+(x.tipo==='Receita'?x.valor:-x.valor),0);
 const bkAtivos=()=>BANKS.filter(b=>b.status==='Ativo');
 const bkBadge=s=>`<span class="bst ${s==='Ativo'?'on':'off'}">${s}</span>`;
 
@@ -211,7 +211,7 @@ function fyChange(){months();render()}
 const sum=(a,f)=>a.filter(f).reduce((s,x)=>s+x.valor,0);
 
 function render(){
- const L=filtered(''),T=filtered(),rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'),pend=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago'),atr=L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length;
+ const L=filtered(''),T=filtered(),rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),pend=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago'),atr=L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length;
  $('#kpis').innerHTML=`<div class="card kpi main"><span>Saldo do período</span><b>${brl(rec-des)}</b><i>${L.length} lançamentos</i></div>
  <div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b><i>${L.filter(x=>x.tipo==='Receita').length} entradas</i></div>
  <div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b><i>${L.filter(x=>x.tipo==='Despesa').length} saídas</i></div>
@@ -378,7 +378,7 @@ function grender(){
  if(G.from||G.to)ch.push(['per','Período',(G.from?mshort(G.from):'início')+' → '+(G.to?mshort(G.to):'fim')]);
  Object.keys(lab).forEach(k=>G[k]&&ch.push([k,lab[k],k==='status'?{pago:'Pago/Recebido',pendente:'Pendente',atrasado:'Atrasado'}[G[k]]:G[k]]));
  $('#gchips').innerHTML=ch.length?ch.map(([k,l,v])=>`<button class="chip on" data-x="${k}">${l}: <b>${esc(v)}</b> ✕</button>`).join('')+'<button class="chip" data-x="all">Limpar tudo</button>':'<span>Clique nos gráficos para filtrar · ou use os filtros acima</span>';
- const L=gf(),DT=G.tipo||'Despesa',P=DT+'s',rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'),ab=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago');
+ const L=gf(),DT=G.tipo||'Despesa',P=DT+'s',rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),ab=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago');
  $('#gkpis').innerHTML=`<div class="card kpi main"><span>Saldo</span><b>${brl(rec-des)}</b><i>${L.length} lançamentos</i></div><div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b><i>${L.filter(x=>x.tipo==='Receita').length} entradas</i></div><div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b><i>${L.filter(x=>x.tipo==='Despesa').length} saídas</i></div><div class="card kpi"><span>Despesas em aberto</span><b>${brl(ab)}</b><i>${L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length} em atraso</i></div>`;
  $('#g_mes').innerHTML=gMes();
  $('#g_t1').textContent=P+' por categoria';$('#g_cat').innerHTML=gDonut(sumBy(gf(['cat','sub']).filter(x=>x.tipo===DT),x=>x.cat));
