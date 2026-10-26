@@ -41,7 +41,7 @@ function agendarEscrita(key, value) {
 function instalarEspelho() {
   Storage.prototype.setItem = function (key, value) {
     // Só envia à nuvem quando o valor realmente mudou (evita tempestade de gravações)
-    const mudou = this === localStorage && String(key).startsWith(PREFIX) && localStorage.getItem(key) !== String(value);
+    const mudou = prontoParaEscrever && this === localStorage && String(key).startsWith(PREFIX) && localStorage.getItem(key) !== String(value);
     origSetItem.call(this, key, value);
     if (mudou) agendarEscrita(key, String(value));
   };
@@ -101,6 +101,8 @@ function iniciarApp() {
 
 // ---------- tempo real: qualquer alteração na nuvem chega aqui ----------
 let ouvindo = false;
+let prontoParaEscrever = false;   // só grava na nuvem depois de receber os dados do servidor
+const VAZIOS = new Set(['', '[]', '{}', 'null']);
 let recarregarAoFechar = false;
 
 function recarregarPagina() {
@@ -127,6 +129,9 @@ function ouvirNuvem(uid) {
   onSnapshot(collection(db, "users", uid, "fluxo"), snap => {
     // Alterações feitas por este aparelho não precisam recarregar nada
     if (snap.metadata.hasPendingWrites) return;
+    // Primeira resposta vinda só do cache local não basta: espera o servidor
+    if (primeira && snap.metadata.fromCache) return;
+    prontoParaEscrever = true;
 
     if (primeira) {
       primeira = false;
@@ -143,6 +148,9 @@ function ouvirNuvem(uid) {
       if (ch.type === "removed") return;
       const k = ch.doc.id, v = ch.doc.data().value;
       if (typeof v !== "string" || localStorage.getItem(k) === v) return;
+      // Nunca troca dados reais do navegador por um valor vazio vindo da nuvem
+      const atual = localStorage.getItem(k);
+      if (VAZIOS.has(v) && atual && !VAZIOS.has(atual)) return;
       if (escritasPendentes) return;           // alteração local ainda não enviada: mantém a local
       origSet(k, v);
       mudou = true;
