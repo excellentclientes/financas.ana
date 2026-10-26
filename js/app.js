@@ -50,7 +50,9 @@ let CARDS=null;try{CARDS=JSON.parse(localStorage.getItem('fluxo_cards'))}catch(e
 if(!Array.isArray(CARDS))CARDS=[];
 D.forEach(x=>{if(x.cartao&&!CARDS.some(c=>c.nome===x.cartao))CARDS.push({id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),nome:x.cartao,limite:0})});
 function cardsSave(){try{localStorage.setItem('fluxo_cards',JSON.stringify(CARDS))}catch(e){}CARTOES.length=0;CARDS.forEach(c=>CARTOES.push(c.nome))}
-let BANKS=null,TR=null,BKE=null,TRE=null;
+let BANKS=null,TR=null,BKE=null,TRE=null,FAT=null;
+try{FAT=JSON.parse(localStorage.getItem('fluxo_faturas'))}catch(e){}
+if(!Array.isArray(FAT))FAT=[];
 try{BANKS=JSON.parse(localStorage.getItem('fluxo_banks'))}catch(e){}
 if(!Array.isArray(BANKS))BANKS=[];
 try{TR=JSON.parse(localStorage.getItem('fluxo_transf'))}catch(e){}
@@ -60,7 +62,7 @@ function banksSave(){try{localStorage.setItem('fluxo_banks',JSON.stringify(BANKS
 function trSave_(){try{localStorage.setItem('fluxo_transf',JSON.stringify(TR))}catch(e){}}
 function parseMon(v){return parseMoney(v)}
 syncContas();
-const saldoAtual=b=>b.saldo+D.filter(x=>x.conta===b.nome&&st(x)==='pago'&&!(x.tipo==='Despesa'&&x.cartao)).reduce((a,x)=>a+(x.tipo==='Receita'?x.valor:-x.valor),0);
+const saldoAtual=b=>b.saldo+D.filter(x=>x.conta===b.nome&&st(x)==='pago'&&!(x.tipo==='Despesa'&&x.cartao)).reduce((a,x)=>a+(x.tipo==='Receita'?x.valor:-x.valor),0)-FAT.filter(f=>f.conta===b.nome).reduce((a,f)=>a+f.valor,0);
 const bkAtivos=()=>BANKS.filter(b=>b.status==='Ativo');
 const bkBadge=s=>`<span class="bst ${s==='Ativo'?'on':'off'}">${s}</span>`;
 
@@ -213,11 +215,11 @@ const sum=(a,f)=>a.filter(f).reduce((s,x)=>s+x.valor,0);
 function render(){
  const L=filtered(''),T=filtered(),rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),pend=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago'),atr=L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length;
  const saldoIni=bkAtivos().reduce((a,b)=>a+b.saldo,0);
- $('#kpis').innerHTML=`<div class="card kpi main" style="cursor:pointer" onclick="setView('b')" title="Ver contas bancárias"><span>Saldo</span><b>${brl(saldoIni+rec-des)}</b><i>${L.length} lançamentos</i></div>
+ $('#kpis').innerHTML=`<div class="card kpi main" style="cursor:pointer" onclick="setView('b')" title="Ver contas bancárias"><span>Saldo</span><b>${brl(saldoPer(L))}</b><i>${L.length} lançamentos</i></div>
  <div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b><i>${L.filter(x=>x.tipo==='Receita').length} entradas</i></div>
  <div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b><i>${L.filter(x=>x.tipo==='Despesa').length} saídas</i></div>
  <div class="card kpi"><span>Despesas em aberto</span><b>${brl(pend)}</b><i>${atr} em atraso</i></div>`;
- $('#kmini').innerHTML=`<div class="km main" style="cursor:pointer" onclick="setView('b')"><span>Saldo</span><b>${brl(saldoIni+rec-des)}</b></div><div class="km"><span>Receitas</span><b class="rec">${brl(rec)}</b></div><div class="km"><span>Despesas</span><b class="des">${brl(des)}</b></div><div class="km"><span>Despesas em aberto</span><b>${brl(pend)}</b></div>`;
+ $('#kmini').innerHTML=`<div class="km main" style="cursor:pointer" onclick="setView('b')"><span>Saldo</span><b>${brl(saldoPer(L))}</b></div><div class="km"><span>Receitas</span><b class="rec">${brl(rec)}</b></div><div class="km"><span>Despesas</span><b class="des">${brl(des)}</b></div><div class="km"><span>Despesas em aberto</span><b>${brl(pend)}</b></div>`;
  const bc={};L.filter(x=>x.tipo==='Despesa').forEach(x=>bc[x.cat]=(bc[x.cat]||0)+x.valor);
  const top=Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,6),mx=top[0]?top[0][1]:1;
  $('#cats').innerHTML=top.map(([c,v])=>`<div class="bar"><span>${c}</span><div><i style="width:${v/mx*100}%"></i></div><b>${brl(v)}</b></div>`).join('')||'<p class="empty">Sem despesas no filtro.</p>';
@@ -252,6 +254,7 @@ function fgVis(){
  const cartao=!!$('#f_cartao').value, despesa=$('#f_tipo').value==='Despesa';
  const comp=$('#f_compra').closest('.fg'), parc=$('#f_parc').closest('.fg');
  comp.hidden=!despesa;
+ $('#f_cartao').closest('.fg').hidden=!despesa;
  parc.hidden=!(despesa&&cartao);
  // receita já recebida: a data relevante é a de recebimento, não o vencimento
  $('#f_venc').closest('.fg').hidden=!despesa&&$('#f_status').value==='pago';
@@ -329,6 +332,10 @@ const mshort=m=>new Date(m.slice(0,4),m.slice(5,7)-1,1).toLocaleDateString('pt-B
 const kfmt=v=>Math.abs(v)>=1000?(v/1000).toFixed(Math.abs(v)>=10000?0:1).replace('.',',')+'k':String(Math.round(v));
 const sumBy=(a,f)=>{const o={};a.forEach(x=>{const k=f(x);o[k]=(o[k]||0)+x.valor});return Object.entries(o).sort((p,q)=>q[1]-p[1])};
 function setView(v){['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;sessionStorage.setItem('fluxo_view',v);$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
+function saldoPer(L){
+ const r=sum(L,x=>x.tipo==='Receita'&&st(x)==='pago'),d=sum(L,x=>x.tipo==='Despesa'&&!x.cartao&&st(x)==='pago');
+ return bkAtivos().reduce((a,b)=>a+b.saldo,0)+r-d-FAT.reduce((a,f)=>a+f.valor,0);
+}
 function gfCount(){const n=['from','to','tipo','status','cat','sub','conta','cartao'].filter(k=>G[k]).length;const e=$('#gf-n');if(e){e.textContent=n;e.hidden=!n}}
 function gfClear(){['from','to','tipo','status','cat','sub','conta','cartao'].forEach(k=>G[k]='');gfCount();grender()}
 const GF_ROWS=[['from','Período inicial','gm1'],['to','Período final','gm2'],['tipo','Tipo','gt'],['status','Status','gs'],['cat','Categoria','gcat'],['sub','Subcategoria','gsub'],['conta','Conta','gcon'],['cartao','Cartão de crédito','gcar']];
@@ -381,7 +388,7 @@ function grender(){
  $('#gchips').innerHTML=ch.length?ch.map(([k,l,v])=>`<button class="chip on" data-x="${k}">${l}: <b>${esc(v)}</b> ✕</button>`).join('')+'<button class="chip" data-x="all">Limpar tudo</button>':'<span>Clique nos gráficos para filtrar · ou use os filtros acima</span>';
  const L=gf(),DT=G.tipo||'Despesa',P=DT+'s',rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),ab=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago');
  const saldoIniG=bkAtivos().reduce((a,b)=>a+b.saldo,0);
- $('#gkpis').innerHTML=`<div class="card kpi main"><span>Saldo</span><b>${brl(saldoIniG+rec-des)}</b><i>${L.length} lançamentos</i></div><div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b><i>${L.filter(x=>x.tipo==='Receita').length} entradas</i></div><div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b><i>${L.filter(x=>x.tipo==='Despesa').length} saídas</i></div><div class="card kpi"><span>Despesas em aberto</span><b>${brl(ab)}</b><i>${L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length} em atraso</i></div>`;
+ $('#gkpis').innerHTML=`<div class="card kpi main"><span>Saldo</span><b>${brl(saldoPer(L))}</b><i>${L.length} lançamentos</i></div><div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b><i>${L.filter(x=>x.tipo==='Receita').length} entradas</i></div><div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b><i>${L.filter(x=>x.tipo==='Despesa').length} saídas</i></div><div class="card kpi"><span>Despesas em aberto</span><b>${brl(ab)}</b><i>${L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length} em atraso</i></div>`;
  $('#g_mes').innerHTML=gMes();
  $('#g_t1').textContent=P+' por categoria';$('#g_cat').innerHTML=gDonut(sumBy(gf(['cat','sub']).filter(x=>x.tipo===DT),x=>x.cat));
  $('#g_t2').textContent=P+' por subcategoria';$('#g_sub').innerHTML=hbars(sumBy(gf(['sub']).filter(x=>x.tipo===DT),x=>x.cat+'|'+x.sub).slice(0,8).map(([k,v])=>[k.split('|')[1],v,k]),'sub',G.sub?G.cat+'|'+G.sub:'');
@@ -423,6 +430,7 @@ function ccRender(){
  const cur=KY===now.getFullYear()?now.getMonth():-1,rd=v=>Math.round(v*100)/100,used={},mon={};
  CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
  D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||st(x)!=='pago'||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
+ CARDS.forEach(c=>{used[c.nome]=Math.max(0,used[c.nome]-FAT.filter(f=>f.cartao===c.nome).reduce((a,f)=>a+f.valor,0));for(let m=0;m<12;m++)mon[c.nome][m]=faturaRestante(c.nome,`${KY}-${String(m+1).padStart(2,'0')}`)});
  const cs=CARDS.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt')),pc=(g,l)=>l>0?g/l*100:null,
   bar=p=>p==null?'<span style="color:var(--mut)">Sem limite</span>':`<div class="ub"><span><i class="${p>=90?'hi':p>=70?'mid':''}" style="width:${Math.min(100,p)}%"></i></span><b>${p.toFixed(1).replace('.',',')}%</b></div>`;
  let tl=0,tg=0;
@@ -449,6 +457,53 @@ function faturaDe(x){
  let [y,mo,d]=base.split('-').map(Number);
  if(d>=card.diaPag){mo++;if(mo>12){mo=1;y++}}
  return{m:`${y}-${String(mo).padStart(2,'0')}`};
+}
+
+const faturaTotal=(c,m)=>D.filter(x=>x.tipo==='Despesa'&&x.cartao===c&&st(x)==='pago'&&faturaDe(x).m===m).reduce((a,x)=>a+x.valor,0);
+const faturaPaga=(c,m)=>FAT.filter(f=>f.cartao===c&&f.mes===m).reduce((a,f)=>a+f.valor,0);
+const faturaRestante=(c,m)=>Math.max(0,Math.round((faturaTotal(c,m)-faturaPaga(c,m))*100)/100);
+function fatOpen(){
+ if(!CARDS.length){toast('Cadastre um cartão primeiro');return}
+ if(!bkAtivos().length){toast('Cadastre uma conta bancária ativa primeiro');return}
+ const meses=[...new Set(D.filter(x=>x.tipo==='Despesa'&&x.cartao&&st(x)==='pago').map(x=>faturaDe(x).m))].sort().reverse();
+ if(!meses.length){toast('Não há faturas pagas para registrar pagamento');return}
+ $('#fa_cartao').innerHTML=CARDS.map(c=>`<option>${esc(c.nome)}</option>`).join('');
+ $('#fa_mes').innerHTML=meses.map(m=>`<option value="${m}">${mlabel(m)}</option>`).join('');
+ $('#fa_conta').innerHTML=bkAtivos().map(b=>`<option>${esc(b.nome)}</option>`).join('');
+ fatTotal();$('#fatdlg').showModal();
+}
+function fatTotal(){
+ const c=$('#fa_cartao').value,m=$('#fa_mes').value;
+ const tot=faturaTotal(c,m),pago=faturaPaga(c,m),res=faturaRestante(c,m);
+ $('#fa_info').innerHTML=`Fatura: <b>${brl(tot)}</b> · já pago: ${brl(pago)} · restante: <b>${brl(res)}</b>`;
+ $('#fa_valor').value=res?String(res).replace('.',','):'';
+}
+function fatSave(e){
+ e.preventDefault();
+ const c=$('#fa_cartao').value,m=$('#fa_mes').value,v=parseMoney($('#fa_valor').value),conta=$('#fa_conta').value;
+ const res=faturaRestante(c,m);
+ if(!res){toast('Esta fatura já está paga');return false}
+ if(!(v>0)){toast('Informe o valor pago');return false}
+ if(v>res+0.001){toast('O valor pago não pode ser maior que o restante da fatura');return false}
+ FAT.push({id:'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),cartao:c,mes:m,valor:Math.round(v*100)/100,data:TODAY,conta});
+ try{localStorage.setItem('fluxo_faturas',JSON.stringify(FAT))}catch(err){}
+ ccRender();render();bkRender();
+ $('#fatdlg').close();toast(v>=res-0.001?'Fatura quitada':'Pagamento parcial registrado');
+ return false;
+}
+function fatHist(){
+ const rows=[...FAT].sort((a,b)=>b.data.localeCompare(a.data)).map(f=>`<tr><td>${fd(f.data)}</td><td>${esc(f.cartao)}</td><td>${mlabel(f.mes)}</td><td>${esc(f.conta)}</td><td class="r">${brl(f.valor)}</td></tr>`).join('');
+ $('#fath_list').innerHTML=`<table class="ct"><thead><tr><th>Data</th><th>Cartão</th><th>Fatura</th><th>Conta</th><th class="r">Valor pago</th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="empty" style="padding:22px">Nenhum pagamento registrado.</td></tr>'}</tbody></table>`;
+ $('#fathdlg').showModal();
+}
+function pdfFat(){
+ if(!window.jspdf)return pdfNoJsp();
+ const{doc,W,M}=pdfNew('Histórico de faturas pagas','Pagamentos registrados das faturas de cartão');
+ const tot=FAT.reduce((a,f)=>a+f.valor,0);
+ pdfKpis(doc,W,M,100,[['Total pago',tot,PDFC.GR],['Pagamentos',String(FAT.length),PDFC.MU]]);
+ const rows=[...FAT].sort((a,b)=>b.data.localeCompare(a.data)).map(f=>[fd(f.data),f.cartao,mlabel(f.mes),f.conta,brl(f.valor)]);
+ pdfTable(doc,M,180,['Data','Cartão','Fatura','Conta','Valor pago'],rows.length?rows:[['Nenhum pagamento','','','','']],[4],rows.length?['Total','','','',brl(tot)]:null);
+ doc.save('historico-faturas.pdf');toast('Relatório PDF gerado');
 }
 function ccOpen(id){
  if(!id&&semContaAtiva('Cadastre uma conta bancária antes de adicionar cartões'))return;KE=id||null;const c=id?CARDS.find(x=>x.id===id):null;$('#kdt').textContent=c?'Editar cartão':'Novo cartão';$('#k_n').value=c?c.nome:'';$('#k_l').value=c?String(c.limite).replace('.',','):'';$('#k_dia').value=c&&c.diaPag?c.diaPag:'';$('#kdlg').showModal();$('#k_n').focus()}
@@ -606,6 +661,7 @@ function pdfCard(){
  const{doc,W,M}=pdfNew('Relatório de Cartões de Crédito',`Ano ${KY}  |  Limite e valores em aberto`);
  const used={},mon={};CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
  D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||st(x)!=='pago'||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
+ CARDS.forEach(c=>{used[c.nome]=Math.max(0,used[c.nome]-FAT.filter(f=>f.cartao===c.nome).reduce((a,f)=>a+f.valor,0));for(let m=0;m<12;m++)mon[c.nome][m]=faturaRestante(c.nome,`${KY}-${String(m+1).padStart(2,'0')}`)});
  const tl=CARDS.reduce((a,c)=>a+c.limite,0),tg=CARDS.reduce((a,c)=>a+used[c.nome],0);
  pdfKpis(doc,W,M,100,[['Limite total',tl,PDFC.TL],['Valor em aberto',tg,PDFC.AM],['Limite disponível',tl-tg,PDFC.GR],['Uso do limite',pdfPct(tg,tl),PDFC.RS]]);
  let y=pdfTitle(doc,M,180,'Cartões');
