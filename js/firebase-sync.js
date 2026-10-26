@@ -9,6 +9,8 @@ import { getFirestore, collection, getDocs, doc, setDoc, onSnapshot }
 import { firebaseConfig } from "./firebase-config.js";
 
 const $p = sel => document.querySelector(sel);
+// Único e-mail autorizado a acessar o sistema
+const EMAIL_PERMITIDO = "acfranco1974@gmail.com";
 const PREFIX = "fluxo";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -172,7 +174,11 @@ function entrarComUsuario(user) {
 document.getElementById("login-btn").addEventListener("click", async () => {
   loginMsg.textContent = "";
   try {
-    await signInWithPopup(auth, provider);
+    const resultado = await signInWithPopup(auth, provider);
+    if (!emailAutorizado(resultado.user)) {
+      await signOut(auth);
+      loginMsg.textContent = "Esta conta do Google não tem acesso ao sistema.";
+    }
   } catch (err) {
     loginMsg.textContent = "Não foi possível entrar. Tente novamente.";
     console.error(err);
@@ -197,7 +203,20 @@ if (emCache) {
 }
 
 // 2) Confirma o login com o Firebase e sincroniza em segundo plano
+function emailAutorizado(user) {
+  return !!user && !!user.email && user.email.toLowerCase() === EMAIL_PERMITIDO && user.emailVerified === true;
+}
+
 onAuthStateChanged(auth, user => {
+  if (user && !emailAutorizado(user)) {
+    // Conta diferente da autorizada: encerra a sessão e volta para o login
+    limparSessao();
+    signOut(auth);
+    uidAtual = null; usuario = null;
+    loginEl.hidden = false;
+    loginMsg.textContent = "Esta conta do Google não tem acesso ao sistema.";
+    return;
+  }
   if (user) {
     if (!emCache) entrarComUsuario(user);
     else { uidAtual = user.uid; salvarSessao(user); }
