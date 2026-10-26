@@ -488,7 +488,7 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
 </div>
 <div id="vC" hidden>
  <div class="pl-top"><div><h2>Cartão de Crédito</h2><p>Limite de cada cartão e valores a pagar mês a mês.</p></div>
-  <div class="pl-act"><select id="kyr" onchange="KY=+this.value;ccRender()" aria-label="Ano"></select></div></div>
+  <div class="pl-act"><button class="btn p" type="button" onclick="fatOpen()">Pagar fatura</button><button class="btn" type="button" onclick="fatHist()">Histórico de faturas</button><select id="kyr" onchange="KY=+this.value;ccRender()" aria-label="Ano"></select></div></div>
 <div class="cchs"><div class="cch" id="cch1"></div></div>
  <div class="card pl-card"><div class="pl-h"><h2>Cartões</h2><span id="ctA"></span></div><div class="pw" id="cwA"></div></div>
  <div class="card pl-card"><div class="pl-h"><h2>A pagar por mês</h2><span id="ctB"></span></div><div class="pw" id="cwB"></div></div>
@@ -588,6 +588,25 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
  </div>
  <div class="df"><button type="button" class="btn" onclick="$('#trdlg').close()">Cancelar</button><button class="btn p">Salvar</button></div>
 </form></dialog>
+<dialog id="fatdlg"><form onsubmit="return fatSave(event)">
+ <div class="dh"><h2>Pagar fatura</h2><button type="button" class="ic" onclick="$('#fatdlg').close()" aria-label="Fechar">✕</button></div>
+ <div class="db">
+  <div class="fg"><label>Cartão</label><select id="fa_cartao" onchange="fatTotal()"></select></div>
+  <div class="fg"><label>Fatura (mês)</label><select id="fa_mes" onchange="fatTotal()"></select></div>
+  <div class="fg w"><p id="fa_info" class="fa-info"></p></div>
+  <div class="fg"><label>Valor pago (R$)</label><input id="fa_valor" inputmode="decimal" required autocomplete="off" placeholder="0,00"></div>
+  <div class="fg"><label>Conta bancária</label><select id="fa_conta" required></select></div>
+ </div>
+ <div class="df"><button type="button" class="btn" onclick="$('#fatdlg').close()">Cancelar</button><button class="btn p">Registrar pagamento</button></div>
+</form></dialog>
+<dialog id="fathdlg">
+ <div class="dh"><h2>Histórico de faturas pagas</h2><button type="button" class="ic" onclick="$('#fathdlg').close()" aria-label="Fechar">✕</button></div>
+ <div class="db" id="fath_list"></div>
+ <div class="df"><button type="button" class="btn" onclick="pdfFat()">Relatório PDF</button><button type="button" class="btn p" onclick="$('#fathdlg').close()">Fechar</button></div>
+</dialog>
+<style>
+.fa-info{margin:0;padding:10px 12px;border-radius:10px;background:#f3f7f6;color:#1f2d2a;font-size:13.5px;line-height:1.5}
+</style>
 <dialog id="kdlg"><form onsubmit="return ccSave(event)">
  <div class="dh"><h2 id="kdt">Novo cartão</h2><button type="button" class="ic" onclick="$('#kdlg').close()" aria-label="Fechar">✕</button></div>
  <div class="db">
