@@ -509,38 +509,43 @@ dialog.lanc{width:min(900px,96vw)}
 @media(max-width:700px){.dlg-grid{grid-template-columns:1fr}}
 </style>
 <style>
-/* Novo lançamento: mesmo desenho da planilha de referência */
-dialog.lanc{width:min(960px,96vw);padding:0;border-radius:6px;background:#f2f5fb;box-shadow:0 20px 60px rgba(0,0,0,.3)}
-dialog.lanc::backdrop{background:rgba(0,0,0,.35)}
-dialog.lanc .dh{background:linear-gradient(#0b55c8,#0a4cb4);color:#fff;padding:16px 22px;border-bottom:4px solid #d4321c;margin:0}
-dialog.lanc .dh h2{color:#fff;font-size:19px;font-weight:700;margin:0}
-dialog.lanc .dh .ic{color:#fff}
-.xl-body{padding:14px 18px;display:flex;flex-direction:column;gap:14px;max-height:72vh;overflow:auto}
-.xl-fs{border:1px solid #c9d3e3;border-radius:4px;padding:12px 14px 10px;margin:0;background:#f2f5fb;min-width:0}
-.xl-fs legend{padding:0 6px;font-size:13px;font-weight:700;color:#0a2a66}
-.xl-tipo{width:360px;max-width:100%}
-.xl-radios{display:flex;gap:22px;align-items:center;flex-wrap:wrap;padding:4px 2px}
-.xl-radios label{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:#1d2a44;cursor:pointer;margin:0}
-.xl-radios input{width:16px;height:16px;accent-color:#0b55c8}
-.xl-radios.v{flex-direction:column;align-items:flex-start;gap:6px}
+/* Novo lançamento: paleta do sistema */
+dialog.lanc{width:min(960px,96vw);padding:0;border-radius:18px;background:#f5f8f7;box-shadow:0 24px 70px rgba(10,30,28,.25)}
+dialog.lanc::backdrop{background:rgba(10,25,23,.45)}
+dialog.lanc .dh{background:#fff;color:var(--ink);padding:18px 22px;border-bottom:1px solid var(--line);margin:0;border-radius:18px 18px 0 0}
+dialog.lanc .dh h2{color:var(--ink);font-size:18px;font-weight:700;margin:0}
+.xl-body{padding:16px 20px;display:flex;flex-direction:column;gap:14px;max-height:72vh;overflow:auto}
+.xl-fs{border:1px solid var(--line);border-radius:14px;padding:14px 16px 12px;margin:0;background:#fff;min-width:0}
+.xl-fs legend{padding:0 6px;font-size:13px;font-weight:700;color:#0f766e}
+.xl-tipo{width:380px;max-width:100%}
+.xl-radios{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.xl-radios label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.xl-radios label:has(input:checked){border-color:#0f766e;background:#eef6f4;color:#0f766e}
+.xl-radios input{width:16px;height:16px;accent-color:#0f766e}
+.xl-radios.v{flex-direction:column;align-items:flex-start}
 .xl-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
 .xl-bottom{align-items:start}
-.fg.row{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:10px;margin:0 0 9px}
-.fg.row label{font-size:13.5px;color:#1d2a44;font-weight:500;margin:0;text-align:left}
-.fg.row input,.fg.row select{width:100%;box-sizing:border-box;height:32px;padding:4px 8px;border:1px solid #9aa9c2;border-radius:2px;background:#fff;font:inherit;font-size:13.5px;color:#1d2a44}
-.fg.row input.ro{background:#dfe3ea;color:#1d2a44;font-weight:600}
-.fg.row select:disabled{background:#dfe3ea}
-.xl-prev-box{min-height:150px}
-.pc-t{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
-.pc-t th,.pc-t td{border:1px solid #c9d3e3;padding:5px 7px;text-align:left}
-.pc-t th{background:#e7edf7;color:#0a2a66;font-weight:700}
+.fg.row{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:10px;margin:0 0 10px}
+.fg.row label{font-size:13.5px;color:var(--mut);font-weight:600;margin:0}
+.fg.row input,.fg.row select{width:100%;box-sizing:border-box;height:36px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:13.5px;color:var(--ink)}
+.fg.row input.ro{background:#f3f5f4;color:var(--ink);font-weight:700}
+.xl-prev-box{min-height:170px}
+.pc-t{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+.pc-t th,.pc-t td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
+.pc-t th{background:#f7faf9;color:var(--mut);font-weight:600}
 .pc-t .r{text-align:right}
-.xl-tot{display:flex;justify-content:space-around;gap:10px;margin-top:10px;font-size:12.5px;color:#0a2a66;font-weight:700}
+.xl-empty{text-align:center;color:var(--mut);padding:22px}
+.xl-st{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.xl-st.pago{background:#dcf5ef;color:#0f766e}
+.xl-st.pendente{background:#fef3c7;color:#92400e}
+.xl-tot{display:flex;justify-content:space-around;gap:10px;margin-top:12px;font-size:12.5px;color:var(--mut);font-weight:600}
 .xl-tot span{display:flex;flex-direction:column;align-items:center;gap:4px}
-.xl-tot b{background:#dfe3ea;border:1px solid #9aa9c2;min-width:110px;text-align:center;padding:6px 8px;font-size:13.5px;color:#1d2a44}
-.xl-foot{background:#f2f5fb;border-top:1px solid #c9d3e3;justify-content:flex-end;gap:10px;padding:12px 18px}
-.xl-add{background:#0b55c8;color:#fff;border:1px solid #083f94;border-radius:3px;padding:8px 26px;font-weight:700;cursor:pointer}
-.xl-cancel{background:#e9edf4;color:#1d2a44;border:1px solid #9aa9c2;border-radius:3px;padding:8px 22px;font-weight:600;cursor:pointer}
+.xl-tot b{background:#f3f7f6;border:1px solid var(--line);border-radius:10px;min-width:120px;text-align:center;padding:7px 10px;font-size:14px;color:var(--ink)}
+.xl-foot{background:#fff;border-top:1px solid var(--line);justify-content:flex-end;gap:10px;padding:14px 20px;border-radius:0 0 18px 18px}
+.xl-add{background:#0f766e;color:#fff;border:0;border-radius:10px;padding:10px 24px;font-weight:700;cursor:pointer}
+.xl-add:hover{background:#0d645d}
+.xl-conc{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 22px;font-weight:600;cursor:pointer}
+.xl-conc:hover{background:#f3f7f6}
 @media(max-width:760px){.xl-cols{grid-template-columns:1fr}}
 </style>
 <header><div class="top">
@@ -765,13 +770,13 @@ dialog.lanc .dh .ic{color:#fff}
     <div class="fg row"><label>Data da 1ª Parcela</label><input id="f_p1" type="date"></div>
     <div class="fg row"><label>Valor informado</label><div class="xl-radios v"><label><input type="radio" name="modo" value="total" checked> Total parcelado</label><label><input type="radio" name="modo" value="parcela"> Valor fixo (cada parcela)</label></div></div>
    </fieldset>
-   <fieldset class="xl-fs xl-prev-box" id="f_prev" hidden><legend>Parcelas</legend>
-    <table class="pc-t"><thead><tr><th>Nº</th><th>Dt Vencimento</th><th>Dt Pagamento</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table>
+   <fieldset class="xl-fs xl-prev-box" id="f_prev"><legend>Lançamentos adicionados</legend>
+    <table class="pc-t"><thead><tr><th>Nº</th><th>Dt Vencimento</th><th>Dt Pagamento</th><th>Conta</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table>
     <div id="f_tot" class="xl-tot"></div>
    </fieldset>
   </div>
  </div>
- <div class="df xl-foot"><button class="btn xl-add">Adicionar</button><button type="button" class="btn xl-cancel" onclick="dlg.close()">Cancelar</button></div>
+ <div class="df xl-foot"><button class="btn p xl-add">Adicionar</button><button type="button" class="btn xl-conc" onclick="concluirLanc()">Concluir</button></div>
 </form></dialog>
 <div class="toast" id="toast"></div>
 
