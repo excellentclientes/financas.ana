@@ -477,6 +477,22 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
 #vL .tbs thead th:nth-child(10),#vL .tbs tbody td[data-l="Qtd"]{width:54px;min-width:0;padding-left:8px;padding-right:8px;text-align:center}
 #vL .tbs thead th:nth-child(13),#vL .tbs tbody td[data-l="Status"]{white-space:nowrap}
 </style>
+<style>
+/* Lançamento parcelado */
+.seg2{display:flex;gap:8px;flex-wrap:wrap}
+.seg2 label{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink)}
+.seg2 label:has(input:checked){border-color:#0f766e;background:#eef6f4;color:#0f766e;font-weight:600}
+.seg2 input{accent-color:#0f766e}
+.pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pc-grid .fg.w{grid-column:1/-1}
+.pc-prev{margin-top:6px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.pc-t{width:100%;border-collapse:collapse;font-size:13px}
+.pc-t th,.pc-t td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left}
+.pc-t th{background:#f7faf9;color:var(--mut);font-weight:600}
+.pc-t .r{text-align:right}
+.pc-tot{display:flex;flex-wrap:wrap;gap:18px;justify-content:flex-end;padding:10px 12px;background:#f7faf9;font-size:13px;color:var(--mut)}
+.pc-tot b{color:var(--ink);margin-left:4px}
+</style>
 <header><div class="top">
  <button class="pf-brand" id="perfil-btn" onclick="perfilOpen()" aria-label="Abrir perfil"><span class="avatar" id="av"></span><span class="pf-txt"><b id="av-nome">Carregando…</b><small>Gestão financeira</small></span></button>
  <nav class="views" aria-label="Seções do sistema"><button data-v="l" class="on" onclick="setView('l')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-1.8L12 21l-3-1.8L6 21z"/><path d="M9.5 8h5M9.5 12h5"/></svg>Lançamentos</button><button data-v="p" onclick="setView('p')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3.5"/><path d="M8 3v4M16 3v4M4 10h16M9.5 15l2 2 3.5-4"/></svg>Planejamento</button><button data-v="c" onclick="setView('c')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="3.5"/><path d="M2.5 10h19M6.5 15h4"/></svg>Cartão de Crédito</button><button data-v="t" onclick="setView('t')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h15M15.5 4.5 19 8l-3.5 3.5M20 16H5M8.5 12.5 5 16l3.5 3.5"/></svg>Transferências</button><button data-v="b" onclick="setView('b')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 4l9 5.5z"/><path d="M5.5 12v5M10 12v5M14 12v5M18.5 12v5M3 20.5h18"/></svg>Conta bancária</button><button data-v="g" onclick="setView('g')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5"/></svg>Gráficos</button></nav>
@@ -670,6 +686,20 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
 <dialog id="dlg"><form onsubmit="return save(event)">
  <div class="dh"><h2 id="dt">Novo lançamento</h2><button type="button" class="ic" onclick="dlg.close()" aria-label="Fechar">✕</button></div>
  <div class="db">
+  <div class="fg w tl-wrap"><label>Tipo de lançamento</label>
+   <div class="seg2" role="radiogroup"><label><input type="radio" name="tl" value="unico" checked> Único</label><label><input type="radio" name="tl" value="parc"> Parcelado</label></div></div>
+  <div class="fg w pc-box" id="fb_parc" hidden>
+   <div class="pc-grid">
+    <div class="fg"><label>Nº de parcelas</label><input id="f_npar" type="number" min="1" max="120" value="2"></div>
+    <div class="fg"><label>Data da 1ª parcela</label><input id="f_p1" type="date"></div>
+    <div class="fg w"><label>O valor informado é</label>
+     <div class="seg2"><label><input type="radio" name="modo" value="total" checked> Total parcelado</label><label><input type="radio" name="modo" value="parcela"> Valor de cada parcela</label></div></div>
+   </div>
+   <div id="f_prev" class="pc-prev" hidden>
+    <table class="pc-t"><thead><tr><th>Nº</th><th>Vencimento</th><th>Pagamento</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table>
+    <div id="f_tot" class="pc-tot"></div>
+   </div>
+  </div>
   <div class="fg"><label>Tipo</label><select id="f_tipo" onchange="fillCat();fgVis()"><option>Despesa</option><option>Receita</option></select></div>
   <div class="fg"><label>Status</label><select id="f_status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
   <div class="fg w"><label>Descrição</label><input id="f_desc" required placeholder="Ex.: Supermercado do mês"></div>
