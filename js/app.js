@@ -288,6 +288,34 @@ function vencFatura(compra,diaPag){
  const ult=new Date(y,mo,0).getDate();
  return `${y}-${String(mo).padStart(2,'0')}-${String(Math.min(diaPag,ult)).padStart(2,'0')}`;
 }
+function addMeses(d,k){let [y,m,dd]=d.split('-').map(Number);m+=k;y+=Math.floor((m-1)/12);m=((m-1)%12+12)%12+1;const ult=new Date(y,m,0).getDate();return `${y}-${String(m).padStart(2,'0')}-${String(Math.min(dd,ult)).padStart(2,'0')}`}
+const isParc=()=>document.querySelector('input[name=tl]:checked').value==='parc';
+function parcelasCalc(){
+ if(!isParc())return [];
+ const n=Math.max(1,Math.min(120,parseInt($('#f_npar').value,10)||1));
+ const v=parseMoney($('#f_valor').value);if(!(v>0))return [];
+ const modo=document.querySelector('input[name=modo]:checked').value;
+ const base=$('#f_p1').value||$('#f_compra').value||TODAY;
+ const card=$('#f_tipo').value==='Despesa'&&$('#f_cartao').value?CARDS.find(c=>c.nome===$('#f_cartao').value):null;
+ const cents=Math.round((modo==='total'?v:v*n)*100),each=modo==='total'?Math.floor(cents/n):Math.round(v*100);
+ const rows=[];let acum=0;
+ for(let i=0;i<n;i++){
+  const val=(modo==='total'&&i===n-1)?(cents-acum):each;acum+=val;
+  let venc=addMeses(base,i);if(card&&card.diaPag)venc=vencFatura(venc,card.diaPag);
+  rows.push({i,venc,valor:val/100,status:$('#f_status').value});
+ }
+ return rows;
+}
+function prevParc(){
+ const box=$('#f_prev'),rows=parcelasCalc();
+ box.hidden=!rows.length;$('#fb_parc').hidden=!isParc();
+ if(!rows.length)return;
+ const tot=rows.reduce((a,r)=>a+r.valor,0),pago=rows.filter(r=>r.status==='pago').reduce((a,r)=>a+r.valor,0);
+ $('#f_prev_body').innerHTML=rows.map(r=>`<tr><td>${r.i+1}/${rows.length}</td><td>${fd(r.venc)}</td><td>${r.status==='pago'?fd(r.venc):'—'}</td><td class="r">${brl(r.valor)}</td><td>${r.status==='pago'?'Pago':'Pendente'}</td></tr>`).join('');
+ $('#f_tot').innerHTML=`<span>Total geral<b>${brl(tot)}</b></span><span>Total pago<b>${brl(pago)}</b></span><span>Total pendente<b>${brl(tot-pago)}</b></span>`;
+}
+$('#dlg').addEventListener('input',prevParc);
+$('#dlg').addEventListener('change',prevParc);
 function fgVis(){
  const cartao=!!$('#f_cartao').value, despesa=$('#f_tipo').value==='Despesa';
  // compra/lançamento na conta bancária já nasce como Pago
@@ -307,6 +335,7 @@ $('#f_status').addEventListener('change',()=>{if($('#f_status').value==='pago'&&
 $('#f_compra').addEventListener('change',fgVis);
 $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
+ document.querySelector(`input[name=tl][value=${n?'unico':'unico'}]`).checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
  editing=n||null;$('#dt').textContent=n?`Editar lançamento ${String(n).padStart(4,'0')}`:'Novo lançamento';
  const x0=n?D.find(i=>i.n===n):null,cur=x0&&x0.conta;
@@ -323,6 +352,13 @@ function save(e){
  e.preventDefault();
  if(!editing&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos')){$('#dlg').close();return false}
  if(!CONTAS.includes($('#f_conta').value)){toast('Escolha uma conta bancária ativa');return false}
+ if(!editing&&isParc()){
+  const rows=parcelasCalc();if(!rows.length){toast('Informe o valor e o número de parcelas');return false}
+  const tipo=$('#f_tipo').value,cartao=tipo==='Despesa'?$('#f_cartao').value:'';
+  let nx=Math.max(0,...D.map(i=>i.n));
+  rows.forEach(r=>{nx++;D.push({n:nx,tipo,status:r.status,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:r.valor,qtd:parseInt($('#f_qtd').value)||1,venc:r.venc,pgto:r.status==='pago'?r.venc:'',parc:`${r.i+1}/${rows.length}`,conta:$('#f_conta').value,cartao,compra:$('#f_compra').value||TODAY})});
+  persist();months();render();$('#dlg').close();toast(`${rows.length} parcelas lançadas`);return false;
+ }
  const o={tipo:$('#f_tipo').value,status:$('#f_status').value,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:parseFloat($('#f_valor').value)||0,qtd:parseInt($('#f_qtd').value)||1,venc:$('#f_venc').value,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
  if(o.tipo!=='Despesa'){o.compra=o.venc;o.parc='1/1';o.cartao=''}
  else if(!o.cartao){o.parc='1/1'}
