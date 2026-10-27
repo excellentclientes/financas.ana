@@ -335,6 +335,7 @@ $('#f_status').addEventListener('change',()=>{if($('#f_status').value==='pago'&&
 $('#f_compra').addEventListener('change',fgVis);
 $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
+ $('#f_nlan').value=n?String(n).padStart(4,'0'):String(Math.max(0,...D.map(i=>i.n))+1).padStart(4,'0');
  document.querySelector(`input[name=tl][value=${n?'unico':'unico'}]`).checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
  editing=n||null;$('#dt').textContent=n?`Editar lançamento ${String(n).padStart(4,'0')}`:'Novo lançamento';
