@@ -509,17 +509,39 @@ dialog.lanc{width:min(900px,96vw)}
 @media(max-width:700px){.dlg-grid{grid-template-columns:1fr}}
 </style>
 <style>
-/* Novo lançamento: blocos ocupam a largura toda, sem rolagem desnecessária */
-dialog.lanc .db{display:block;padding:16px 20px;overflow:auto}
-dialog.lanc .fs{width:100%;box-sizing:border-box;margin:0}
-dialog.lanc .fs .fg{display:block;width:100%;margin-bottom:12px}
-dialog.lanc .fs .fg label{display:block;margin-bottom:5px}
-dialog.lanc .fs .fg input,dialog.lanc .fs .fg select{width:100%;box-sizing:border-box}
-dialog.lanc .fs .fg.w{grid-column:auto}
-dialog.lanc .fs .tl-wrap .seg2 label{flex:1;justify-content:center}
-dialog.lanc #fb_parc{width:100%;box-sizing:border-box;margin-top:16px}
-dialog.lanc .pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-@media(max-width:700px){dialog.lanc .dlg-grid{grid-template-columns:minmax(0,1fr) !important}}
+/* Novo lançamento: mesmo desenho da planilha de referência */
+dialog.lanc{width:min(960px,96vw);padding:0;border-radius:6px;background:#f2f5fb;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog.lanc::backdrop{background:rgba(0,0,0,.35)}
+dialog.lanc .dh{background:linear-gradient(#0b55c8,#0a4cb4);color:#fff;padding:16px 22px;border-bottom:4px solid #d4321c;margin:0}
+dialog.lanc .dh h2{color:#fff;font-size:19px;font-weight:700;margin:0}
+dialog.lanc .dh .ic{color:#fff}
+.xl-body{padding:14px 18px;display:flex;flex-direction:column;gap:14px;max-height:72vh;overflow:auto}
+.xl-fs{border:1px solid #c9d3e3;border-radius:4px;padding:12px 14px 10px;margin:0;background:#f2f5fb;min-width:0}
+.xl-fs legend{padding:0 6px;font-size:13px;font-weight:700;color:#0a2a66}
+.xl-tipo{width:360px;max-width:100%}
+.xl-radios{display:flex;gap:22px;align-items:center;flex-wrap:wrap;padding:4px 2px}
+.xl-radios label{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:#1d2a44;cursor:pointer;margin:0}
+.xl-radios input{width:16px;height:16px;accent-color:#0b55c8}
+.xl-radios.v{flex-direction:column;align-items:flex-start;gap:6px}
+.xl-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.xl-bottom{align-items:start}
+.fg.row{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:10px;margin:0 0 9px}
+.fg.row label{font-size:13.5px;color:#1d2a44;font-weight:500;margin:0;text-align:left}
+.fg.row input,.fg.row select{width:100%;box-sizing:border-box;height:32px;padding:4px 8px;border:1px solid #9aa9c2;border-radius:2px;background:#fff;font:inherit;font-size:13.5px;color:#1d2a44}
+.fg.row input.ro{background:#dfe3ea;color:#1d2a44;font-weight:600}
+.fg.row select:disabled{background:#dfe3ea}
+.xl-prev-box{min-height:150px}
+.pc-t{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+.pc-t th,.pc-t td{border:1px solid #c9d3e3;padding:5px 7px;text-align:left}
+.pc-t th{background:#e7edf7;color:#0a2a66;font-weight:700}
+.pc-t .r{text-align:right}
+.xl-tot{display:flex;justify-content:space-around;gap:10px;margin-top:10px;font-size:12.5px;color:#0a2a66;font-weight:700}
+.xl-tot span{display:flex;flex-direction:column;align-items:center;gap:4px}
+.xl-tot b{background:#dfe3ea;border:1px solid #9aa9c2;min-width:110px;text-align:center;padding:6px 8px;font-size:13.5px;color:#1d2a44}
+.xl-foot{background:#f2f5fb;border-top:1px solid #c9d3e3;justify-content:flex-end;gap:10px;padding:12px 18px}
+.xl-add{background:#0b55c8;color:#fff;border:1px solid #083f94;border-radius:3px;padding:8px 26px;font-weight:700;cursor:pointer}
+.xl-cancel{background:#e9edf4;color:#1d2a44;border:1px solid #9aa9c2;border-radius:3px;padding:8px 22px;font-weight:600;cursor:pointer}
+@media(max-width:760px){.xl-cols{grid-template-columns:1fr}}
 </style>
 <header><div class="top">
  <button class="pf-brand" id="perfil-btn" onclick="perfilOpen()" aria-label="Abrir perfil"><span class="avatar" id="av"></span><span class="pf-txt"><b id="av-nome">Carregando…</b><small>Gestão financeira</small></span></button>
@@ -712,47 +734,44 @@ dialog.lanc .pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
  <div class="df"><button type="button" class="btn" onclick="$('#kdlg').close()">Cancelar</button><button class="btn p">Salvar</button></div>
 </form></dialog>
 <dialog id="dlg" class="lanc"><form onsubmit="return save(event)">
- <div class="dh"><h2 id="dt">Novo lançamento</h2><button type="button" class="ic" onclick="dlg.close()" aria-label="Fechar">✕</button></div>
- <div class="db">
-  <div class="dlg-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;width:100%">
-   <fieldset class="fs">
-    <legend>Dados gerais</legend>
-    <div class="fg"><label>Nº lançamento</label><input id="f_nlan" readonly class="ro" value="—"></div>
-    <div class="fg"><label>Tipo</label><select id="f_tipo" onchange="fillCat();fgVis()"><option>Despesa</option><option>Receita</option></select></div>
-    <div class="fg"><label>Status</label><select id="f_status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
-    <div class="fg"><label>Data de vencimento</label><input id="f_venc" type="date" required></div>
-    <div class="fg"><label>Data de pagamento / recebimento</label><input id="f_pgto" type="date"></div>
-    <div class="fg w tl-wrap"><label>Tipo de lançamento</label>
-     <div class="seg2" role="radiogroup"><label><input type="radio" name="tl" value="unico" checked> Único</label><label><input type="radio" name="tl" value="parc"> Parcelado</label></div></div>
+ <div class="dh"><h2 id="dt">Lançamento de Despesa</h2><button type="button" class="ic" onclick="dlg.close()" aria-label="Fechar">✕</button></div>
+ <div class="xl-body">
+  <fieldset class="xl-fs xl-tipo"><legend>Tipo de Lançamento</legend>
+   <div class="xl-radios"><label><input type="radio" name="tl" value="unico" checked> ÚNICO</label><label><input type="radio" name="tl" value="parc"> PARCELADO</label></div>
+  </fieldset>
+  <div class="xl-cols">
+   <fieldset class="xl-fs"><legend>Dados Gerais</legend>
+    <div class="fg row"><label>Nº Lançamento</label><input id="f_nlan" readonly class="ro" value="—"></div>
+    <div class="fg row"><label>Tipo</label><select id="f_tipo" onchange="fillCat();fgVis()"><option>Despesa</option><option>Receita</option></select></div>
+    <div class="fg row"><label>Categoria</label><select id="f_cat" onchange="fillSub()"></select></div>
+    <div class="fg row"><label>Subcategoria</label><select id="f_sub"></select></div>
+    <div class="fg row"><label>Cartão de Crédito</label><select id="f_cartao"></select></div>
+    <div class="fg row"><label>Data da Compra</label><input id="f_compra" type="date"></div>
+    <div class="fg row"><label>Descrição</label><input id="f_desc" required placeholder="Ex.: Supermercado do mês"></div>
    </fieldset>
-   <fieldset class="fs">
-    <legend>Dados do pagamento</legend>
-    <div class="fg"><label>Conta bancária</label><select id="f_conta"></select></div>
-    <div class="fg"><label>Cartão de crédito</label><select id="f_cartao"></select></div>
-    <div class="fg"><label>Categoria</label><select id="f_cat" onchange="fillSub()"></select></div>
-    <div class="fg"><label>Subcategoria</label><select id="f_sub"></select></div>
-    <div class="fg"><label>Data da compra</label><input id="f_compra" type="date"></div>
-    <div class="fg"><label>Parcela</label><input id="f_parc" placeholder="1/1" value="1/1"></div>
-    <div class="fg w"><label>Descrição</label><input id="f_desc" required placeholder="Ex.: Supermercado do mês"></div>
-    <div class="fg"><label>Valor (R$)</label><input id="f_valor" type="number" step="0.01" min="0" required></div>
-    <div class="fg"><label>Quantidade</label><input id="f_qtd" type="number" min="1" value="1"></div>
+   <fieldset class="xl-fs"><legend>Dados do Pagamento</legend>
+    <div class="fg row"><label>Parcela</label><input id="f_parc" placeholder="1/1" value="1/1" readonly class="ro"></div>
+    <div class="fg row"><label>Conta Bancária</label><select id="f_conta" required></select></div>
+    <div class="fg row"><label>Data Vencimento</label><input id="f_venc" type="date" required></div>
+    <div class="fg row"><label>Valor (R$)</label><input id="f_valor" type="number" step="0.01" min="0" required></div>
+    <div class="fg row"><label>Data Pagamento</label><input id="f_pgto" type="date"></div>
+    <div class="fg row"><label>Status</label><select id="f_status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
+    <div class="fg row"><label>Quantidade</label><input id="f_qtd" type="number" min="1" value="1"></div>
    </fieldset>
   </div>
-  <fieldset class="fs pc-box" id="fb_parc" hidden>
-   <legend>Configuração das parcelas</legend>
-   <div class="pc-grid">
-    <div class="fg"><label>Nº de parcelas</label><input id="f_npar" type="number" min="1" max="120" value="2"></div>
-    <div class="fg"><label>Data da 1ª parcela</label><input id="f_p1" type="date"></div>
-    <div class="fg w"><label>O valor informado é</label>
-     <div class="seg2"><label><input type="radio" name="modo" value="total" checked> Total parcelado</label><label><input type="radio" name="modo" value="parcela"> Valor de cada parcela</label></div></div>
-   </div>
-   <div id="f_prev" class="pc-prev" hidden>
-    <table class="pc-t"><thead><tr><th>Nº</th><th>Vencimento</th><th>Pagamento</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table>
-    <div id="f_tot" class="pc-tot"></div>
-   </div>
-  </fieldset>
+  <div class="xl-cols xl-bottom">
+   <fieldset class="xl-fs" id="fb_parc" hidden><legend>Configuração das Parcelas</legend>
+    <div class="fg row"><label>Nº Parcelas</label><input id="f_npar" type="number" min="1" max="120" value="2"></div>
+    <div class="fg row"><label>Data da 1ª Parcela</label><input id="f_p1" type="date"></div>
+    <div class="fg row"><label>Valor informado</label><div class="xl-radios v"><label><input type="radio" name="modo" value="total" checked> Total parcelado</label><label><input type="radio" name="modo" value="parcela"> Valor fixo (cada parcela)</label></div></div>
+   </fieldset>
+   <fieldset class="xl-fs xl-prev-box" id="f_prev" hidden><legend>Parcelas</legend>
+    <table class="pc-t"><thead><tr><th>Nº</th><th>Dt Vencimento</th><th>Dt Pagamento</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table>
+    <div id="f_tot" class="xl-tot"></div>
+   </fieldset>
+  </div>
  </div>
- <div class="df"><button type="button" class="btn" onclick="dlg.close()">Cancelar</button><button class="btn p">Salvar lançamento</button></div>
+ <div class="df xl-foot"><button class="btn xl-add">Adicionar</button><button type="button" class="btn xl-cancel" onclick="dlg.close()">Cancelar</button></div>
 </form></dialog>
 <div class="toast" id="toast"></div>
 
