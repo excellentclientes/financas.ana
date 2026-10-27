@@ -307,14 +307,16 @@ function parcelasCalc(){
  return rows;
 }
 function prevParc(){
- const box=$('#f_prev'),rows=parcelasCalc();
- box.hidden=!rows.length;$('#fb_parc').hidden=!isParc();
- if(!rows.length)return;
+ $('#fb_parc').hidden=!isParc();
+ sessRender();
+ return;
+ const rows=parcelasCalc();
  const tot=rows.reduce((a,r)=>a+r.valor,0),pago=rows.filter(r=>r.status==='pago').reduce((a,r)=>a+r.valor,0);
  $('#f_prev_body').innerHTML=rows.map(r=>`<tr><td>${r.i+1}/${rows.length}</td><td>${fd(r.venc)}</td><td>${r.status==='pago'?fd(r.venc):'—'}</td><td class="r">${brl(r.valor)}</td><td>${r.status==='pago'?'Pago':'Pendente'}</td></tr>`).join('');
  $('#f_tot').innerHTML=`<span>Total geral<b>${brl(tot)}</b></span><span>Total pago<b>${brl(pago)}</b></span><span>Total pendente<b>${brl(tot-pago)}</b></span>`;
 }
 $('#dlg').addEventListener('input',prevParc);
+$('#dlg').addEventListener('cancel',e=>e.preventDefault());
 $('#dlg').addEventListener('change',prevParc);
 function fgVis(){
  const cartao=!!$('#f_cartao').value, despesa=$('#f_tipo').value==='Despesa';
@@ -335,6 +337,7 @@ $('#f_status').addEventListener('change',()=>{if($('#f_status').value==='pago'&&
 $('#f_compra').addEventListener('change',fgVis);
 $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
+ if(!n)SESS=[];
  $('#f_nlan').value=n?String(n).padStart(4,'0'):String(Math.max(0,...D.map(i=>i.n))+1).padStart(4,'0');
  document.querySelector(`input[name=tl][value=${n?'unico':'unico'}]`).checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
@@ -349,6 +352,18 @@ function openF(n){
  $('#f_pgto').value=x.pgto||(n?'':TODAY);$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();
  $('#dlg').showModal();
 }
+let SESS=[];
+function sessRender(){
+ const tb=$('#f_prev_body');
+ tb.innerHTML=SESS.length?SESS.map(r=>`<tr><td>${String(r.n).padStart(4,'0')}</td><td>${fd(r.venc)}</td><td>${r.pgto?fd(r.pgto):'—'}</td><td>${esc(r.conta)}</td><td class="r">${brl(r.valor)}</td><td><span class="xl-st ${r.status}">${r.status==='pago'?'Pago':'Pendente'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="xl-empty">Nenhum lançamento adicionado ainda.</td></tr>';
+ const tot=SESS.reduce((a,r)=>a+r.valor,0),pago=SESS.filter(r=>r.status==='pago').reduce((a,r)=>a+r.valor,0);
+ $('#f_tot').innerHTML=`<span>Total Geral<b>${brl(tot)}</b></span><span>Total Pago<b>${brl(pago)}</b></span><span>Total Pendente<b>${brl(tot-pago)}</b></span>`;
+}
+function sessLimpaCampos(){
+ $('#f_desc').value='';$('#f_valor').value='';$('#f_qtd').value='1';$('#f_parc').value='1/1';
+ $('#f_nlan').value=String(Math.max(0,...D.map(i=>i.n),...SESS.map(i=>i.n))+1).padStart(4,'0');
+}
+function concluirLanc(){SESS=[];$('#dlg').close();render()}
 function save(e){
  e.preventDefault();
  if(!editing&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos')){$('#dlg').close();return false}
@@ -358,15 +373,18 @@ function save(e){
   const tipo=$('#f_tipo').value,cartao=tipo==='Despesa'?$('#f_cartao').value:'';
   let nx=Math.max(0,...D.map(i=>i.n));
   rows.forEach(r=>{nx++;D.push({n:nx,tipo,status:r.status,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:r.valor,qtd:parseInt($('#f_qtd').value)||1,venc:r.venc,pgto:r.status==='pago'?r.venc:'',parc:`${r.i+1}/${rows.length}`,conta:$('#f_conta').value,cartao,compra:$('#f_compra').value||TODAY})});
-  persist();months();render();$('#dlg').close();toast(`${rows.length} parcelas lançadas`);return false;
+  rows.forEach((r,k)=>SESS.push({n:nx-rows.length+k+1,venc:r.venc,pgto:r.status==='pago'?r.venc:'',conta:$('#f_conta').value,valor:r.valor,status:r.status}));
+  persist();months();render();sessRender();sessLimpaCampos();toast(`${rows.length} parcelas adicionadas`);return false;
  }
  const o={tipo:$('#f_tipo').value,status:$('#f_status').value,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:parseFloat($('#f_valor').value)||0,qtd:parseInt($('#f_qtd').value)||1,venc:$('#f_venc').value,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
  if(o.tipo!=='Despesa'){o.compra=o.venc;o.parc='1/1';o.cartao=''}
  else if(!o.cartao){o.parc='1/1'}
  if(o.tipo==='Receita'&&o.status==='pago'){o.pgto=o.pgto||TODAY;o.venc=o.pgto}
  if(o.status==='pago'&&!o.pgto)o.pgto=TODAY;if(o.status==='pendente')o.pgto='';
- if(editing){Object.assign(D.find(i=>i.n===editing),o)}else{o.n=Math.max(0,...D.map(i=>i.n))+1;D.push(o)}
- persist();months();render();$('#dlg').close();toast(editing?'Lançamento atualizado':'Lançamento salvo');return false;
+ if(editing){Object.assign(D.find(i=>i.n===editing),o);persist();months();render();$('#dlg').close();toast('Lançamento atualizado');return false}
+ o.n=Math.max(0,...D.map(i=>i.n))+1;D.push(o);
+ SESS.push({n:o.n,venc:o.venc,pgto:o.pgto,conta:o.conta,valor:o.valor,status:o.status});
+ persist();months();render();sessRender();sessLimpaCampos();toast('Lançamento adicionado');return false;
 }
 function setStatus(n,v){const x=D.find(i=>i.n===n);x.status=v;x.pgto=v==='pago'?(x.pgto||TODAY):'';persist();render();toast(v==='pago'?(x.tipo==='Receita'?'Marcado como recebido':'Marcado como pago'):'Voltou para pendente')}
 function del(n){confirmar('Excluir este lançamento?').then(ok=>{if(ok){D=D.filter(i=>i.n!==n);persist();months();render();toast('Lançamento excluído')}})}
