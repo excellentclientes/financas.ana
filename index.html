@@ -509,44 +509,53 @@ dialog.lanc{width:min(900px,96vw)}
 @media(max-width:700px){.dlg-grid{grid-template-columns:1fr}}
 </style>
 <style>
-/* Novo lançamento: paleta do sistema */
-dialog.lanc{width:min(960px,96vw);padding:0;border-radius:18px;background:#f5f8f7;box-shadow:0 24px 70px rgba(10,30,28,.25)}
+/* Novo lançamento: mesmo desenho da referência, com a paleta do sistema */
+dialog.lanc{width:min(1000px,97vw);padding:0;border-radius:6px;background:#f4f7f6;box-shadow:0 24px 70px rgba(10,30,28,.28);border:1px solid #cbd6d3}
 dialog.lanc::backdrop{background:rgba(10,25,23,.45)}
-dialog.lanc .dh{background:#fff;color:var(--ink);padding:18px 22px;border-bottom:1px solid var(--line);margin:0;border-radius:18px 18px 0 0}
-dialog.lanc .dh h2{color:var(--ink);font-size:18px;font-weight:700;margin:0}
-.xl-body{padding:16px 20px;display:flex;flex-direction:column;gap:14px;max-height:72vh;overflow:auto}
-.xl-fs{border:1px solid var(--line);border-radius:14px;padding:14px 16px 12px;margin:0;background:#fff;min-width:0}
+.xl-head{background:#0f766e;color:#fff;padding:14px 20px;border-bottom:4px solid #14b8a6;display:flex;align-items:center;justify-content:space-between}
+.xl-head h2{margin:0;font-size:19px;font-weight:700;color:#fff}
+.xl-x{background:none;border:0;color:#fff;font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px}
+.xl-x:hover{background:rgba(255,255,255,.15)}
+.xl-top{display:flex;align-items:flex-start;gap:16px;padding:14px 18px 6px}
+.xl-tipo{width:360px;max-width:100%;margin:0}
+.xl-tp{display:flex;flex-direction:column;gap:4px;min-width:200px}
+.xl-tp label{font-size:12.5px;font-weight:700;color:#0f766e}
+.xl-tp select{height:34px;border:1px solid #9fb3ae;border-radius:3px;background:#fff;padding:4px 8px;font:inherit;font-size:13.5px;color:#1f2d2a}
+.xl-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;padding:8px 18px 12px;align-items:start}
+.xl-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.xl-fs{border:1px solid #9fb3ae;border-radius:3px;padding:12px 14px 10px;margin:0;background:#f4f7f6;min-width:0}
 .xl-fs legend{padding:0 6px;font-size:13px;font-weight:700;color:#0f766e}
-.xl-tipo{width:380px;max-width:100%}
-.xl-radios{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.xl-radios label{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink);cursor:pointer;margin:0;padding:8px 14px;border:1px solid var(--line);border-radius:10px;background:#fff}
-.xl-radios label:has(input:checked){border-color:#0f766e;background:#eef6f4;color:#0f766e}
-.xl-radios input{width:16px;height:16px;accent-color:#0f766e}
-.xl-radios.v{flex-direction:column;align-items:flex-start}
-.xl-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
-.xl-bottom{align-items:start}
+.xl-radios{display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:4px 2px}
+.xl-radios.v{flex-direction:column;align-items:flex-start;gap:6px}
+.xl-radios label{display:flex;align-items:center;gap:6px;font-size:14px;color:#1f2d2a;cursor:pointer;margin:0}
+.xl-radios input{width:15px;height:15px;accent-color:#0f766e}
+.xl-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .fg.row{display:grid;grid-template-columns:150px minmax(0,1fr);align-items:center;gap:10px;margin:0 0 10px}
-.fg.row label{font-size:13.5px;color:var(--mut);font-weight:600;margin:0}
-.fg.row input,.fg.row select{width:100%;box-sizing:border-box;height:36px;padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;font-size:13.5px;color:var(--ink)}
-.fg.row input.ro{background:#f3f5f4;color:var(--ink);font-weight:700}
-.xl-prev-box{min-height:170px}
-.pc-t{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
-.pc-t th,.pc-t td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left}
-.pc-t th{background:#f7faf9;color:var(--mut);font-weight:600}
+.fg.row label{font-size:13.5px;color:#1f2d2a;font-weight:500;margin:0;text-align:left}
+.fg.row input,.fg.row select{width:100%;box-sizing:border-box;height:32px;padding:4px 8px;border:1px solid #9fb3ae;border-radius:2px;background:#fff;font:inherit;font-size:13.5px;color:#1f2d2a}
+.fg.row input.ro{background:#dfe6e4;font-weight:700}
+.req{color:#dc2626;font-style:normal;font-weight:700}
+.xl-2 .fg.row{grid-template-columns:110px minmax(0,1fr)}
+.xl-prev-box{min-height:200px}
+.pc-t{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff}
+.pc-t th,.pc-t td{border:1px solid #d3dedb;padding:6px 8px;text-align:left}
+.pc-t th{background:#eaf1ef;color:#0f766e;font-weight:700}
 .pc-t .r{text-align:right}
-.xl-empty{text-align:center;color:var(--mut);padding:22px}
-.xl-st{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.xl-empty{text-align:center;color:#5d6d69;padding:22px}
+.xl-st{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:600}
 .xl-st.pago{background:#dcf5ef;color:#0f766e}
 .xl-st.pendente{background:#fef3c7;color:#92400e}
-.xl-tot{display:flex;justify-content:space-around;gap:10px;margin-top:12px;font-size:12.5px;color:var(--mut);font-weight:600}
+.xl-tot{display:flex;justify-content:space-around;gap:10px;margin-top:12px;font-size:12.5px;color:#0f766e;font-weight:700}
 .xl-tot span{display:flex;flex-direction:column;align-items:center;gap:4px}
-.xl-tot b{background:#f3f7f6;border:1px solid var(--line);border-radius:10px;min-width:120px;text-align:center;padding:7px 10px;font-size:14px;color:var(--ink)}
-.xl-foot{background:#fff;border-top:1px solid var(--line);justify-content:flex-end;gap:10px;padding:14px 20px;border-radius:0 0 18px 18px}
-.xl-add{background:#0f766e;color:#fff;border:0;border-radius:10px;padding:10px 24px;font-weight:700;cursor:pointer}
+.xl-tot b{background:#dfe6e4;border:1px solid #9fb3ae;min-width:130px;text-align:center;padding:7px 10px;font-size:13.5px;color:#1f2d2a}
+.xl-foot{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid #d3dedb;background:#f4f7f6}
+.xl-obg{font-size:12.5px;color:#5d6d69}
+.xl-btns{display:flex;gap:10px}
+.xl-add{background:#0f766e;color:#fff;border:1px solid #0d5f58;border-radius:3px;padding:8px 26px;font-weight:700;cursor:pointer}
 .xl-add:hover{background:#0d645d}
-.xl-conc{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 22px;font-weight:600;cursor:pointer}
-.xl-conc:hover{background:#f3f7f6}
-@media(max-width:760px){.xl-cols{grid-template-columns:1fr}}
+.xl-conc{background:#fff;color:#1f2d2a;border:1px solid #9fb3ae;border-radius:3px;padding:8px 22px;font-weight:600;cursor:pointer}
+.xl-conc:hover{background:#eaf1ef}
+@media(max-width:820px){.xl-grid{grid-template-columns:1fr}.xl-2{grid-template-columns:1fr}}
 </style>
 <header><div class="top">
  <button class="pf-brand" id="perfil-btn" onclick="perfilOpen()" aria-label="Abrir perfil"><span class="avatar" id="av"></span><span class="pf-txt"><b id="av-nome">Carregando…</b><small>Gestão financeira</small></span></button>
@@ -739,36 +748,38 @@ dialog.lanc .dh h2{color:var(--ink);font-size:18px;font-weight:700;margin:0}
  <div class="df"><button type="button" class="btn" onclick="$('#kdlg').close()">Cancelar</button><button class="btn p">Salvar</button></div>
 </form></dialog>
 <dialog id="dlg" class="lanc"><form onsubmit="return save(event)">
- <div class="dh"><h2 id="dt">Lançamento de Despesa</h2><button type="button" class="ic" onclick="dlg.close()" aria-label="Fechar">✕</button></div>
- <div class="xl-body">
+ <div class="xl-head"><h2 id="dt">Lançamento de Despesa</h2><button type="button" class="xl-x" onclick="dlg.close()" aria-label="Fechar">✕</button></div>
+ <div class="xl-top">
   <fieldset class="xl-fs xl-tipo"><legend>Tipo de Lançamento</legend>
    <div class="xl-radios"><label><input type="radio" name="tl" value="unico" checked> ÚNICO</label><label><input type="radio" name="tl" value="parc"> PARCELADO</label></div>
   </fieldset>
-  <div class="xl-cols">
+  <div class="xl-tp"><label>Tipo</label><select id="f_tipo" onchange="fillCat();fgVis();xlTitulo()"><option>Despesa</option><option>Receita</option></select></div>
+ </div>
+ <div class="xl-grid">
+  <div class="xl-col">
    <fieldset class="xl-fs"><legend>Dados Gerais</legend>
-    <div class="fg row"><label>Nº Lançamento</label><input id="f_nlan" readonly class="ro" value="—"></div>
-    <div class="fg row"><label>Tipo</label><select id="f_tipo" onchange="fillCat();fgVis()"><option>Despesa</option><option>Receita</option></select></div>
-    <div class="fg row"><label>Categoria</label><select id="f_cat" onchange="fillSub()"></select></div>
-    <div class="fg row"><label>Subcategoria</label><select id="f_sub"></select></div>
+    <div class="fg row"><label><i class=req>*</i> Nº Lançamento</label><input id="f_nlan" readonly class="ro" value="—"></div>
+    <div class="fg row"><label><i class=req>*</i> Categoria</label><select id="f_cat" onchange="fillSub()"></select></div>
+    <div class="fg row"><label><i class=req>*</i> Subcategoria</label><select id="f_sub"></select></div>
     <div class="fg row"><label>Cartão de Crédito</label><select id="f_cartao"></select></div>
     <div class="fg row"><label>Data da Compra</label><input id="f_compra" type="date"></div>
-    <div class="fg row"><label>Descrição</label><input id="f_desc" required placeholder="Ex.: Supermercado do mês"></div>
-   </fieldset>
-   <fieldset class="xl-fs"><legend>Dados do Pagamento</legend>
-    <div class="fg row"><label>Parcela</label><input id="f_parc" placeholder="1/1" value="1/1" readonly class="ro"></div>
-    <div class="fg row"><label>Conta Bancária</label><select id="f_conta" required></select></div>
-    <div class="fg row"><label>Data Vencimento</label><input id="f_venc" type="date" required></div>
-    <div class="fg row"><label>Valor (R$)</label><input id="f_valor" type="number" step="0.01" min="0" required></div>
-    <div class="fg row"><label>Data Pagamento</label><input id="f_pgto" type="date"></div>
-    <div class="fg row"><label>Status</label><select id="f_status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div>
     <div class="fg row"><label>Quantidade</label><input id="f_qtd" type="number" min="1" value="1"></div>
+    <div class="fg row"><label><i class=req>*</i> Descrição</label><input id="f_desc" required placeholder="Ex.: Supermercado do mês"></div>
+   </fieldset>
+   <fieldset class="xl-fs" id="fb_parc" hidden><legend>Configuração das parcelas</legend>
+    <div class="fg row"><label><i class=req>*</i> Nº Parcelas</label><input id="f_npar" type="number" min="1" max="120" value="2"></div>
+    <div class="fg row"><label><i class=req>*</i> Data da 1ª Parcela</label><input id="f_p1" type="date"></div>
+    <div class="fg row"><label>Valor informado</label><div class="xl-radios v"><label><input type="radio" name="modo" value="total" checked> Total Parcelado</label><label><input type="radio" name="modo" value="parcela"> Valor Fixo</label></div></div>
    </fieldset>
   </div>
-  <div class="xl-cols xl-bottom">
-   <fieldset class="xl-fs" id="fb_parc" hidden><legend>Configuração das Parcelas</legend>
-    <div class="fg row"><label>Nº Parcelas</label><input id="f_npar" type="number" min="1" max="120" value="2"></div>
-    <div class="fg row"><label>Data da 1ª Parcela</label><input id="f_p1" type="date"></div>
-    <div class="fg row"><label>Valor informado</label><div class="xl-radios v"><label><input type="radio" name="modo" value="total" checked> Total parcelado</label><label><input type="radio" name="modo" value="parcela"> Valor fixo (cada parcela)</label></div></div>
+  <div class="xl-col">
+   <fieldset class="xl-fs"><legend>Dados da Parcela</legend>
+    <div class="fg row"><label>Parcela</label><input id="f_parc" placeholder="1/1" value="1/1" readonly class="ro"></div>
+    <div class="fg row"><label><i class=req>*</i> Conta Bancária</label><select id="f_conta" required></select></div>
+    <div class="xl-2"><div class="fg row"><label><i class=req>*</i> Data Vencimento</label><input id="f_venc" type="date" required></div>
+     <div class="fg row"><label><i class=req>*</i> Valor</label><input id="f_valor" type="number" step="0.01" min="0" required></div></div>
+    <div class="xl-2"><div class="fg row"><label><i class=req>*</i> Data Pagamento</label><input id="f_pgto" type="date"></div>
+     <div class="fg row"><label><i class=req>*</i> Status</label><select id="f_status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div></div>
    </fieldset>
    <fieldset class="xl-fs xl-prev-box" id="f_prev"><legend>Lançamentos adicionados</legend>
     <table class="pc-t"><thead><tr><th>Nº</th><th>Dt Vencimento</th><th>Dt Pagamento</th><th>Conta</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table>
@@ -776,7 +787,7 @@ dialog.lanc .dh h2{color:var(--ink);font-size:18px;font-weight:700;margin:0}
    </fieldset>
   </div>
  </div>
- <div class="df xl-foot"><button class="btn p xl-add">Adicionar</button><button type="button" class="btn xl-conc" onclick="concluirLanc()">Concluir</button></div>
+ <div class="xl-foot"><span class="xl-obg"><i class=req>*</i> Campos obrigatórios</span><div class="xl-btns"><button class="xl-add">Adicionar</button><button type="button" class="xl-conc" onclick="concluirLanc()">Concluir</button></div></div>
 </form></dialog>
 <div class="toast" id="toast"></div>
 
