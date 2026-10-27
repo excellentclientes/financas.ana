@@ -454,7 +454,7 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
  
 <div id="vL">
  <section class="kpis" id="kpis"></section>
- <section class="g2">
+ <section class="g2" hidden>
   <div class="card"><h2>Despesas por categoria</h2><div id="cats"></div></div>
   <div class="card"><h2>Receitas × despesas por mês</h2><div class="months" id="months"></div>
    <div class="leg"><span><u style="background:#0f766e"></u>Receitas</span><span><u style="background:#e11d48"></u>Despesas</span></div></div>
@@ -472,7 +472,7 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
  <p class="hint">↔ Deslize a tabela para o lado para ver todas as colunas</p>
  <div class="card tw">
   <div class="tbs"><table>
-   <thead><tr><th>Nº</th><th>Tipo</th><th>Vencimento</th><th>Pgto / Receb.</th><th>Parcela</th><th>Conta / Cartão</th><th>Categoria</th><th>Compra</th><th>Qtd</th><th>Descrição</th><th class="th-r">Valor</th><th>Status</th><th></th></tr></thead>
+   <thead><tr><th>Nº</th><th>Tipo<button class="thf" data-k="tipo" onclick="colFilter('tipo')" aria-label="Filtrar Tipo">▾</button></th><th>Vencimento</th><th>Pgto / Receb.</th><th>Parcela</th><th>Conta<button class="thf" data-k="conta" onclick="colFilter('conta')" aria-label="Filtrar Conta">▾</button></th><th>Cartão<button class="thf" data-k="cartao" onclick="colFilter('cartao')" aria-label="Filtrar Cartão">▾</button></th><th>Categoria<button class="thf" data-k="cat" onclick="colFilter('cat')" aria-label="Filtrar Categoria">▾</button></th><th>Data da Compra</th><th>Qtd</th><th>Descrição</th><th class="th-r">Valor</th><th>Status<button class="thf" data-k="status" onclick="colFilter('status')" aria-label="Filtrar Status">▾</button></th><th></th></tr></thead>
    <tbody id="tb"></tbody>
   </table></div>
   <div class="foot"><span id="cnt"></span><span id="tot"></span></div>
@@ -494,7 +494,7 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
  <div class="card pl-card"><div class="pl-h"><h2>A pagar por mês</h2><span id="ctB"></span></div><div class="pw" id="cwB"></div></div>
 </div>
 <div id="vT" hidden><div class="card pl-card"><div class="pl-h"><h2>Transferências</h2><span id="ctT"></span></div><div class="pw" id="trA"></div></div></div>
-<div id="vB" hidden><div class="card pl-card"><div class="pl-h"><h2>Conta bancária</h2><span id="ctBk"></span></div><div class="pw" id="bkA"></div></div></div>
+<div id="vB" hidden><section class="kpis" id="bkk"></section><div class="card" style="margin-bottom:14px"><h2>Resumo por conta</h2><div id="bkres"></div></div><div class="card pl-card"><div class="pl-h"><h2>Conta bancária</h2><span id="ctBk"></span></div><div class="pw" id="bkA"></div></div></div>
 <div id="vG" hidden>
  <div class="gbar">
   <input id="gq" type="search" placeholder="Pesquisa inteligente nos gráficos: nubank outubro &gt;500, cat:lazer…" oninput="gset('q',this.value)" autocomplete="off" aria-label="Pesquisar nos gráficos">
@@ -606,6 +606,20 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
 </dialog>
 <style>
 .fa-info{margin:0;padding:10px 12px;border-radius:10px;background:#f3f7f6;color:#1f2d2a;font-size:13.5px;line-height:1.5}
+</style>
+<dialog id="coldlg"><form onsubmit="return colApply(event)">
+ <div class="dh"><h2 id="cf_t">Filtrar</h2><button type="button" class="ic" onclick="$('#coldlg').close()" aria-label="Fechar">✕</button></div>
+ <div class="db"><input type="hidden" id="cf_k"><div id="cf_list" class="cf-list"></div></div>
+ <div class="df"><button type="button" class="btn" onclick="colClear()">Limpar filtro</button><button class="btn p">Aplicar</button></div>
+</form></dialog>
+<style>
+.thf{border:0;background:none;cursor:pointer;color:var(--mut);font-size:11px;padding:0 0 0 4px;margin-left:2px;vertical-align:middle}
+.thf:hover{color:var(--ink)}
+.thf.on{color:#0f766e;font-weight:700}
+.cf-list{display:flex;flex-direction:column;gap:4px;max-height:360px;overflow:auto}
+.cf-i{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:14px}
+.cf-i:hover{background:#f3f7f6}
+.cf-i input{width:16px;height:16px;accent-color:#0f766e}
 </style>
 <dialog id="kdlg"><form onsubmit="return ccSave(event)">
  <div class="dh"><h2 id="kdt">Novo cartão</h2><button type="button" class="ic" onclick="$('#kdlg').close()" aria-label="Fechar">✕</button></div>
