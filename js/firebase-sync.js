@@ -99,7 +99,7 @@ function iniciarApp() {
   if (appIniciado) return;
   appIniciado = true;
   const s = document.createElement("script");
-  s.src = "js/app.js";
+  s.src = "js/app.js?v=" + Date.now();
   document.body.appendChild(s);
 }
 
