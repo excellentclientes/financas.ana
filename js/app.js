@@ -199,7 +199,7 @@ function hl(s,key){
 function setQ(v){$('#q').value=v;render();$('#q').focus()}
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}});
 
-const FK={tipo:['Tipo',x=>x.tipo],conta:['Conta',x=>x.conta],cartao:['Cartão',x=>x.cartao||'—'],cat:['Categoria',x=>x.cat],status:['Status',x=>st(x)]};
+const FK={n:['Nº',x=>String(x.n).padStart(4,'0')],tipo:['Tipo',x=>x.tipo],venc:['Vencimento',x=>fd(x.venc)],pgto:['Pgto / Receb.',x=>x.pgto?fd(x.pgto):'—'],parc:['Parcela',x=>x.parc||'—'],conta:['Conta',x=>x.conta],cartao:['Cartão',x=>x.cartao||'—'],cat:['Categoria',x=>x.cat],compra:['Data da Compra',x=>x.compra?fd(x.compra):'—'],qtd:['Qtd',x=>String(x.qtd)],desc:['Descrição',x=>x.desc||'—'],valor:['Valor',x=>brl(x.valor)],status:['Status',x=>stLabel(x)]};
 let FCOL={};
 function colBtns(){document.querySelectorAll('.thf').forEach(b=>b.classList.toggle('on',!!FCOL[b.dataset.k]))}
 function colFilter(k){
@@ -377,7 +377,7 @@ const mshort=m=>new Date(m.slice(0,4),m.slice(5,7)-1,1).toLocaleDateString('pt-B
 const kfmt=v=>Math.abs(v)>=1000?(v/1000).toFixed(Math.abs(v)>=10000?0:1).replace('.',',')+'k':String(Math.round(v));
 const sumBy=(a,f)=>{const o={};a.forEach(x=>{const k=f(x);o[k]=(o[k]||0)+x.valor});return Object.entries(o).sort((p,q)=>q[1]-p[1])};
 function setView(v){
- $('#hnew').hidden=(v==='p');['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;sessionStorage.setItem('fluxo_view',v);$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
+ $('#hnew').style.visibility=(v==='p')?'hidden':'';['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;sessionStorage.setItem('fluxo_view',v);$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
 function resumoCards(L){
  const at=bkAtivos(),ini=at.reduce((a,b)=>a+b.saldo,0),hoje=TODAY.slice(0,7);
  const rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao);
