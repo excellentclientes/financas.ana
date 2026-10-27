@@ -363,6 +363,7 @@ function sessLimpaCampos(){
  $('#f_desc').value='';$('#f_valor').value='';$('#f_qtd').value='1';$('#f_parc').value='1/1';
  $('#f_nlan').value=String(Math.max(0,...D.map(i=>i.n),...SESS.map(i=>i.n))+1).padStart(4,'0');
 }
+function xlTitulo(){$('#dt').textContent=$('#f_tipo').value==='Receita'?'Lançamento de Receita':'Lançamento de Despesa'}
 function concluirLanc(){SESS=[];$('#dlg').close();render()}
 function save(e){
  e.preventDefault();
