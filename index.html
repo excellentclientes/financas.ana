@@ -441,11 +441,10 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
 #g_mes svg{width:100%;height:auto;max-height:none}
 </style>
 <style>
-/* Conta bancária: os 5 cards de resumo ficam em uma linha só */
-#bkk{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-#bkk .card{margin:0}
-@media(max-width:1100px){#bkk{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:700px){#bkk{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Lançamentos e Gráficos: 5 cards de resumo em uma linha */
+#kpis,#gkpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:1100px){#kpis,#gkpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){#kpis,#gkpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 <header><div class="top">
  <button class="pf-brand" id="perfil-btn" onclick="perfilOpen()" aria-label="Abrir perfil"><span class="avatar" id="av"></span><span class="pf-txt"><b id="av-nome">Carregando…</b><small>Gestão financeira</small></span></button>
@@ -501,7 +500,7 @@ dialog.cfd::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
  <div class="card pl-card"><div class="pl-h"><h2>A pagar por mês</h2><span id="ctB"></span></div><div class="pw" id="cwB"></div></div>
 </div>
 <div id="vT" hidden><div class="card pl-card"><div class="pl-h"><h2>Transferências</h2><span id="ctT"></span></div><div class="pw" id="trA"></div></div></div>
-<div id="vB" hidden><section class="kpis" id="bkk"></section><div class="card" style="margin-bottom:14px"><h2>Resumo por conta</h2><div id="bkres"></div></div><div class="card pl-card"><div class="pl-h"><h2>Conta bancária</h2><span id="ctBk"></span></div><div class="pw" id="bkA"></div></div></div>
+<div id="vB" hidden><div class="card" style="margin-bottom:14px"><h2>Resumo por conta</h2><div id="bkres"></div></div><div class="card pl-card"><div class="pl-h"><h2>Conta bancária</h2><span id="ctBk"></span></div><div class="pw" id="bkA"></div></div></div>
 <div id="vG" hidden>
  <div class="gbar">
   <input id="gq" type="search" placeholder="Pesquisa inteligente nos gráficos: nubank outubro &gt;500, cat:lazer…" oninput="gset('q',this.value)" autocomplete="off" aria-label="Pesquisar nos gráficos">
