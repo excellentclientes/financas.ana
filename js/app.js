@@ -75,7 +75,7 @@ function bkRender(){
  const recM=pago.filter(x=>x.tipo==='Receita'&&x.venc.slice(0,7)===hoje).reduce((a,x)=>a+x.valor,0);
  const desM=pago.filter(x=>x.tipo==='Despesa'&&!x.cartao&&x.venc.slice(0,7)===hoje).reduce((a,x)=>a+x.valor,0);
  const acum=at.reduce((a,b)=>a+saldoAtual(b),0);
- $('#bkk').innerHTML=`<div class="card kpi"><span>Saldo inicial</span><b>${brl(sIni)}</b></div><div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b></div><div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b></div><div class="card kpi"><span>Saldo do mês</span><b>${brl(recM-desM)}</b></div><div class="card kpi main"><span>Saldo acumulado</span><b>${brl(acum)}</b></div>`;
+
  const linhas=at.map(b=>`<tr><td class="nm">${esc(b.nome)}</td><td class="r">${brl(saldoAtual(b))}</td></tr>`).join('');
  $('#bkres').innerHTML=`<table class="ct"><thead><tr><th>Conta bancária</th><th class="r">Saldo</th></tr></thead><tbody>${linhas||'<tr><td colspan="2" class="empty" style="padding:18px">Nenhuma conta ativa.</td></tr>'}</tbody><tfoot><tr><th>Total</th><th class="r">${brl(acum)}</th></tr></tfoot></table>`;
  const rows=BANKS.map(b=>`<tr><td class="nm">${esc(b.nome)}</td><td class="r">${brl(b.saldo)}</td><td>${fd(b.data)}</td><td>${bkBadge(b.status)}</td><td class="r">${brl(saldoAtual(b))}</td><td class="act"><button class="ic" onclick="bkOpen('${b.id}')" title="Editar" aria-label="Editar">✎</button><button class="ic" onclick="bkDel('${b.id}')" title="Excluir" aria-label="Excluir">🗑</button></td></tr>`).join('');
@@ -244,10 +244,7 @@ function render(){
  try{plRender()}catch(e){}
  const L=filtered(''),T=filtered(),rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),pend=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago'),atr=L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length;
  const saldoIni=bkAtivos().reduce((a,b)=>a+b.saldo,0);
- $('#kpis').innerHTML=`<div class="card kpi main" style="cursor:pointer" onclick="setView('b')" title="Ver contas bancárias"><span>Saldo</span><b>${brl(saldoPer(L))}</b><i>${L.length} lançamentos</i></div>
- <div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b><i>${L.filter(x=>x.tipo==='Receita').length} entradas</i></div>
- <div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b><i>${L.filter(x=>x.tipo==='Despesa').length} saídas</i></div>
- <div class="card kpi"><span>Despesas em aberto</span><b>${brl(pend)}</b><i>${atr} em atraso</i></div>`;
+ $('#kpis').innerHTML=resumoCards(L);
  $('#kmini').innerHTML=`<div class="km main" style="cursor:pointer" onclick="setView('b')"><span>Saldo</span><b>${brl(saldoPer(L))}</b></div><div class="km"><span>Receitas</span><b class="rec">${brl(rec)}</b></div><div class="km"><span>Despesas</span><b class="des">${brl(des)}</b></div><div class="km"><span>Despesas em aberto</span><b>${brl(pend)}</b></div>`;
  const bc={};L.filter(x=>x.tipo==='Despesa').forEach(x=>bc[x.cat]=(bc[x.cat]||0)+x.valor);
  const top=Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,6),mx=top[0]?top[0][1]:1;
@@ -381,6 +378,13 @@ const kfmt=v=>Math.abs(v)>=1000?(v/1000).toFixed(Math.abs(v)>=10000?0:1).replace
 const sumBy=(a,f)=>{const o={};a.forEach(x=>{const k=f(x);o[k]=(o[k]||0)+x.valor});return Object.entries(o).sort((p,q)=>q[1]-p[1])};
 function setView(v){
  $('#hnew').hidden=(v==='p');['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;sessionStorage.setItem('fluxo_view',v);$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
+function resumoCards(L){
+ const at=bkAtivos(),ini=at.reduce((a,b)=>a+b.saldo,0),hoje=TODAY.slice(0,7);
+ const rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao);
+ const recM=sum(L,x=>x.tipo==='Receita'&&x.venc.slice(0,7)===hoje),desM=sum(L,x=>x.tipo==='Despesa'&&!x.cartao&&x.venc.slice(0,7)===hoje);
+ const cards=[['Saldo inicial',brl(ini),'',1],['Receitas',brl(rec),'rec',0],['Despesas',brl(des),'des',0],['Saldo do mês',brl(recM-desM),'',0],['Saldo acumulado',brl(saldoPer(L)),'',0]];
+ return cards.map(([l,v,c,main])=>`<div class="card kpi${main?' main':''}"><span>${l}</span><b class="${c}">${v}</b></div>`).join('');
+}
 function saldoPer(L){
  const r=sum(L,x=>x.tipo==='Receita'&&st(x)==='pago'),d=sum(L,x=>x.tipo==='Despesa'&&!x.cartao&&st(x)==='pago');
  return bkAtivos().reduce((a,b)=>a+b.saldo,0)+r-d-FAT.reduce((a,f)=>a+f.valor,0);
@@ -438,7 +442,7 @@ function grender(){
  $('#gchips').innerHTML=ch.length?ch.map(([k,l,v])=>`<button class="chip on" data-x="${k}">${l}: <b>${esc(v)}</b> ✕</button>`).join('')+'<button class="chip" data-x="all">Limpar tudo</button>':'<span>Clique nos gráficos para filtrar · ou use os filtros acima</span>';
  const L=gf(),DT=G.tipo||'Despesa',P=DT+'s',rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),ab=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago');
  const saldoIniG=bkAtivos().reduce((a,b)=>a+b.saldo,0);
- $('#gkpis').innerHTML=`<div class="card kpi main"><span>Saldo</span><b>${brl(saldoPer(L))}</b><i>${L.length} lançamentos</i></div><div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b><i>${L.filter(x=>x.tipo==='Receita').length} entradas</i></div><div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b><i>${L.filter(x=>x.tipo==='Despesa').length} saídas</i></div><div class="card kpi"><span>Despesas em aberto</span><b>${brl(ab)}</b><i>${L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length} em atraso</i></div>`;
+ $('#gkpis').innerHTML=resumoCards(L);
  $('#g_mes').innerHTML=gMes();
  $('#g_t1').textContent=P+' por categoria';$('#g_cat').innerHTML=gDonut(sumBy(gf(['cat','sub']).filter(x=>x.tipo===DT),x=>x.cat));
  $('#g_t2').textContent=P+' por subcategoria';$('#g_sub').innerHTML=hbars(sumBy(gf(['sub']).filter(x=>x.tipo===DT),x=>x.cat+'|'+x.sub).slice(0,8).map(([k,v])=>[k.split('|')[1],v,k]),'sub',G.sub?G.cat+'|'+G.sub:'');
