@@ -67,6 +67,17 @@ const bkAtivos=()=>BANKS.filter(b=>b.status==='Ativo');
 const bkBadge=s=>`<span class="bst ${s==='Ativo'?'on':'off'}">${s}</span>`;
 
 function bkRender(){
+ const at=bkAtivos(),hoje=TODAY.slice(0,7);
+ const sIni=at.reduce((a,b)=>a+b.saldo,0);
+ const pago=D.filter(x=>st(x)==='pago');
+ const rec=pago.filter(x=>x.tipo==='Receita').reduce((a,x)=>a+x.valor,0);
+ const des=pago.filter(x=>x.tipo==='Despesa'&&!x.cartao).reduce((a,x)=>a+x.valor,0)+FAT.reduce((a,f)=>a+f.valor,0);
+ const recM=pago.filter(x=>x.tipo==='Receita'&&x.venc.slice(0,7)===hoje).reduce((a,x)=>a+x.valor,0);
+ const desM=pago.filter(x=>x.tipo==='Despesa'&&!x.cartao&&x.venc.slice(0,7)===hoje).reduce((a,x)=>a+x.valor,0);
+ const acum=at.reduce((a,b)=>a+saldoAtual(b),0);
+ $('#bkk').innerHTML=`<div class="card kpi"><span>Saldo inicial</span><b>${brl(sIni)}</b></div><div class="card kpi"><span>Receitas</span><b class="rec">${brl(rec)}</b></div><div class="card kpi"><span>Despesas</span><b class="des">${brl(des)}</b></div><div class="card kpi"><span>Saldo do mês</span><b>${brl(recM-desM)}</b></div><div class="card kpi main"><span>Saldo acumulado</span><b>${brl(acum)}</b></div>`;
+ const linhas=at.map(b=>`<tr><td class="nm">${esc(b.nome)}</td><td class="r">${brl(saldoAtual(b))}</td></tr>`).join('');
+ $('#bkres').innerHTML=`<table class="ct"><thead><tr><th>Conta bancária</th><th class="r">Saldo</th></tr></thead><tbody>${linhas||'<tr><td colspan="2" class="empty" style="padding:18px">Nenhuma conta ativa.</td></tr>'}</tbody><tfoot><tr><th>Total</th><th class="r">${brl(acum)}</th></tr></tfoot></table>`;
  const rows=BANKS.map(b=>`<tr><td class="nm">${esc(b.nome)}</td><td class="r">${brl(b.saldo)}</td><td>${fd(b.data)}</td><td>${bkBadge(b.status)}</td><td class="r">${brl(saldoAtual(b))}</td><td class="act"><button class="ic" onclick="bkOpen('${b.id}')" title="Editar" aria-label="Editar">✎</button><button class="ic" onclick="bkDel('${b.id}')" title="Excluir" aria-label="Excluir">🗑</button></td></tr>`).join('');
  $('#bkA').innerHTML=`<table class="ct"><thead><tr><th>Conta Bancária</th><th class="r">Saldo Inicial</th><th>Data Saldo Inicial</th><th>Status</th><th class="r">Valor atual</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="empty" style="padding:22px">Nenhuma conta cadastrada.</td></tr>'}</tbody></table>`;
  $('#ctBk').textContent=BANKS.length+(BANKS.length===1?' conta':' contas');
@@ -188,9 +199,26 @@ function hl(s,key){
 function setQ(v){$('#q').value=v;render();$('#q').focus()}
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}});
 
+const FK={tipo:['Tipo',x=>x.tipo],conta:['Conta',x=>x.conta],cartao:['Cartão',x=>x.cartao||'—'],cat:['Categoria',x=>x.cat],status:['Status',x=>st(x)]};
+let FCOL={};
+function colBtns(){document.querySelectorAll('.thf').forEach(b=>b.classList.toggle('on',!!FCOL[b.dataset.k]))}
+function colFilter(k){
+ const [lab,get]=FK[k];const vals=[...new Set(D.map(get))].sort((a,b)=>String(a).localeCompare(String(b),'pt'));
+ $('#cf_t').textContent='Filtrar: '+lab;$('#cf_k').value=k;
+ $('#cf_list').innerHTML=vals.map(v=>`<label class="cf-i"><input type="checkbox" value="${esc(v)}"${(!FCOL[k]||FCOL[k].has(String(v)))?' checked':''}><span>${esc(v)}</span></label>`).join('')||'<p style="color:var(--mut)">Sem valores</p>';
+ $('#coldlg').showModal();
+}
+function colApply(e){
+ e.preventDefault();const k=$('#cf_k').value;
+ const todos=[...$('#cf_list').querySelectorAll('input')],sel=todos.filter(i=>i.checked).map(i=>i.value);
+ if(sel.length===todos.length)delete FCOL[k];else FCOL[k]=new Set(sel);
+ colBtns();$('#coldlg').close();render();return false;
+}
+function colClear(){delete FCOL[$('#cf_k').value];colBtns();$('#coldlg').close();render()}
 function filtered(tab=TAB){
  const Q=getQ(),t=$('#ft').value,m=$('#fm').value,yr=$('#fy').value;
- return D.filter(x=>(!t||x.tipo===t)&&(!tab||(tab==='pago'?st(x)==='pago':st(x)!=='pago'))&&(!m||(yr?x.venc.startsWith(m):x.venc.slice(5,7)===m))&&(!yr||x.venc.startsWith(yr))&&matchQ(x,Q)).sort((a,b)=>a.venc.localeCompare(b.venc)||a.n-b.n);
+ return D.filter(x=>Object.keys(FCOL).every(k=>FCOL[k].has(String(FK[k][1](x)))))
+  .filter(x=>(!t||x.tipo===t)&&(!tab||(tab==='pago'?st(x)==='pago':st(x)!=='pago'))&&(!m||(yr?x.venc.startsWith(m):x.venc.slice(5,7)===m))&&(!yr||x.venc.startsWith(yr))&&matchQ(x,Q)).sort((a,b)=>a.venc.localeCompare(b.venc)||a.n-b.n);
 }
 function months(){
  const y=$('#fy').value,cur=$('#fm').value;
@@ -213,6 +241,7 @@ function fyChange(){months();render()}
 const sum=(a,f)=>a.filter(f).reduce((s,x)=>s+x.valor,0);
 
 function render(){
+ try{plRender()}catch(e){}
  const L=filtered(''),T=filtered(),rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),pend=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago'),atr=L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length;
  const saldoIni=bkAtivos().reduce((a,b)=>a+b.saldo,0);
  $('#kpis').innerHTML=`<div class="card kpi main" style="cursor:pointer" onclick="setView('b')" title="Ver contas bancárias"><span>Saldo</span><b>${brl(saldoPer(L))}</b><i>${L.length} lançamentos</i></div>
@@ -232,9 +261,10 @@ function render(){
   <td data-l="Vencimento">${hl(fd(x.venc),'venc')}</td>
   <td data-l="Pgto / Receb.">${hl(fd(x.pgto),'pgto')}</td>
   <td data-l="Parcela">${hl(x.parc||'—','parc')}</td>
-  <td data-l="Conta / Cartão">${hl(x.conta,'conta')}<small>${hl(x.cartao||'Sem cartão','conta')}</small></td>
+  <td data-l="Conta">${hl(x.conta,'conta')}</td>
+  <td data-l="Cartão">${hl(x.cartao||'—','conta')}</td>
   <td data-l="Categoria">${hl(x.cat,'cat')}<small>${hl(x.sub,'sub')}</small></td>
-  <td data-l="Compra">${hl(fd(x.compra),'compra')}</td>
+  <td data-l="Data da Compra">${hl(fd(x.compra),'compra')}</td>
   <td data-l="Qtd">${hl(String(x.qtd),'qtd')}</td>
   <td data-l="Descrição"><b style="font-weight:600">${hl(x.desc,'desc')}</b></td>
   <td data-l="Valor" class="v ${x.tipo==='Receita'?'rec':'des'}">${hl((x.tipo==='Receita'?'+':'−')+' '+brl(x.valor),'valor')}</td>
@@ -250,8 +280,21 @@ function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Obje
  $('#f_status').options[1].text=t==='Receita'?'Recebido':'Pago'}
 function fillSub(s){$('#f_sub').innerHTML=opts(CATS[$('#f_tipo').value][$('#f_cat').value]||[]);if(s)$('#f_sub').value=s}
 let editing=null;
+// Vencimento da fatura: dia de pagamento do cartão no mês correto, conforme a data da compra
+function vencFatura(compra,diaPag){
+ let [y,mo,d]=compra.split('-').map(Number);
+ if(d>=diaPag){mo++;if(mo>12){mo=1;y++}}
+ const ult=new Date(y,mo,0).getDate();
+ return `${y}-${String(mo).padStart(2,'0')}-${String(Math.min(diaPag,ult)).padStart(2,'0')}`;
+}
 function fgVis(){
  const cartao=!!$('#f_cartao').value, despesa=$('#f_tipo').value==='Despesa';
+ // compra/lançamento na conta bancária já nasce como Pago
+ if(!editing&&!cartao)$('#f_status').value='pago';
+ // compra no cartão: vencimento automático pela fatura
+ const cardObj=cartao?CARDS.find(c=>c.nome===$('#f_cartao').value):null;
+ $('#f_venc').readOnly=!!(cardObj&&cardObj.diaPag&&despesa);
+ if(cardObj&&cardObj.diaPag&&despesa&&$('#f_compra').value)$('#f_venc').value=vencFatura($('#f_compra').value,cardObj.diaPag);
  const comp=$('#f_compra').closest('.fg'), parc=$('#f_parc').closest('.fg');
  comp.hidden=!despesa;
  $('#f_cartao').closest('.fg').hidden=!despesa;
@@ -260,6 +303,7 @@ function fgVis(){
  $('#f_venc').closest('.fg').hidden=!despesa&&$('#f_status').value==='pago';
 }
 $('#f_status').addEventListener('change',()=>{if($('#f_status').value==='pago'&&!$('#f_pgto').value)$('#f_pgto').value=TODAY;fgVis()});
+$('#f_compra').addEventListener('change',fgVis);
 $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
@@ -323,6 +367,10 @@ function pdf(){
    if(d.section==='body'){const x=L[d.row.index];if(d.column.index===8)d.cell.styles.textColor=x.tipo==='Receita'?[4,120,87]:[190,18,60];
     if(d.column.index===9){const s=st(x);d.cell.styles.textColor=s==='pago'?[4,120,87]:s==='atrasado'?[190,18,60]:[180,83,9];d.cell.styles.fontStyle='bold'}}},
   didDrawPage:d=>{const h=doc.internal.pageSize.getHeight();doc.setFontSize(8.5);doc.setTextColor(140);doc.text('Fluxo · Relatório financeiro',M,h-18);doc.text('Página '+doc.internal.getNumberOfPages(),W-M,h-18,{align:'right'})}});
+ {const GS={};L.forEach(x=>{const k=x.tipo+'|'+x.cat+'|'+x.sub;const g=GS[k]=GS[k]||{t:x.tipo,c:x.cat,s:x.sub,n:0,v:0};g.n++;g.v+=x.valor});
+ const rowsS=Object.values(GS).sort((a,b)=>a.t.localeCompare(b.t)||a.c.localeCompare(b.c,'pt')||a.s.localeCompare(b.s,'pt')).map(g=>[g.t,g.c,g.s,String(g.n),brl(g.v)]);
+ const yS=doc.lastAutoTable.finalY+28;doc.setFont('helvetica','bold');doc.setFontSize(12);doc.setTextColor(20,32,30);doc.text('Resumo por subcategoria',M,yS);
+ pdfTable(doc,M,yS+8,['Tipo','Categoria','Subcategoria','Lançamentos','Total'],rowsS.length?rowsS:[['—','','','','']],[3,4]);}
  doc.save('relatorio-financeiro.pdf');toast('Relatório PDF gerado');
 }
 /* ===== Aba de Gráficos ===== */
@@ -363,6 +411,7 @@ const hbars=(rows,g,sel)=>{const mx=rows[0]?rows[0][1]:1;return rows.map(([l,v,k
 function grid(W,H,pl,pr,pt,pb,lo,top){const Y=v=>pt+(top-v)/(top-lo)*(H-pt-pb);let o='';for(let i=0;i<=4;i++){const v=lo+(top-lo)*i/4;o+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e5eae8"/><text x="${pl-5}" y="${Y(v)+3}" text-anchor="end" font-size="9.5" fill="#667571">${kfmt(v)}</text>`}return[Y,o]}
 const GDEF='<defs><linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0f766e"/></linearGradient><linearGradient id="gD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb7185"/><stop offset="1" stop-color="#be123c"/></linearGradient><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14b8a6" stop-opacity=".45"/><stop offset="1" stop-color="#14b8a6" stop-opacity="0"/></linearGradient><filter id="glw" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
 function gMes(){const bm={};gf(['from','to']).forEach(x=>{const m=x.venc.slice(0,7);(bm[m]=bm[m]||{R:0,D:0})[x.tipo==='Receita'?'R':'D']+=x.valor});
+ bkAtivos().forEach(b=>{if(!b.saldo)return;const m=(b.data||TODAY).slice(0,7);(bm[m]=bm[m]||{R:0,D:0}).R+=b.saldo});
  const ks=Object.keys(bm).sort().slice(-12);if(!ks.length)return EMPTY;
  const W=600,H=200,pl=36,pr=8,pt=10,pb=24,top=Math.max(1,...ks.map(k=>Math.max(bm[k].R,bm[k].D))),lo=0,[Y,gr]=grid(W,H,pl,pr,pt,pb,lo,top),sw=(W-pl-pr)/ks.length,bw=Math.min(16,sw*.3),rng=G.from||G.to;
  let o=`<svg viewBox="0 0 ${W} ${H}">${GDEF}`+gr;
@@ -414,7 +463,7 @@ $('#vG').addEventListener('click',e=>{
 
 (function(){const v=$('#vL'),e=$('#stky'),k=$('#kpis'),t=()=>{const kr=k.getBoundingClientRect(),vr=v.getBoundingClientRect();e.classList.toggle('scr',v.scrollTop>0&&kr.height>0&&vr.height>0&&kr.bottom<=vr.top+1)};v.addEventListener('scroll',t,{passive:true});addEventListener('resize',t);if(window.ResizeObserver){const ro=new ResizeObserver(t);ro.observe(k);ro.observe(v)}t();setTimeout(t,0)})();
 (function(){const e=$('#stky'),f=()=>$('#vL').style.setProperty('--stk',e.offsetHeight+'px');f();if(window.ResizeObserver)new ResizeObserver(f).observe(e);addEventListener('resize',f)})();
-const COLN=['Nº','Tipo','Vencimento','Pgto / Receb.','Parcela','Conta / Cartão','Categoria','Compra','Qtd','Descrição','Valor','Status'];let HC=[];try{HC=JSON.parse(localStorage.getItem('fluxo_cols')||'[]')}catch(e){}
+const COLN=['Nº','Tipo','Vencimento','Pgto / Receb.','Parcela','Conta','Cartão','Categoria','Data da Compra','Qtd','Descrição','Valor','Status'];let HC=[];try{HC=JSON.parse(localStorage.getItem('fluxo_cols')||'[]')}catch(e){}
 function applyCols(){$('#colcss').textContent=HC.length?HC.map(i=>`.tbs th:nth-child(${i+1}),.tbs td:not(.empty):nth-child(${i+1})`).join(',')+'{display:none!important}':''}
 function saveCols(){try{localStorage.setItem('fluxo_cols',JSON.stringify(HC))}catch(e){}applyCols()}
 function openCols(){$('#cbody').innerHTML=COLN.map((n,i)=>`<label class="cfg-i"><input type="checkbox" data-i="${i}"${HC.includes(i)?'':' checked'}>${n}</label>`).join('');$('#cdlg').showModal();cfgTab('k')}
@@ -549,11 +598,13 @@ const plPersist=()=>{try{localStorage.setItem('fluxo_plan',JSON.stringify(PL))}c
  same=(a,b)=>a.toLowerCase()===b.toLowerCase();
 function parseMoney(v){v=String(v).replace(/[R$\s]/g,'');if(!v)return NaN;if(v.includes(','))v=v.replace(/\./g,'').replace(',','.');return Number(v)}
 function plRender(focus){
- const yr=$('#pyr'),now=new Date();if(!yr.options.length)for(let y=now.getFullYear()-2;y<=now.getFullYear()+3;y++)yr.add(new Option(y,y));yr.value=PY;
+ const yr=$('#pyr'),now=new Date();
+ // valores automáticos: cada lançamento cai na categoria/subcategoria dele, no mês do vencimento
+ const PLR=(()=>{const A={};D.forEach(x=>{if(!x.cat||!x.sub||x.venc.slice(0,4)!==String(PY))return;const k=x.tipo+'|'+x.cat+'|'+x.sub;const a=A[k]=A[k]||{id:k,t:x.tipo,c:x.cat,s:x.sub,v:{}};const mm=x.venc.slice(0,7);a.v[mm]=(a.v[mm]||0)+x.valor});return Object.values(A)})();if(!yr.options.length)for(let y=now.getFullYear()-2;y<=now.getFullYear()+3;y++)yr.add(new Option(y,y));yr.value=PY;
  const TT={Receita:Array(12).fill(0),Despesa:Array(12).fill(0)};
  const cur=PY===now.getFullYear()?now.getMonth():-1,W=[80,110,130],cols=W.map(w=>`<col style="width:${w}px">`).join('')+'<col style="width:80px">'.repeat(12),tw=W.reduce((a,b)=>a+b,0)+80*12;
  [['Receita','R'],['Despesa','D']].forEach(([t,k])=>{
-  const rows=PL.filter(r=>r.t===t).sort((a,b)=>a.c.localeCompare(b.c,'pt')||a.s.localeCompare(b.s,'pt')),box=$('#pw'+k),sl=box.scrollLeft,groups=[],tot=Array(12).fill(0);
+  const rows=PLR.filter(r=>r.t===t).sort((a,b)=>a.c.localeCompare(b.c,'pt')||a.s.localeCompare(b.s,'pt')),box=$('#pw'+k),sl=box.scrollLeft,groups=[],tot=Array(12).fill(0);
   rows.forEach(r=>{const g=groups[groups.length-1];if(g&&g.c===r.c)g.r.push(r);else groups.push({c:r.c,r:[r]})});
   let body='',first=true;
   groups.forEach(g=>g.r.forEach((r,i)=>{
@@ -569,7 +620,7 @@ function plRender(focus){
   if(focus){const th=box.querySelector('th.cur');box.scrollLeft=th?Math.max(0,th.offsetLeft-W.reduce((a,b)=>a+b,0)-110):0}
  });
  {const box=$('#pwS'),sl=box.scrollLeft,cls=v=>v<0?' neg':v>0?' pos':'',rd=v=>Math.round(v*100)/100,CS={};
-  PL.forEach(r=>{const a=CS[r.c]=CS[r.c]||Array(12).fill(0);for(let m=0;m<12;m++){const v=r.v[pk(m)];if(v!=null)a[m]+=(r.t==='Receita'?v:-v)}});
+  PLR.forEach(r=>{const a=CS[r.c]=CS[r.c]||Array(12).fill(0);for(let m=0;m<12;m++){const v=r.v[pk(m)];if(v!=null)a[m]+=(r.t==='Receita'?v:-v)}});
   const tt=Array(12).fill(0);Object.keys(CS).forEach(c=>CS[c].forEach((v,m)=>tt[m]+=v));
   const body=`<tr class="pl-tot"><td class="pl-s" colspan="3" style="left:0">Total</td>${tt.map((v,m)=>{v=rd(v);return `<td class="sd${cls(v)}${m===cur?' cur':''}">${pm(v)}</td>`}).join('')}</tr>`;
   box.innerHTML=`<table class="pt" style="width:100%;min-width:${tw}px"><colgroup>${cols}</colgroup><thead><tr><th class="pl-c" colspan="3" style="left:0;box-shadow:1px 0 0 var(--line)">Receitas vs Despesas</th>${MS.map((n,m)=>`<th class="m${m===cur?' cur':''}" title="${MN[m]}">${n}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table>`;
@@ -583,6 +634,7 @@ function plRender(focus){
 function plFillCats(c){const t=$('#p_t').value,ks=Object.keys(PC[t]).sort(pt);$('#p_c').innerHTML=ks.length?ks.map(k=>`<option>${esc(k)}</option>`).join(''):'<option value="">Nenhuma categoria cadastrada</option>';if(c&&ks.includes(c))$('#p_c').value=c;plFillSubs()}
 function plFillSubs(sb){const t=$('#p_t').value,ss=(PC[t][$('#p_c').value]||[]).slice().sort(pt);$('#p_s').innerHTML=ss.length?ss.map(k=>`<option>${esc(k)}</option>`).join(''):'<option value="">Nenhuma subcategoria cadastrada</option>';if(sb&&ss.includes(sb))$('#p_s').value=sb}
 function plOpen(id,m){
+ if(id&&!PL.find(x=>x.id===id)){toast('Os valores do planejamento vêm automaticamente dos lançamentos');return}
  if(!id&&!['Despesa','Receita'].some(t=>Object.values(PC[t]).some(a=>a.length))){toast('Configure categoria e subcategoria em “Configurar tabela” antes de planejar');return}
  const r=id?PL.find(x=>x.id===id):null,now=new Date();
  $('#p_y').textContent='Ano de referência: '+PY+'. Categorias e subcategorias vêm de “Configurar tabela”.';

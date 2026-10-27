@@ -10,7 +10,9 @@ import { firebaseConfig } from "./firebase-config.js";
 
 const $p = sel => document.querySelector(sel);
 // Único e-mail autorizado a acessar o sistema
-const EMAIL_PERMITIDO = "acfranco1974@gmail.com";
+const EMAILS_PERMITIDOS = ["acfranco1974@gmail.com", "excellentservices.excel@gmail.com"];
+// Dados compartilhados: todos os e-mails autorizados veem e alteram as mesmas informações
+const CAMINHO_DADOS = () => collection(db, "dados", "compartilhado", "fluxo");
 const PREFIX = "fluxo";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -34,7 +36,7 @@ function agendarEscrita(key, value) {
   timers[key] = setTimeout(() => {
     timers[key] = null;
     if (!uidAtual) { escritasPendentes = Object.values(timers).some(Boolean); return; }
-    setDoc(doc(db, "users", uidAtual, "fluxo", key), { value, atualizado: Date.now() })
+    setDoc(doc(db, "dados", "compartilhado", "fluxo", key), { value, atualizado: Date.now() })
       .catch(err => console.error("Erro ao salvar no Firebase (dados NÃO foram enviados):", err))
       .finally(() => { escritasPendentes = Object.values(timers).some(Boolean); });
   }, 300);
@@ -51,7 +53,7 @@ function instalarEspelho() {
 
 // ---------- leitura (Firestore -> localStorage) ----------
 async function carregarDaNuvem(uid) {
-  const snap = await getDocs(collection(db, "users", uid, "fluxo"));
+  const snap = await getDocs(CAMINHO_DADOS());
   const nuvem = {};
   snap.forEach(d => { nuvem[d.id] = d.data().value; });
 
@@ -128,7 +130,7 @@ function ouvirNuvem(uid) {
   if (ouvindo) return;
   ouvindo = true;
   let primeira = true;
-  onSnapshot(collection(db, "users", uid, "fluxo"), snap => {
+  onSnapshot(CAMINHO_DADOS(), async snap => {
     // Alterações feitas por este aparelho não precisam recarregar nada
     if (snap.metadata.hasPendingWrites) return;
     // Primeira resposta vinda só do cache local não basta: espera o servidor
@@ -137,6 +139,15 @@ function ouvirNuvem(uid) {
 
     if (primeira) {
       primeira = false;
+      if (snap.empty) {
+        // Primeira vez no espaço compartilhado: copia os dados que estavam na conta de quem entrou
+        try {
+          const antigos = await getDocs(collection(db, "users", uid, "fluxo"));
+          for (const d of antigos.docs) {
+            await setDoc(doc(db, "dados", "compartilhado", "fluxo", d.id), { value: d.data().value, atualizado: Date.now() });
+          }
+        } catch (err) { console.error("Migração de dados:", err); }
+      }
       // Dados que existem só no navegador são enviados à nuvem (nunca apagados)
       const ids = new Set(snap.docs.map(d => d.id));
       for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -204,7 +215,7 @@ if (emCache) {
 
 // 2) Confirma o login com o Firebase e sincroniza em segundo plano
 function emailAutorizado(user) {
-  return !!user && !!user.email && user.email.toLowerCase() === EMAIL_PERMITIDO && user.emailVerified === true;
+  return !!user && !!user.email && EMAILS_PERMITIDOS.includes(user.email.toLowerCase()) && user.emailVerified === true;
 }
 
 onAuthStateChanged(auth, user => {
