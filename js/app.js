@@ -202,11 +202,15 @@ document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&
 const FK={n:['Nº',x=>String(x.n).padStart(4,'0')],tipo:['Tipo',x=>x.tipo],venc:['Vencimento',x=>fd(x.venc)],pgto:['Pgto / Receb.',x=>x.pgto?fd(x.pgto):'—'],parc:['Parcela',x=>x.parc||'—'],conta:['Conta',x=>x.conta],cartao:['Cartão',x=>x.cartao||'—'],cat:['Categoria',x=>x.cat],compra:['Data da Compra',x=>x.compra?fd(x.compra):'—'],qtd:['Qtd',x=>String(x.qtd)],desc:['Descrição',x=>x.desc||'—'],valor:['Valor',x=>brl(x.valor)],status:['Status',x=>stLabel(x)]};
 let FCOL={};
 function colBtns(){document.querySelectorAll('.thf').forEach(b=>b.classList.toggle('on',!!FCOL[b.dataset.k]))}
-function colFilter(k){
+function colFilter(k,btn){
  const [lab,get]=FK[k];const vals=[...new Set(D.map(get))].sort((a,b)=>String(a).localeCompare(String(b),'pt'));
  $('#cf_t').textContent='Filtrar: '+lab;$('#cf_k').value=k;
  $('#cf_list').innerHTML=vals.map(v=>`<label class="cf-i"><input type="checkbox" value="${esc(v)}"${(!FCOL[k]||FCOL[k].has(String(v)))?' checked':''}><span>${esc(v)}</span></label>`).join('')||'<p style="color:var(--mut)">Sem valores</p>';
- $('#coldlg').showModal();
+ const d=$('#coldlg');d.style.visibility='hidden';d.showModal();
+ if(btn){const r=btn.getBoundingClientRect(),w=d.offsetWidth,h=d.offsetHeight;
+  let x=Math.min(r.left,window.innerWidth-w-12),y=r.bottom+8;if(y+h>window.innerHeight-12)y=Math.max(12,r.top-h-8);
+  d.style.left=Math.max(12,x)+'px';d.style.top=y+'px';}
+ d.style.visibility='';
 }
 function colApply(e){
  e.preventDefault();const k=$('#cf_k').value;
