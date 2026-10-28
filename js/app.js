@@ -475,22 +475,38 @@ function gf(ign=[]){const Q=parseQ(G.q),I=k=>ign.includes(k);
 const hbars=(rows,g,sel)=>{const mx=rows[0]?rows[0][1]:1;return rows.map(([l,v,k])=>`<div class="bar sel${sel&&sel!==(k||l)?' dim':''}" data-g="${g}" data-v="${esc(k||l)}" title="${esc(l)}"><span>${esc(l)}</span><div><i style="width:${v/mx*100}%"></i></div><b>${brl(v)}</b></div>`).join('')||EMPTY};
 function grid(W,H,pl,pr,pt,pb,lo,top){const Y=v=>pt+(top-v)/(top-lo)*(H-pt-pb);let o='';for(let i=0;i<=4;i++){const v=lo+(top-lo)*i/4;o+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e5eae8"/><text x="${pl-5}" y="${Y(v)+3}" text-anchor="end" font-size="9.5" fill="#667571">${kfmt(v)}</text>`}return[Y,o]}
 const GDEF='<defs><linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0f766e"/></linearGradient><linearGradient id="gD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb7185"/><stop offset="1" stop-color="#be123c"/></linearGradient><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14b8a6" stop-opacity=".45"/><stop offset="1" stop-color="#14b8a6" stop-opacity="0"/></linearGradient><filter id="glw" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+/* Etiquetas de valor dos gráficos: "pílula" legível sempre acima da barra, sem cortar e sem sobrepor */
+const G_PH=18;
+function gPillW(t){return Math.round(t.length*6.4+12)}
+function gPill(it,W){const w=it.w,x=it.cx-w/2;return`<g style="pointer-events:none"><rect x="${x}" y="${it.y}" width="${w}" height="${G_PH}" rx="6" fill="#fff" stroke="${it.c}" stroke-opacity=".4"/><text x="${it.cx}" y="${it.y+12.6}" text-anchor="middle" font-size="10.5" font-weight="800" fill="${it.c}">${it.t}</text></g>`}
+function gPlace(items,W){const placed=[];
+ items.forEach(it=>{it.w=gPillW(it.t);it.cx=Math.min(Math.max(it.cx,it.w/2+2),W-it.w/2-2)});
+ items.sort((a,b)=>a.cx-b.cx).forEach(it=>{for(let n=0;n<4;n++){if(!placed.some(p=>Math.abs(p.cx-it.cx)<(p.w+it.w)/2+2&&Math.abs(p.y-it.y)<G_PH+2))break;it.y+=it.dir*(G_PH+2)}placed.push(it)});
+ return items}
 function gMes(){const bm={};gf(['from','to']).forEach(x=>{const m=x.venc.slice(0,7);(bm[m]=bm[m]||{R:0,D:0})[x.tipo==='Receita'?'R':'D']+=x.valor});
  bkAtivos().forEach(b=>{if(!b.saldo)return;const m=(b.data||TODAY).slice(0,7);(bm[m]=bm[m]||{R:0,D:0}).R+=b.saldo});
  const ks=Object.keys(bm).sort().slice(-12);if(!ks.length)return EMPTY;
- const W=600,H=200,pl=36,pr=8,pt=10,pb=24,top=Math.max(1,...ks.map(k=>Math.max(bm[k].R,bm[k].D))),lo=0,[Y,gr]=grid(W,H,pl,pr,pt,pb,lo,top),sw=(W-pl-pr)/ks.length,bw=Math.min(16,sw*.3),rng=G.from||G.to;
+ const el=document.getElementById('g_mes'),W=Math.max(300,(el&&el.clientWidth)||560),H=230,pl=40,pr=10,pb=26,top=Math.max(1,...ks.map(k=>Math.max(bm[k].R,bm[k].D))),sw=(W-pl-pr)/ks.length,bw=Math.min(26,Math.max(6,sw*.32)),rng=G.from||G.to,e=Math.max(1,Math.ceil(46/sw));
+ let pt=16,Y,gr,items;
+ for(let p=0;p<2;p++){[Y,gr]=grid(W,H,pl,pr,pt,pb,0,top);items=[];
+  ks.forEach((k,i)=>{const r=bm[k].R,dd=bm[k].D,cx=pl+sw*(i+.5);
+   if(r>0)items.push({cx:cx-bw/2-1.5,y:Y(r)-5-G_PH,t:'R$ '+kfmt(r),c:'#0f766e',dir:-1});
+   if(dd>0)items.push({cx:cx+bw/2+1.5,y:Y(dd)-5-G_PH,t:'R$ '+kfmt(dd),c:'#be123c',dir:-1})});
+  gPlace(items,W);const mn=Math.min(...items.map(i=>i.y),99);if(mn>=2)break;pt+=2-mn+4}
  let o=`<svg viewBox="0 0 ${W} ${H}">${GDEF}`+gr;
  ks.forEach((k,i)=>{const cx=pl+sw*(i+.5),d=rng&&!((!G.from||k>=G.from)&&(!G.to||k<=G.to)),r=bm[k].R,dd=bm[k].D;
-  o+=`<g data-g="month" data-v="${k}" style="cursor:pointer;opacity:${d?.3:1}"><title>${mlabel(k)}\nReceitas: ${brl(r)}\nDespesas: ${brl(dd)}\nSaldo: ${brl(r-dd)}</title><rect x="${cx-sw/2}" y="${pt}" width="${sw}" height="${H-pt-pb}" fill="transparent"/><rect x="${cx-bw-1.5}" y="${Y(r)}" width="${bw}" height="${Math.max(1,Y(0)-Y(r))}" rx="4" fill="url(#gR)" filter="url(#glw)"/><rect x="${cx+1.5}" y="${Y(dd)}" width="${bw}" height="${Math.max(1,Y(0)-Y(dd))}" rx="4" fill="url(#gD)" filter="url(#glw)"/><text x="${cx}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="#667571">${mshort(k)}</text></g>`});
- const lbl=(x,y,t,c)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${c}">${t}</text>`;
- ks.forEach((k,i)=>{const r=bm[k].R,dd=bm[k].D,cx=pl+sw*(i+.5);
-  if(r>0)o+=lbl(cx-bw/2-1.5,Y(r)-5,'R$ '+kfmt(r),'#0f766e');
-  if(dd>0)o+=lbl(cx+bw/2+1.5,Y(dd)-5,'R$ '+kfmt(dd),'#be123c');});
- return o+'</svg>'}
+  o+=`<g data-g="month" data-v="${k}" style="cursor:pointer;opacity:${d?.3:1}"><title>${mlabel(k)}\nReceitas: ${brl(r)}\nDespesas: ${brl(dd)}\nSaldo: ${brl(r-dd)}</title><rect x="${cx-sw/2}" y="0" width="${sw}" height="${H-pb+4}" fill="transparent"/><rect x="${cx-bw-1.5}" y="${Y(r)}" width="${bw}" height="${Math.max(1,Y(0)-Y(r))}" rx="4" fill="url(#gR)" filter="url(#glw)"/><rect x="${cx+1.5}" y="${Y(dd)}" width="${bw}" height="${Math.max(1,Y(0)-Y(dd))}" rx="4" fill="url(#gD)" filter="url(#glw)"/>${i%e===0?`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" fill="#667571">${mshort(k)}</text>`:''}</g>`});
+ return o+items.map(it=>gPill(it,W)).join('')+'</svg>'}
 function gSal(L){const bm={};L.forEach(x=>{const m=x.venc.slice(0,7);bm[m]=(bm[m]||0)+(x.tipo==='Receita'?x.valor:-x.valor)});
  const ks=Object.keys(bm).sort();if(!ks.length)return EMPTY;let c=0;const cum=ks.map(k=>c+=bm[k]),n=ks.length;
- const W=400,H=190,pl=38,pr=12,pt=10,pb=24,[Y,gr]=grid(W,H,pl,pr,pt,pb,Math.min(0,...cum),Math.max(1,...cum)),sw=(W-pl-pr)/n,bw=Math.min(26,sw*.62),e=Math.ceil(n/6);
- return`<svg viewBox="0 0 ${W} ${H}">${GDEF}${gr}`+cum.map((v,i)=>{const cx=pl+sw*(i+.5),y=Math.min(Y(v),Y(0)),h=Math.max(1,Math.abs(Y(v)-Y(0)));return`<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${h}" rx="4" fill="url(#${v>=0?'gR':'gD'})"><title>${mlabel(ks[i])}: ${brl(v)}</title></rect><text x="${cx}" y="${v>=0?y-4:y+h+11}" text-anchor="middle" font-size="9.5" font-weight="700" fill="${v>=0?'#0f766e':'#be123c'}">${(v<0?'-':'')+'R$ '+kfmt(Math.abs(v))}</text>${i%e===0?`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="9.5" fill="#667571">${mshort(ks[i])}</text>`:''}`}).join('')+'</svg>'}
+ const el=document.getElementById('g_sal'),W=Math.max(300,(el&&el.clientWidth)||420),H=210,pl=44,pr=12,hasNeg=cum.some(v=>v<0),pb=hasNeg?46:26,lo=Math.min(0,...cum),hi=Math.max(1,...cum),sw=(W-pl-pr)/n,bw=Math.min(30,Math.max(6,sw*.6)),e=Math.max(1,Math.ceil(46/sw));
+ let pt=16,Y,gr,items;
+ for(let p=0;p<2;p++){[Y,gr]=grid(W,H,pl,pr,pt,pb,lo,hi);items=[];
+  cum.forEach((v,i)=>{const cx=pl+sw*(i+.5),y=Math.min(Y(v),Y(0)),h=Math.max(1,Math.abs(Y(v)-Y(0))),t=(v<0?'-':'')+'R$ '+kfmt(Math.abs(v));
+   items.push(v>=0?{cx,y:y-5-G_PH,t,c:'#0f766e',dir:-1}:{cx,y:y+h+5,t,c:'#be123c',dir:1})});
+  gPlace(items,W);const mn=Math.min(...items.map(i=>i.y),99);if(mn>=2)break;pt+=2-mn+4}
+ return`<svg viewBox="0 0 ${W} ${H}">${GDEF}${gr}`+cum.map((v,i)=>{const cx=pl+sw*(i+.5),y=Math.min(Y(v),Y(0)),h=Math.max(1,Math.abs(Y(v)-Y(0)));return`<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${h}" rx="4" fill="url(#${v>=0?'gR':'gD'})"><title>${mlabel(ks[i])}: ${brl(v)}</title></rect>${i%e===0?`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" fill="#667571">${mshort(ks[i])}</text>`:''}`}).join('')+items.map(it=>gPill(it,W)).join('')+'</svg>'}
+(()=>{let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(()=>{if(typeof VIEW!=='undefined'&&VIEW==='g')grender()},150)})})();
 function gDonut(rows){const tot=rows.reduce((s,r)=>s+r[1],0);if(!tot)return EMPTY;const C=2*Math.PI*60;let acc=0;
  const arcs=rows.map(([c,v],i)=>{const len=v/tot*C,o=`<circle cx="90" cy="90" r="60" fill="none" stroke="${PAL[i%8]}" stroke-width="26" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-acc}" transform="rotate(-90 90 90)" data-g="cat" data-v="${esc(c)}" style="cursor:pointer;opacity:${G.cat&&G.cat!==c?.25:1}"><title>${esc(c)}: ${brl(v)}</title></circle>`;acc+=len;return o}).join('');
  return`<div class="dn"><svg viewBox="0 0 180 180">${arcs}<text x="90" y="86" text-anchor="middle" font-size="11" fill="#667571">Total</text><text x="90" y="104" text-anchor="middle" font-size="15" font-weight="800" fill="#14201e">R$ ${kfmt(tot)}</text></svg><div class="lg2">${rows.map(([c,v],i)=>`<div class="lgr" data-g="cat" data-v="${esc(c)}" style="opacity:${G.cat&&G.cat!==c?.4:1}"><u style="background:${PAL[i%8]}"></u>${esc(c)}<b>${brl(v)} <em>${Math.round(v/tot*100)}%</em></b></div>`).join('')}</div></div>`}
