@@ -314,30 +314,34 @@ function parcelasCalc(){
 const FG=id=>$('#'+id).closest('.fg');
 function layoutLanc(){
  const parc=isParc();if(layoutLanc.m===parc)return;layoutLanc.m=parc;
- const A=$('#fs_a'),B=$('#fs_b'),w1=$('#xl_w1'),w2=$('#xl_w2');
+ const A=$('#fs_a'),B=$('#fs_b'),w1=$('#xl_w1'),w2=$('#xl_w2'),w3=$('#xl_w3'),w4=$('#xl_w4'),cfg=$('#xl_cfg');
  if(parc){
   $('#lg_a').textContent='Dados Gerais';$('#lg_b').textContent='Dados do pagamento';
-  A.append(FG('f_nlan'),FG('f_cat'),FG('f_sub'),FG('f_cartao'),FG('f_compra'),FG('f_qtd'),FG('f_desc'));
-  B.append(FG('f_parc'),FG('f_conta'),w1,w2);w1.hidden=w2.hidden=false;
-  w1.append(FG('f_venc'),FG('f_valor'));w2.append(FG('f_pgto'),FG('f_status'));
+  w3.append(FG('f_cartao'),FG('f_compra'));
+  A.append(FG('f_nlan'),FG('f_cat'),FG('f_sub'),w3,FG('f_qtd'),FG('f_desc'),w4);w3.hidden=w4.hidden=false;
+  w2.append(FG('f_venc'),FG('f_pgto'));w1.append(FG('f_valor'),FG('f_status'));
+  B.append(FG('f_parc'),FG('f_conta'),w1,w2,cfg);w1.hidden=false;w2.hidden=true;cfg.hidden=false;
  }else{
   $('#lg_a').textContent='Dados do pagamento';$('#lg_b').textContent='Dados Gerais';
-  w1.hidden=w2.hidden=true;
+  w1.hidden=w2.hidden=w3.hidden=w4.hidden=cfg.hidden=true;
   A.append(FG('f_conta'),FG('f_cat'),FG('f_sub'),FG('f_cartao'),FG('f_compra'),FG('f_qtd'),FG('f_desc'),FG('f_valor'));
   B.append(FG('f_nlan'),FG('f_venc'),FG('f_pgto'),FG('f_status'),FG('f_parc'));
  }
 }
-// Mostra o valor equivalente de cada opção de "Valor informado"
+// Caixinha ao lado das opções: mostra o valor equivalente conforme a opção marcada
 function hintsParc(){
  const v=parseMoney($('#f_valor').value),n=Math.max(1,Math.min(120,parseInt($('#f_npar').value,10)||1));
- if(!(v>0)){$('#h_total').textContent='';$('#h_fixo').textContent='';return}
- const cents=Math.round(v*100),each=Math.floor(cents/n),last=cents-each*(n-1);
- $('#h_total').textContent=`→ ${n}x de ${brl(each/100)}`+(last!==each?` (última ${brl(last/100)})`:'');
- $('#h_fixo').textContent=`→ total ${brl(Math.round(v*n*100)/100)}`;
+ const total=document.querySelector('input[name=modo]:checked').value==='total';
+ let txt=brl(0),tip='';
+ if(v>0){
+  if(total){const c=Math.round(v*100),each=Math.floor(c/n),last=c-each*(n-1);txt=brl(each/100);if(last!==each)tip='A última parcela fica '+brl(last/100)}
+  else txt=brl(Math.round(v*n*100)/100);
+ }
+ $('#h_cap').textContent=total?'Parcela':'Total';$('#h_val').textContent=txt;$('#h_box').title=tip;
 }
 function prevParc(){
  layoutLanc();hintsParc();
- $('#fb_parc').hidden=!isParc();
+ $('#xl_cfg').hidden=!isParc();
  sessRender();
  return;
  const rows=parcelasCalc();
@@ -357,7 +361,7 @@ function fgVis(){
  const comp=$('#f_compra').closest('.fg'), parc=$('#f_parc').closest('.fg');
  comp.hidden=!despesa;
  $('#f_cartao').closest('.fg').hidden=!despesa;
- parc.hidden=!(despesa&&cartao);
+ parc.hidden=!(despesa&&cartao&&!!editing);
  // receita já recebida: a data relevante é a de recebimento, não o vencimento
  $('#f_venc').closest('.fg').hidden=!despesa&&$('#f_status').value==='pago';
 }
@@ -365,9 +369,9 @@ $('#f_status').addEventListener('change',fgVis);
 $('#f_compra').addEventListener('change',fgVis);
 $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
- if(!n)SESS=[];
+ if(!n){SESS=[];sessRender()}
  $('#f_nlan').value=n?String(n).padStart(4,'0'):String(Math.max(0,...D.map(i=>i.n))+1).padStart(4,'0');
- document.querySelector(`input[name=tl][value=${n?'unico':'unico'}]`).checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';layoutLanc();
+ document.querySelector(`input[name=tl][value=${n?'unico':'unico'}]`).checked=true;$('#xl_cfg').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';layoutLanc();
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
  editing=n||null;$('#dt').textContent=n?`Editar lançamento ${String(n).padStart(4,'0')}`:'Novo lançamento';
  const x0=n?D.find(i=>i.n===n):null,cur=x0&&x0.conta;
@@ -389,7 +393,7 @@ function sessRender(){
 }
 function sessLimpaCampos(){
  // Volta o formulário ao estado de um lançamento novo (mantém só o Tipo: Despesa/Receita)
- document.querySelector('input[name=tl][value=unico]').checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';layoutLanc();
+ document.querySelector('input[name=tl][value=unico]').checked=true;$('#xl_cfg').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';layoutLanc();
  fillCat();
  $('#f_cartao').value='';$('#f_compra').value=TODAY;$('#f_qtd').value='1';$('#f_desc').value='';
  $('#f_conta').value=CONTAS[0]||'';
