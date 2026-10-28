@@ -333,7 +333,7 @@ function fgVis(){
  // receita já recebida: a data relevante é a de recebimento, não o vencimento
  $('#f_venc').closest('.fg').hidden=!despesa&&$('#f_status').value==='pago';
 }
-$('#f_status').addEventListener('change',()=>{if($('#f_status').value==='pago'&&!$('#f_pgto').value)$('#f_pgto').value=TODAY;fgVis()});
+$('#f_status').addEventListener('change',fgVis);
 $('#f_compra').addEventListener('change',fgVis);
 $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
@@ -349,7 +349,7 @@ function openF(n){
  const x=x0||{tipo:'Despesa',status:'pendente',desc:'',valor:'',qtd:1,venc:TODAY,pgto:'',compra:TODAY,parc:'1/1',conta:CONTAS[0]||'',cartao:''};
  $('#f_tipo').value=x.tipo;fillCat(x.cat,x.sub);
  $('#f_status').value=x.status;$('#f_desc').value=x.desc;$('#f_valor').value=x.valor;$('#f_qtd').value=x.qtd;$('#f_venc').value=x.venc;
- $('#f_pgto').value=x.pgto||(n?'':TODAY);$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();
+ $('#f_pgto').value=x.pgto||'';$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();
  $('#dlg').showModal();
 }
 let SESS=[];
@@ -360,7 +360,13 @@ function sessRender(){
  $('#f_tot').innerHTML=`<span>Total Geral<b>${brl(tot)}</b></span><span>Total Pago<b>${brl(pago)}</b></span><span>Total Pendente<b>${brl(tot-pago)}</b></span>`;
 }
 function sessLimpaCampos(){
- $('#f_desc').value='';$('#f_valor').value='';$('#f_qtd').value='1';$('#f_parc').value='1/1';
+ // Volta o formulário ao estado de um lançamento novo (mantém só o Tipo: Despesa/Receita)
+ document.querySelector('input[name=tl][value=unico]').checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';
+ fillCat();
+ $('#f_cartao').value='';$('#f_compra').value=TODAY;$('#f_qtd').value='1';$('#f_desc').value='';
+ $('#f_conta').value=CONTAS[0]||'';
+ $('#f_valor').value='';$('#f_venc').value=TODAY;$('#f_pgto').value='';$('#f_parc').value='1/1';
+ $('#f_status').value='pendente';fgVis();
  $('#f_nlan').value=String(Math.max(0,...D.map(i=>i.n),...SESS.map(i=>i.n))+1).padStart(4,'0');
 }
 function xlTitulo(){$('#dt').textContent=$('#f_tipo').value==='Receita'?'Lançamento de Receita':'Lançamento de Despesa'}
