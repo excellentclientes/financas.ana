@@ -376,9 +376,9 @@ function openF(n){
  editing=n||null;$('#dt').textContent=n?`Editar lançamento ${String(n).padStart(4,'0')}`:'Novo lançamento';
  const x0=n?D.find(i=>i.n===n):null,cur=x0&&x0.conta;
  const contaOpts=CONTAS.slice();if(cur&&!contaOpts.includes(cur))contaOpts.push(cur);
- $('#f_conta').innerHTML=contaOpts.map(c=>`<option value="${esc(c)}">${esc(c)}${CONTAS.includes(c)?'':' (inativa)'}</option>`).join('');
+ $('#f_conta').innerHTML='<option value="">Selecione</option>'+contaOpts.map(c=>`<option value="${esc(c)}">${esc(c)}${CONTAS.includes(c)?'':' (inativa)'}</option>`).join('');
  $('#f_cartao').innerHTML=opts(CARTOES,'Sem cartão');
- const x=x0||{tipo:'Despesa',status:'pendente',desc:'',valor:'',qtd:1,venc:TODAY,pgto:'',compra:TODAY,parc:'1/1',conta:CONTAS[0]||'',cartao:''};
+ const x=x0||{tipo:'Despesa',status:'pendente',desc:'',valor:'',qtd:1,venc:TODAY,pgto:'',compra:TODAY,parc:'1/1',conta:'',cartao:''};
  $('#f_tipo').value=x.tipo;fillCat(x.cat,x.sub);
  $('#f_status').value=x.status;$('#f_desc').value=x.desc;$('#f_valor').value=x.valor;$('#f_qtd').value=x.qtd;$('#f_venc').value=x.venc;
  $('#f_pgto').value=x.pgto||'';$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();
@@ -396,7 +396,7 @@ function sessLimpaCampos(){
  document.querySelector('input[name=tl][value=unico]').checked=true;$('#xl_cfg').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';layoutLanc();
  fillCat();
  $('#f_cartao').value='';$('#f_compra').value=TODAY;$('#f_qtd').value='1';$('#f_desc').value='';
- $('#f_conta').value=CONTAS[0]||'';
+ $('#f_conta').value='';
  $('#f_valor').value='';$('#f_venc').value=TODAY;$('#f_pgto').value='';$('#f_parc').value='1/1';
  $('#f_status').value='pendente';fgVis();
  $('#f_nlan').value=String(Math.max(0,...D.map(i=>i.n),...SESS.map(i=>i.n))+1).padStart(4,'0');
