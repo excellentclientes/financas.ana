@@ -132,9 +132,9 @@ function trDel(id){confirmar('Excluir esta transferência?').then(ok=>{if(ok){TR
 
 cardsSave();
 const st=x=>x.status==='pago'?'pago':(x.venc<TODAY?'atrasado':'pendente');
-const stLabel=x=>({pago:x.tipo==='Receita'?'Recebido':'Pago',pendente:'Pendente',atrasado:'Atrasado'}[st(x)]);
+const stLabel=x=>({pago:x.tipo==='Receita'?'Recebido':'Pago',pendente:'Em aberto',atrasado:'Atrasado'}[st(x)]);
 
-let TAB='';const TABN={pendente:'Pendentes',pago:'Pagos / Recebidos','':'Todos os status'};
+let TAB='';const TABN={pendente:'Em aberto',pago:'Pagos / Recebidos','':'Todos os status'};
 function setTab(t){TAB=t;render()}
 /* ===== Busca inteligente: pesquisa em todas as colunas ===== */
 const nrm=s=>String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\u00a0/g,' ').toLowerCase();
@@ -269,7 +269,7 @@ function render(){
   <td data-l="Qtd">${hl(String(x.qtd),'qtd')}</td>
   <td data-l="Descrição"><b style="font-weight:600">${hl(x.desc,'desc')}</b></td>
   <td data-l="Valor" class="v ${x.tipo==='Receita'?'rec':'des'}">${hl((x.tipo==='Receita'?'+':'−')+' '+brl(x.valor),'valor')}</td>
-  <td data-l="Status"><select class="tag ${st(x)}" onchange="setStatus(${x.n},this.value)" aria-label="Alterar status"><option value="pendente"${st(x)!=='pago'?' selected':''}>${st(x)==='atrasado'?'Atrasado':'Pendente'}</option><option value="pago"${st(x)==='pago'?' selected':''}>${x.tipo==='Receita'?'Recebido':'Pago'}</option></select></td>
+  <td data-l="Status"><select class="tag ${st(x)}" onchange="setStatus(${x.n},this.value)" aria-label="Alterar status"><option value="pendente"${st(x)!=='pago'?' selected':''}>${st(x)==='atrasado'?'Atrasado':'Em aberto'}</option><option value="pago"${st(x)==='pago'?' selected':''}>${x.tipo==='Receita'?'Recebido':'Pago'}</option></select></td>
   <td class="act"><button class="ic" onclick="openF(${x.n})" title="Editar" aria-label="Editar">✎</button><button class="ic" onclick="del(${x.n})" title="Excluir" aria-label="Excluir">🗑</button></td></tr>`).join('')||'<tr><td class="empty" colspan="13">Nenhum lançamento encontrado. Ajuste os filtros ou crie um novo.</td></tr>';
  document.querySelectorAll('.tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===TAB);b.querySelector('em').textContent=filtered(b.dataset.t).length});
  $('#cnt').textContent=`${T.length} lançamentos`;$('#tot').innerHTML=`Saldo desta lista: <b style="color:var(--ink)">${brl(sum(T,x=>x.tipo==='Receita')-sum(T,x=>x.tipo==='Despesa'))}</b>`;
@@ -277,14 +277,19 @@ function render(){
 }
 
 const opts=(a,b)=>(b!==undefined?`<option value="">${b}</option>`:'')+a.map(x=>`<option>${esc(x)}</option>`).join('');
-function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Object.keys(CATS[t]));if(c)$('#f_cat').value=c;fillSub(s);
+function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Object.keys(CATS[t]),'Selecione');if(c)$('#f_cat').value=c;fillSub(s);
  $('#f_status').options[1].text=t==='Receita'?'Recebido':'Pago'}
-function fillSub(s){$('#f_sub').innerHTML=opts(CATS[$('#f_tipo').value][$('#f_cat').value]||[]);if(s)$('#f_sub').value=s}
+function fillSub(s){$('#f_sub').innerHTML=opts(CATS[$('#f_tipo').value][$('#f_cat').value]||[],'Selecione');if(s)$('#f_sub').value=s}
 let editing=null;
 // Vencimento da fatura: dia de pagamento do cartão no mês correto, conforme a data da compra
-function vencFatura(compra,diaPag){
+function vencFatura(compra,diaPag,diaFech){
  let [y,mo,d]=compra.split('-').map(Number);
- if(d>=diaPag){mo++;if(mo>12){mo=1;y++}}
+ if(diaFech){
+  // compra a partir do dia de fechamento entra na fatura seguinte
+  if(d>=diaFech){mo++;if(mo>12){mo=1;y++}}
+  // se o pagamento é depois do fechamento, vence no mesmo mês do fechamento; senão, no mês seguinte
+  if(diaPag<=diaFech){mo++;if(mo>12){mo=1;y++}}
+ }else if(d>=diaPag){mo++;if(mo>12){mo=1;y++}}
  const ult=new Date(y,mo,0).getDate();
  return `${y}-${String(mo).padStart(2,'0')}-${String(Math.min(diaPag,ult)).padStart(2,'0')}`;
 }
@@ -301,12 +306,37 @@ function parcelasCalc(){
  const rows=[];let acum=0;
  for(let i=0;i<n;i++){
   const val=(modo==='total'&&i===n-1)?(cents-acum):each;acum+=val;
-  let venc=addMeses(base,i);if(card&&card.diaPag)venc=vencFatura(venc,card.diaPag);
+  let venc=addMeses(base,i);if(card&&card.diaPag)venc=vencFatura(venc,card.diaPag,card.diaFech);
   rows.push({i,venc,valor:val/100,status:$('#f_status').value});
  }
  return rows;
 }
+const FG=id=>$('#'+id).closest('.fg');
+function layoutLanc(){
+ const parc=isParc();if(layoutLanc.m===parc)return;layoutLanc.m=parc;
+ const A=$('#fs_a'),B=$('#fs_b'),w1=$('#xl_w1'),w2=$('#xl_w2');
+ if(parc){
+  $('#lg_a').textContent='Dados Gerais';$('#lg_b').textContent='Dados do pagamento';
+  A.append(FG('f_nlan'),FG('f_cat'),FG('f_sub'),FG('f_cartao'),FG('f_compra'),FG('f_qtd'),FG('f_desc'));
+  B.append(FG('f_parc'),FG('f_conta'),w1,w2);w1.hidden=w2.hidden=false;
+  w1.append(FG('f_venc'),FG('f_valor'));w2.append(FG('f_pgto'),FG('f_status'));
+ }else{
+  $('#lg_a').textContent='Dados do pagamento';$('#lg_b').textContent='Dados Gerais';
+  w1.hidden=w2.hidden=true;
+  A.append(FG('f_conta'),FG('f_cat'),FG('f_sub'),FG('f_cartao'),FG('f_compra'),FG('f_qtd'),FG('f_desc'),FG('f_valor'));
+  B.append(FG('f_nlan'),FG('f_venc'),FG('f_pgto'),FG('f_status'),FG('f_parc'));
+ }
+}
+// Mostra o valor equivalente de cada opção de "Valor informado"
+function hintsParc(){
+ const v=parseMoney($('#f_valor').value),n=Math.max(1,Math.min(120,parseInt($('#f_npar').value,10)||1));
+ if(!(v>0)){$('#h_total').textContent='';$('#h_fixo').textContent='';return}
+ const cents=Math.round(v*100),each=Math.floor(cents/n),last=cents-each*(n-1);
+ $('#h_total').textContent=`→ ${n}x de ${brl(each/100)}`+(last!==each?` (última ${brl(last/100)})`:'');
+ $('#h_fixo').textContent=`→ total ${brl(Math.round(v*n*100)/100)}`;
+}
 function prevParc(){
+ layoutLanc();hintsParc();
  $('#fb_parc').hidden=!isParc();
  sessRender();
  return;
@@ -320,12 +350,10 @@ $('#dlg').addEventListener('cancel',e=>e.preventDefault());
 $('#dlg').addEventListener('change',prevParc);
 function fgVis(){
  const cartao=!!$('#f_cartao').value, despesa=$('#f_tipo').value==='Despesa';
- // compra/lançamento na conta bancária já nasce como Pago
- if(!editing&&!cartao)$('#f_status').value='pago';
  // compra no cartão: vencimento automático pela fatura
  const cardObj=cartao?CARDS.find(c=>c.nome===$('#f_cartao').value):null;
  $('#f_venc').readOnly=!!(cardObj&&cardObj.diaPag&&despesa);
- if(cardObj&&cardObj.diaPag&&despesa&&$('#f_compra').value)$('#f_venc').value=vencFatura($('#f_compra').value,cardObj.diaPag);
+ if(cardObj&&cardObj.diaPag&&despesa&&$('#f_compra').value)$('#f_venc').value=vencFatura($('#f_compra').value,cardObj.diaPag,cardObj.diaFech);
  const comp=$('#f_compra').closest('.fg'), parc=$('#f_parc').closest('.fg');
  comp.hidden=!despesa;
  $('#f_cartao').closest('.fg').hidden=!despesa;
@@ -339,7 +367,7 @@ $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
  if(!n)SESS=[];
  $('#f_nlan').value=n?String(n).padStart(4,'0'):String(Math.max(0,...D.map(i=>i.n))+1).padStart(4,'0');
- document.querySelector(`input[name=tl][value=${n?'unico':'unico'}]`).checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';
+ document.querySelector(`input[name=tl][value=${n?'unico':'unico'}]`).checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';layoutLanc();
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
  editing=n||null;$('#dt').textContent=n?`Editar lançamento ${String(n).padStart(4,'0')}`:'Novo lançamento';
  const x0=n?D.find(i=>i.n===n):null,cur=x0&&x0.conta;
@@ -355,13 +383,13 @@ function openF(n){
 let SESS=[];
 function sessRender(){
  const tb=$('#f_prev_body');
- tb.innerHTML=SESS.length?SESS.map(r=>`<tr><td>${String(r.n).padStart(4,'0')}</td><td>${fd(r.venc)}</td><td>${r.pgto?fd(r.pgto):'—'}</td><td>${esc(r.conta)}</td><td class="r">${brl(r.valor)}</td><td><span class="xl-st ${r.status}">${r.status==='pago'?'Pago':'Pendente'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="xl-empty">Nenhum lançamento adicionado ainda.</td></tr>';
+ tb.innerHTML=SESS.length?SESS.map(r=>`<tr><td>${String(r.n).padStart(4,'0')}</td><td>${fd(r.venc)}</td><td>${r.pgto?fd(r.pgto):'—'}</td><td>${esc(r.conta)}</td><td class="r">${brl(r.valor)}</td><td><span class="xl-st ${r.status}">${r.status==='pago'?'Pago':'Em aberto'}</span></td></tr>`).join(''):'<tr><td colspan="6" class="xl-empty">Nenhum lançamento adicionado ainda.</td></tr>';
  const tot=SESS.reduce((a,r)=>a+r.valor,0),pago=SESS.filter(r=>r.status==='pago').reduce((a,r)=>a+r.valor,0);
- $('#f_tot').innerHTML=`<span>Total Geral<b>${brl(tot)}</b></span><span>Total Pago<b>${brl(pago)}</b></span><span>Total Pendente<b>${brl(tot-pago)}</b></span>`;
+ $('#f_tot').innerHTML=`<span>Total Geral<b>${brl(tot)}</b></span><span>Total Pago<b>${brl(pago)}</b></span><span>Total em Aberto<b>${brl(tot-pago)}</b></span>`;
 }
 function sessLimpaCampos(){
  // Volta o formulário ao estado de um lançamento novo (mantém só o Tipo: Despesa/Receita)
- document.querySelector('input[name=tl][value=unico]').checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';
+ document.querySelector('input[name=tl][value=unico]').checked=true;$('#fb_parc').hidden=true;$('#f_p1').value='';$('#f_npar').value='2';layoutLanc();
  fillCat();
  $('#f_cartao').value='';$('#f_compra').value=TODAY;$('#f_qtd').value='1';$('#f_desc').value='';
  $('#f_conta').value=CONTAS[0]||'';
@@ -528,7 +556,7 @@ function grender(){
  set('#gcon',opt(CONTAS,'Todas as contas'),G.conta);set('#gcar',opt(CARTOES,'Todos os cartões'),G.cartao);$('#gt').value=G.tipo;$('#gs').value=G.status;
  const lab={tipo:'Tipo',status:'Status',conta:'Conta',cartao:'Cartão',cat:'Categoria',sub:'Subcategoria',q:'Busca'},ch=[];
  if(G.from||G.to)ch.push(['per','Período',(G.from?mshort(G.from):'início')+' → '+(G.to?mshort(G.to):'fim')]);
- Object.keys(lab).forEach(k=>G[k]&&ch.push([k,lab[k],k==='status'?{pago:'Pago/Recebido',pendente:'Pendente',atrasado:'Atrasado'}[G[k]]:G[k]]));
+ Object.keys(lab).forEach(k=>G[k]&&ch.push([k,lab[k],k==='status'?{pago:'Pago/Recebido',pendente:'Em aberto',atrasado:'Atrasado'}[G[k]]:G[k]]));
  $('#gchips').innerHTML=ch.length?ch.map(([k,l,v])=>`<button class="chip on" data-x="${k}">${l}: <b>${esc(v)}</b> ✕</button>`).join('')+'<button class="chip" data-x="all">Limpar tudo</button>':'<span>Clique nos gráficos para filtrar · ou use os filtros acima</span>';
  const L=gf(),DT=G.tipo||'Despesa',P=DT+'s',rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),ab=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago');
  const saldoIniG=bkAtivos().reduce((a,b)=>a+b.saldo,0);
@@ -539,7 +567,7 @@ function grender(){
  $('#g_t3').textContent=P+' por conta';$('#g_acc').innerHTML=hbars(sumBy(gf(['conta']).filter(x=>x.tipo===DT),x=>x.conta),'conta',G.conta);
  $('#g_t4').textContent=P+' por cartão de crédito';$('#g_car').innerHTML=hbars(sumBy(gf(['cartao']).filter(x=>x.tipo===DT&&x.cartao),x=>x.cartao),'cartao',G.cartao);
  $('#g_t6').textContent='Situação dos saldos';$('#g_saldo').innerHTML=hbars(bkAtivos().map(b=>[b.nome,saldoAtual(b),b.nome]).sort((a,b)=>b[1]-a[1]),'conta',G.conta);
- const SL={pago:DT==='Receita'?'Recebido':'Pago',pendente:'Pendente',atrasado:'Atrasado'},SC={pago:'#047857',pendente:'#f59e0b',atrasado:'#be123c'},sr=gf(['status']).filter(x=>x.tipo===DT),sb={};
+ const SL={pago:DT==='Receita'?'Recebido':'Pago',pendente:'Em aberto',atrasado:'Atrasado'},SC={pago:'#047857',pendente:'#f59e0b',atrasado:'#be123c'},sr=gf(['status']).filter(x=>x.tipo===DT),sb={};
  sr.forEach(x=>{const k=st(x);(sb[k]=sb[k]||{v:0,n:0}).v+=x.valor;sb[k].n++});
  $('#g_t5').textContent='Status';
  $('#g_sta').innerHTML=sr.length?`<div class="stk">${Object.keys(SL).filter(k=>sb[k]).map(k=>`<i data-g="status" data-v="${k}" title="${SL[k]}: ${brl(sb[k].v)}" style="flex:${sb[k].v};background:${SC[k]};opacity:${G.status&&G.status!==k?.3:1}"></i>`).join('')}</div>`+Object.keys(SL).map(k=>`<div class="lgr" data-g="status" data-v="${k}" style="opacity:${G.status&&G.status!==k?.4:1}"><u style="background:${SC[k]}"></u>${SL[k]} <em>${sb[k]?sb[k].n:0} lanç.</em><b>${brl(sb[k]?sb[k].v:0)}</b></div>`).join(''):EMPTY;
@@ -598,8 +626,7 @@ function faturaDe(x){
  const card=CARDS.find(c=>c.nome===x.cartao);
  const base=(x.pgto||x.compra||x.venc);
  if(!card||!card.diaPag)return{m:x.venc.slice(0,7)};
- let [y,mo,d]=base.split('-').map(Number);
- if(d>=card.diaPag){mo++;if(mo>12){mo=1;y++}}
+ return{m:vencFatura(base,card.diaPag,card.diaFech).slice(0,7)};
  return{m:`${y}-${String(mo).padStart(2,'0')}`};
 }
 
@@ -650,14 +677,16 @@ function pdfFat(){
  doc.save('historico-faturas.pdf');toast('Relatório PDF gerado');
 }
 function ccOpen(id){
- if(!id&&semContaAtiva('Cadastre uma conta bancária antes de adicionar cartões'))return;KE=id||null;const c=id?CARDS.find(x=>x.id===id):null;$('#kdt').textContent=c?'Editar cartão':'Novo cartão';$('#k_n').value=c?c.nome:'';$('#k_l').value=c?String(c.limite).replace('.',','):'';$('#k_dia').value=c&&c.diaPag?c.diaPag:'';$('#kdlg').showModal();$('#k_n').focus()}
+ if(!id&&semContaAtiva('Cadastre uma conta bancária antes de adicionar cartões'))return;KE=id||null;const c=id?CARDS.find(x=>x.id===id):null;$('#kdt').textContent=c?'Editar cartão':'Novo cartão';$('#k_n').value=c?c.nome:'';$('#k_l').value=c?String(c.limite).replace('.',','):'';$('#k_dia').value=c&&c.diaPag?c.diaPag:'';$('#k_fech').value=c&&c.diaFech?c.diaFech:'';$('#kdlg').showModal();$('#k_n').focus()}
 function ccSave(e){e.preventDefault();const n=nm($('#k_n').value),l=parseMoney($('#k_l').value);
  if(!n)return false;if(!isFinite(l)||l<0){toast('Informe um limite válido');return false}
  if(CARDS.some(c=>c.id!==KE&&same(c.nome,n))){toast('Já existe um cartão com esse nome');return false}
  const lim=Math.round(l*100)/100;const dia=parseInt($('#k_dia').value,10);
  if(!(dia>=1&&dia<=31)){toast('Informe o dia de pagamento da fatura (1 a 31)');return false}
- if(KE){const c=CARDS.find(x=>x.id===KE);if(c.nome!==n){D.forEach(x=>{if(x.cartao===c.nome)x.cartao=n});if(G.cartao===c.nome)G.cartao=n;persist();c.nome=n}c.limite=lim;c.diaPag=dia}
- else CARDS.push({id:'c'+Date.now().toString(36),nome:n,limite:lim,diaPag:dia});
+ const fech=parseInt($('#k_fech').value,10);
+ if(!(fech>=1&&fech<=31)){toast('Informe o dia de fechamento da fatura (1 a 31)');return false}
+ if(KE){const c=CARDS.find(x=>x.id===KE);if(c.nome!==n){D.forEach(x=>{if(x.cartao===c.nome)x.cartao=n});if(G.cartao===c.nome)G.cartao=n;persist();c.nome=n}c.limite=lim;c.diaPag=dia;c.diaFech=fech}
+ else CARDS.push({id:'c'+Date.now().toString(36),nome:n,limite:lim,diaPag:dia,diaFech:fech});
  cardsSave();ccRender();render();$('#kdlg').close();toast(KE?'Cartão atualizado':'Cartão cadastrado');return false}
 function ccDel(id){const c=CARDS.find(x=>x.id===id);if(!c)return;const n=D.filter(x=>x.cartao===c.nome).length;
  if(n)return toast(`"${c.nome}" está em uso em ${n} lançamento${n===1?'':'s'}`);
