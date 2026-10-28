@@ -29,16 +29,26 @@ const FOTO_KEY = "fluxo_perfil_foto";
 const origSetItem = Storage.prototype.setItem;
 const origRemoveItem = Storage.prototype.removeItem;
 const timers = {};
+const ultimaNuvem = {};   // último valor conhecido de cada chave na nuvem
+const VAZIOS_ = new Set(['', '[]', '{}', 'null']);
 
 function agendarEscrita(key, value) {
   escritasPendentes = true;
   clearTimeout(timers[key]);
-  timers[key] = setTimeout(() => {
+  timers[key] = setTimeout(async () => {
     timers[key] = null;
     if (!uidAtual) { escritasPendentes = Object.values(timers).some(Boolean); return; }
-    setDoc(doc(db, "dados", "compartilhado", "fluxo", key), { value, atualizado: Date.now() })
-      .catch(err => console.error("Erro ao salvar no Firebase (dados NÃO foram enviados):", err))
-      .finally(() => { escritasPendentes = Object.values(timers).some(Boolean); });
+    try {
+      // Proteção: se o novo valor é vazio ou muito menor, guarda antes uma cópia do valor anterior
+      const antes = ultimaNuvem[key];
+      if (typeof antes === "string" && !VAZIOS_.has(antes) && (VAZIOS_.has(value) || value.length < antes.length * 0.5)) {
+        await setDoc(doc(db, "dados", "compartilhado", "backups", key + "__" + Date.now()),
+          { key, value: antes, motivo: "reducao", atualizado: Date.now() });
+      }
+      await setDoc(doc(db, "dados", "compartilhado", "fluxo", key), { value, atualizado: Date.now() });
+      ultimaNuvem[key] = value;
+    } catch (err) { console.error("Erro ao salvar no Firebase (dados NÃO foram enviados):", err); }
+    finally { escritasPendentes = Object.values(timers).some(Boolean); }
   }, 300);
 }
 
@@ -126,6 +136,19 @@ document.addEventListener("close", () => {
   }
 }, true);
 
+// Cópia diária de todos os dados (uma por dia, sobrescreve no mesmo dia): dados/compartilhado/backups
+async function backupDiario(snap) {
+  const dia = new Date().toISOString().slice(0, 10);
+  if (localStorage.getItem("bkp_dia") === dia) return;
+  try {
+    for (const d of snap.docs) {
+      const v = d.data().value;
+      if (typeof v === "string" && !VAZIOS_.has(v)) await setDoc(doc(db, "dados", "compartilhado", "backups", dia + "__" + d.id), { key: d.id, value: v, motivo: "diario", atualizado: Date.now() });
+    }
+    origSet("bkp_dia", dia);
+  } catch (err) { console.error("Backup diário:", err); }
+}
+
 function ouvirNuvem(uid) {
   if (ouvindo) return;
   ouvindo = true;
@@ -137,6 +160,8 @@ function ouvirNuvem(uid) {
     if (primeira && snap.metadata.fromCache) return;
     prontoParaEscrever = true;
 
+    snap.docs.forEach(d => { const v = d.data().value; if (typeof v === "string") ultimaNuvem[d.id] = v; });
+    if (!snap.metadata.fromCache) backupDiario(snap);
     if (primeira) {
       primeira = false;
       if (snap.empty) {
