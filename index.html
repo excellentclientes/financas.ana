@@ -552,7 +552,23 @@ dialog.lanc::backdrop{background:rgba(10,25,23,.45)}
 .xl-box{margin-left:auto;display:flex;align-items:center;gap:6px;background:#dfe6e4;border:1px solid #9fb3ae;border-radius:2px;padding:0 8px;height:30px;white-space:nowrap}
 .xl-box small{font-size:11.5px;color:#0f766e;font-weight:700}.xl-box b{font-size:13.5px;color:#1f2d2a}
 .xl-tw{height:76px;overflow:auto}
-.xl-grid{min-height:430px}
+.xl-tw{height:190px}
+.xl-tw th{position:sticky;top:0;background:#f4f7f6;z-index:1}
+.xl-tw{overflow-x:hidden}
+.xl-tw .pc-t .tag,.xl-tw .pc-t .st{font-size:10px;padding:2px 5px}
+.xl-tw .pc-t{width:100%;table-layout:fixed}
+.xl-tw .pc-t th,.xl-tw .pc-t td{padding:5px 4px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xl-tw .pc-t th:nth-child(1),.xl-tw .pc-t td:nth-child(1){width:9%}
+.xl-tw .pc-t th:nth-child(2),.xl-tw .pc-t td:nth-child(2){width:19%}
+.xl-tw .pc-t th:nth-child(3),.xl-tw .pc-t td:nth-child(3){width:19%}
+.xl-tw .pc-t th:nth-child(4),.xl-tw .pc-t td:nth-child(4){width:17%}
+.xl-tw .pc-t th:nth-child(5),.xl-tw .pc-t td:nth-child(5){width:16%}
+.xl-tw .pc-t th:nth-child(6),.xl-tw .pc-t td:nth-child(6){width:20%}
+.xl-foot{gap:14px}
+.xl-foot .xl-tot{margin:0;flex:1;justify-content:center;gap:12px;font-size:12px}
+.xl-foot .xl-tot b{min-width:100px;padding:4px 8px;font-size:13px}
+.xl-foot .xl-tot span{gap:2px}
+.xl-grid{min-height:472px}
 .xl-tot{display:flex;justify-content:space-around;gap:10px;margin-top:12px;font-size:12.5px;color:#0f766e;font-weight:700}
 .xl-tot span{display:flex;flex-direction:column;align-items:center;gap:4px}
 .xl-tot b{background:#dfe6e4;border:1px solid #9fb3ae;min-width:130px;text-align:center;padding:7px 10px;font-size:13.5px;color:#1f2d2a}
@@ -807,11 +823,10 @@ dialog.lanc{zoom:.8;max-height:none;overflow:visible}
    </fieldset>
    <fieldset class="xl-fs xl-prev-box" id="f_prev"><legend>Lançamentos adicionados</legend>
     <div class="xl-tw"><table class="pc-t"><thead><tr><th>Nº</th><th>Dt Vencimento</th><th>Dt Pagamento</th><th>Conta</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table></div>
-    <div id="f_tot" class="xl-tot"></div>
    </fieldset>
   </div>
  </div>
- <div class="xl-foot"><span class="xl-obg"><i class=req>*</i> Campos obrigatórios</span><div class="xl-btns"><button class="xl-add">Adicionar</button><button type="button" class="xl-conc" onclick="concluirLanc()">Concluir</button></div></div>
+ <div class="xl-foot"><span class="xl-obg"><i class=req>*</i> Campos obrigatórios</span><div id="f_tot" class="xl-tot"></div><div class="xl-btns"><button class="xl-add">Adicionar</button><button type="button" class="xl-conc" onclick="concluirLanc()">Concluir</button></div></div>
 </form></dialog>
 <div class="toast" id="toast"></div>
 
