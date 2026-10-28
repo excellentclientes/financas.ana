@@ -434,7 +434,11 @@ function pdf(){
 const G={from:'',to:'',tipo:'',status:'',conta:'',cartao:'',cat:'',sub:'',q:''};
 const PAL=['#0f766e','#e11d48','#f59e0b','#6366f1','#0ea5e9','#84cc16','#d946ef','#64748b'],EMPTY='<p class="empty">Sem dados no filtro.</p>';
 const mshort=m=>new Date(m.slice(0,4),m.slice(5,7)-1,1).toLocaleDateString('pt-BR',{month:'short'}).replace('.','')+'/'+m.slice(2,4);
-const kfmt=v=>Math.abs(v)>=1000?(v/1000).toFixed(Math.abs(v)>=10000?0:1).replace('.',',')+'k':String(Math.round(v));
+const kfmt0=v=>Math.abs(v)>=1000?(v/1000).toFixed(Math.abs(v)>=10000?0:1).replace('.',',')+'k':String(Math.round(v));
+/* Valores com centavos aparecem exatos (ex.: 0,59 / 1.234,56); sem centavos mantém o formato curto */
+const kfmt=v=>{const c=Math.round(v*100);return c%100!==0?(c/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):kfmt0(v)};
+/* Eixo: abaixo de 1000 mostra decimais (sem arredondar) quando necessário */
+const afmt=v=>Math.abs(v)<1000?(Math.round(v*100)/100).toLocaleString('pt-BR',{maximumFractionDigits:2}):kfmt0(v);
 const sumBy=(a,f)=>{const o={};a.forEach(x=>{const k=f(x);o[k]=(o[k]||0)+x.valor});return Object.entries(o).sort((p,q)=>q[1]-p[1])};
 function setView(v){
  $('#hnew').style.visibility=(v==='p')?'hidden':'';['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;sessionStorage.setItem('fluxo_view',v);$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
@@ -473,7 +477,7 @@ gfCount();
 function gf(ign=[]){const Q=parseQ(G.q),I=k=>ign.includes(k);
  return D.filter(x=>{const m=x.venc.slice(0,7);return(I('from')||!G.from||m>=G.from)&&(I('to')||!G.to||m<=G.to)&&(!G.tipo||x.tipo===G.tipo)&&(I('status')||!G.status||st(x)===G.status)&&(I('conta')||!G.conta||x.conta===G.conta)&&(I('cartao')||!G.cartao||x.cartao===G.cartao)&&(I('cat')||!G.cat||x.cat===G.cat)&&(I('sub')||!G.sub||x.sub===G.sub)&&matchQ(x,Q)})}
 const hbars=(rows,g,sel)=>{const mx=rows[0]?rows[0][1]:1;return rows.map(([l,v,k])=>`<div class="bar sel${sel&&sel!==(k||l)?' dim':''}" data-g="${g}" data-v="${esc(k||l)}" title="${esc(l)}"><span>${esc(l)}</span><div><i style="width:${v/mx*100}%"></i></div><b>${brl(v)}</b></div>`).join('')||EMPTY};
-function grid(W,H,pl,pr,pt,pb,lo,top){const Y=v=>pt+(top-v)/(top-lo)*(H-pt-pb);let o='';for(let i=0;i<=4;i++){const v=lo+(top-lo)*i/4;o+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e5eae8"/><text x="${pl-5}" y="${Y(v)+3}" text-anchor="end" font-size="9.5" fill="#667571">${kfmt(v)}</text>`}return[Y,o]}
+function grid(W,H,pl,pr,pt,pb,lo,top){const Y=v=>pt+(top-v)/(top-lo)*(H-pt-pb);let o='';for(let i=0;i<=4;i++){const v=lo+(top-lo)*i/4;o+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e5eae8"/><text x="${pl-5}" y="${Y(v)+3}" text-anchor="end" font-size="9.5" fill="#667571">${afmt(v)}</text>`}return[Y,o]}
 const GDEF='<defs><linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0f766e"/></linearGradient><linearGradient id="gD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb7185"/><stop offset="1" stop-color="#be123c"/></linearGradient><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14b8a6" stop-opacity=".45"/><stop offset="1" stop-color="#14b8a6" stop-opacity="0"/></linearGradient><filter id="glw" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
 /* Etiquetas de valor dos gráficos: "pílula" legível sempre acima da barra, sem cortar e sem sobrepor */
 const G_PH=18;
@@ -870,7 +874,7 @@ function pdfPlan(){
  doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setFillColor(20,184,166);doc.rect(W-M-150,189,8,8,'F');doc.setTextColor(102,117,113);doc.text('Receitas',W-M-138,196);doc.setFillColor(244,63,94);doc.rect(W-M-80,189,8,8,'F');doc.text('Despesas',W-M-68,196);
  if(cur>=0){doc.setFillColor(230,244,241);doc.roundedRect(x0+cw*cur+2,y0-8,cw-4,y1-y0+42,5,5,'F')}
  doc.setDrawColor(229,234,232);doc.setLineWidth(.6);doc.setFontSize(7.5);
- for(let i=0;i<=4;i++){const y=y1-(y1-y0)*i/4;doc.line(x0,y,x1,y);doc.setTextColor(102,117,113);doc.text(kfmt(mx*i/4),x0-6,y+2.5,{align:'right'})}
+ for(let i=0;i<=4;i++){const y=y1-(y1-y0)*i/4;doc.line(x0,y,x1,y);doc.setTextColor(102,117,113);doc.text(afmt(mx*i/4),x0-6,y+2.5,{align:'right'})}
  doc.text('Saldo',x0-6,y1+27,{align:'right'});
  for(let m=0;m<12;m++){const cx=x0+cw*m+cw/2,hr=tR[m]/mx*(y1-y0),hd=tD[m]/mx*(y1-y0),sl=tR[m]-tD[m];
   if(hr>0){doc.setFillColor(20,184,166);doc.rect(cx-bw2-1,y1-hr,bw2,hr,'F')}if(hd>0){doc.setFillColor(244,63,94);doc.rect(cx+1,y1-hd,bw2,hd,'F')}
