@@ -545,6 +545,8 @@ dialog.lanc::backdrop{background:rgba(10,25,23,.45)}
 .xl-st{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;font-weight:600}
 .xl-st.pago{background:#dcf5ef;color:#0f766e}
 .xl-st.pendente{background:#fef3c7;color:#92400e}
+.xl-hint{font-size:12px;font-weight:700;color:#0f766e}
+.xl-radios.h{flex-direction:column;align-items:flex-start;gap:6px}
 .xl-tot{display:flex;justify-content:space-around;gap:10px;margin-top:12px;font-size:12.5px;color:#0f766e;font-weight:700}
 .xl-tot span{display:flex;flex-direction:column;align-items:center;gap:4px}
 .xl-tot b{background:#dfe6e4;border:1px solid #9fb3ae;min-width:130px;text-align:center;padding:7px 10px;font-size:13.5px;color:#1f2d2a}
@@ -593,7 +595,7 @@ dialog.lanc{zoom:.8;max-height:none;overflow:visible}
  </section>
 
  <div class="stky" id="stky">
- <div class="trow"><div class="tabs"><button data-t="" onclick="setTab('')">Todos <em>0</em></button><button data-t="pago" onclick="setTab('pago')">Pagos / Recebidos <em>0</em></button><button data-t="pendente" onclick="setTab('pendente')">Pendentes <em>0</em></button></div><div class="kmini" id="kmini"></div><button class="btn cfgb" onclick="openCols()" title="Escolher as colunas da tabela"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="t">Configurar tabela</span></button></div>
+ <div class="trow"><div class="tabs"><button data-t="" onclick="setTab('')">Todos <em>0</em></button><button data-t="pago" onclick="setTab('pago')">Pagos / Recebidos <em>0</em></button><button data-t="pendente" onclick="setTab('pendente')">Em aberto <em>0</em></button></div><div class="kmini" id="kmini"></div><button class="btn cfgb" onclick="openCols()" title="Escolher as colunas da tabela"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="t">Configurar tabela</span></button></div>
  <div class="filters">
   <input id="q" class="qbusca" type="search" placeholder="Pesquise qualquer coisa: descrição, valor, data, mês, conta, status…" oninput="render()" autocomplete="off" aria-label="Pesquisar em todas as colunas">
   <select id="fy" onchange="fyChange()" aria-label="Ano"></select>
@@ -642,7 +644,7 @@ dialog.lanc{zoom:.8;max-height:none;overflow:visible}
   <div hidden>
    <div class="per"><select id="gm1" onchange="gset('from',this.value)" aria-label="Período de início"></select><select id="gm2" onchange="gset('to',this.value)" aria-label="Período de fim"></select></div>
   <select id="gt" onchange="gset('tipo',this.value)" aria-label="Tipo"><option value="">Todos os tipos</option><option>Receita</option><option>Despesa</option></select>
-  <select id="gs" onchange="gset('status',this.value)" aria-label="Status"><option value="">Todos os status</option><option value="pago">Pago / Recebido</option><option value="pendente">Pendente</option><option value="atrasado">Atrasado</option></select>
+  <select id="gs" onchange="gset('status',this.value)" aria-label="Status"><option value="">Todos os status</option><option value="pago">Pago / Recebido</option><option value="pendente">Em aberto</option><option value="atrasado">Atrasado</option></select>
   <select id="gcat" onchange="gset('cat',this.value)" aria-label="Categoria"></select>
   <select id="gsub" onchange="gset('sub',this.value)" aria-label="Subcategoria"></select>
   <select id="gcon" onchange="gset('conta',this.value)" aria-label="Conta"></select>
@@ -758,6 +760,7 @@ dialog.lanc{zoom:.8;max-height:none;overflow:visible}
  <div class="db">
   <div class="fg w"><label>Nome do cartão</label><input id="k_n" maxlength="40" required autocomplete="off" placeholder="Ex.: Nubank Mastercard"></div>
   <div class="fg w"><label>Limite (R$)</label><input id="k_l" inputmode="decimal" required autocomplete="off" placeholder="0,00"></div>
+  <div class="fg w"><label>Dia de fechamento da fatura</label><input id="k_fech" type="number" min="1" max="31" required placeholder="Ex.: 3"></div>
   <div class="fg w"><label>Dia de pagamento da fatura</label><input id="k_dia" type="number" min="1" max="31" required placeholder="Ex.: 10"></div>
  </div>
  <div class="df"><button type="button" class="btn" onclick="$('#kdlg').close()">Cancelar</button><button class="btn p">Salvar</button></div>
@@ -772,25 +775,25 @@ dialog.lanc{zoom:.8;max-height:none;overflow:visible}
  </div>
  <div class="xl-grid">
   <div class="xl-col">
-   <fieldset class="xl-fs"><legend>Dados Gerais</legend>
+   <fieldset class="xl-fs" id="fs_a"><legend id="lg_a">Dados Gerais</legend>
     <div class="fg row"><label><i class=req>*</i> Nº Lançamento</label><input id="f_nlan" readonly class="ro" value="—"></div>
-    <div class="fg row"><label><i class=req>*</i> Categoria</label><select id="f_cat" onchange="fillSub()"></select></div>
-    <div class="fg row"><label><i class=req>*</i> Subcategoria</label><select id="f_sub"></select></div>
+    <div class="fg row"><label><i class=req>*</i> Categoria</label><select id="f_cat" required onchange="fillSub()"></select></div>
+    <div class="fg row"><label><i class=req>*</i> Subcategoria</label><select id="f_sub" required></select></div>
     <div class="fg row"><label>Cartão de Crédito</label><select id="f_cartao"></select></div>
     <div class="fg row"><label>Data da Compra</label><input id="f_compra" type="date"></div>
     <div class="fg row"><label>Quantidade</label><input id="f_qtd" type="number" min="1" value="1"></div>
     <div class="fg row"><label><i class=req>*</i> Descrição</label><input id="f_desc" required placeholder="Ex.: Supermercado do mês"></div>
    </fieldset>
-   <fieldset class="xl-fs" id="fb_parc" hidden><legend>Configuração das parcelas</legend><div class="xl-2"><div class="fg row"><label><i class=req>*</i> Nº Parcelas</label><input id="f_npar" type="number" min="1" max="120" value="2"></div><div class="fg row"><label><i class=req>*</i> Data da 1ª Parcela</label><input id="f_p1" type="date"></div></div><div class="fg row xl-rad"><label>Valor informado</label><div class="xl-radios h"><label><input type="radio" name="modo" value="total" checked> Total Parcelado</label><label><input type="radio" name="modo" value="parcela"> Valor Fixo</label></div></div></fieldset>
+   <fieldset class="xl-fs" id="fb_parc" hidden><legend>Configuração das parcelas</legend><div class="xl-2"><div class="fg row"><label><i class=req>*</i> Nº Parcelas</label><input id="f_npar" type="number" min="1" max="120" value="2"></div><div class="fg row"><label><i class=req>*</i> Data da 1ª Parcela</label><input id="f_p1" type="date"></div></div><div class="fg row xl-rad"><label>Valor informado</label><div class="xl-radios h"><label><input type="radio" name="modo" value="total" checked> Total Parcelado <span class="xl-hint" id="h_total"></span></label><label><input type="radio" name="modo" value="parcela"> Valor Fixo <span class="xl-hint" id="h_fixo"></span></label></div></div></fieldset>
   </div>
   <div class="xl-col">
-   <fieldset class="xl-fs"><legend>Dados da Parcela</legend>
+   <fieldset class="xl-fs" id="fs_b"><legend id="lg_b">Dados do pagamento</legend>
     <div class="fg row"><label>Parcela</label><input id="f_parc" placeholder="1/1" value="1/1" readonly class="ro"></div>
     <div class="fg row"><label><i class=req>*</i> Conta Bancária</label><select id="f_conta" required></select></div>
-    <div class="xl-2"><div class="fg row"><label><i class=req>*</i> Data Vencimento</label><input id="f_venc" type="date" required></div>
+    <div class="xl-2" id="xl_w1"><div class="fg row"><label><i class=req>*</i> Data Vencimento</label><input id="f_venc" type="date" required></div>
      <div class="fg row"><label><i class=req>*</i> Valor</label><input id="f_valor" type="number" step="0.01" min="0" required></div></div>
-    <div class="xl-2"><div class="fg row"><label><i class=req>*</i> Data Pagamento</label><input id="f_pgto" type="date"></div>
-     <div class="fg row"><label><i class=req>*</i> Status</label><select id="f_status"><option value="pendente">Pendente</option><option value="pago">Pago</option></select></div></div>
+    <div class="xl-2" id="xl_w2"><div class="fg row"><label><i class=req>*</i> Data Pagamento</label><input id="f_pgto" type="date"></div>
+     <div class="fg row"><label><i class=req>*</i> Status</label><select id="f_status"><option value="pendente">Em aberto</option><option value="pago">Pago</option></select></div></div>
    </fieldset>
    <fieldset class="xl-fs xl-prev-box" id="f_prev"><legend>Lançamentos adicionados</legend>
     <table class="pc-t"><thead><tr><th>Nº</th><th>Dt Vencimento</th><th>Dt Pagamento</th><th>Conta</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table>
