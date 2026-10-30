@@ -265,14 +265,14 @@ function render(){
   <td data-l="Vencimento">${hl(fd(x.venc),'venc')}</td>
   <td data-l="Pgto / Receb.">${hl(fd(x.pgto),'pgto')}</td>
   <td data-l="Parcela">${hl(x.parc||'—','parc')}</td>
-  <td data-l="Conta">${hl(x.conta,'conta')}</td>
+  <td data-l="Conta">${hl(x.conta||'—','conta')}</td>
   <td data-l="Cartão">${hl(x.cartao||'—','conta')}</td>
   <td data-l="Categoria">${hl(x.cat,'cat')}<small>${hl(x.sub,'sub')}</small></td>
   <td data-l="Data da Compra">${hl(fd(x.compra),'compra')}</td>
   <td data-l="Qtd">${hl(String(x.qtd),'qtd')}</td>
   <td data-l="Descrição"><b style="font-weight:600">${hl(x.desc,'desc')}</b></td>
   <td data-l="Valor" class="v ${x.tipo==='Receita'?'rec':'des'}">${hl((x.tipo==='Receita'?'+':'−')+' '+brl(x.valor),'valor')}</td>
-  <td data-l="Status"><select class="tag ${st(x)}" onchange="setStatus(${x.n},this.value)" aria-label="Alterar status"><option value="pendente"${st(x)!=='pago'?' selected':''}>${st(x)==='atrasado'?'Atrasado':'Em aberto'}</option><option value="pago"${st(x)==='pago'?' selected':''}>${x.tipo==='Receita'?'Recebido':'Pago'}</option></select></td>
+  <td data-l="Status"><span class="tag ${st(x)}">${stLabel(x)}</span></td>
   <td class="act"><button class="ic" onclick="openF(${x.n})" title="Editar" aria-label="Editar">✎</button><button class="ic" onclick="del(${x.n})" title="Excluir" aria-label="Excluir">🗑</button></td></tr>`).join('')||'<tr><td class="empty" colspan="13">Nenhum lançamento encontrado. Ajuste os filtros ou crie um novo.</td></tr>';
  document.querySelectorAll('.tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===TAB);b.querySelector('em').textContent=filtered(b.dataset.t).length});
  $('#cnt').textContent=`${T.length} lançamentos`;$('#tot').innerHTML=`Saldo desta lista: <b style="color:var(--ink)">${brl(sum(T,x=>x.tipo==='Receita')-sum(T,x=>x.tipo==='Despesa'))}</b>`;
@@ -283,7 +283,7 @@ const opts=(a,b)=>(b!==undefined?`<option value="">${b}</option>`:'')+a.map(x=>`
 function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Object.keys(CATS[t]),'Selecione');if(c)$('#f_cat').value=c;fillSub(s);
  $('#f_status').options[1].text=t==='Receita'?'Recebido':'Pago'}
 function fillSub(s){$('#f_sub').innerHTML=opts(CATS[$('#f_tipo').value][$('#f_cat').value]||[],'Selecione');if(s)$('#f_sub').value=s}
-let editing=null,selRow=null,editInit=null;
+let editing=null,selRow=null,editInit=null,uPgto='';
 const stAuto=p=>p&&p<=TODAY?'pago':'pendente';
 const qtdF=()=>Math.max(1,parseInt($('#f_qtd').value,10)||1);
 // Vencimento da fatura: dia de pagamento do cartão no mês correto, conforme a data da compra
@@ -332,15 +332,15 @@ function layoutLanc(){
   A.append(w5,w6,w3,FG('f_desc'),FG('f_valor'));
   FG('f_valor').hidden=true;$('#f_valor').required=false;$('#f_conta').required=false;
   w1.append(FG('f_venc'),FG('f_pgto'));w2.append(FG('f_parc'),FG('f_status'));
-  B.append(FG('f_conta'),w1,w2,$('#xl_hint'));
+  B.append(FG('f_conta'),w1,w2,$('#xl_hint'));FG('f_conta_g').hidden=true;
   w1.hidden=w2.hidden=w3.hidden=w5.hidden=w6.hidden=false;cfg.hidden=false;
   autoP1();
  }else{
   $('#lg_a').textContent='Dados do pagamento';$('#lg_b').textContent='Dados Gerais';
   w1.hidden=w2.hidden=w3.hidden=w5.hidden=w6.hidden=true;cfg.hidden=true;
   A.append(FG('f_conta'),FG('f_cat'),FG('f_sub'),FG('f_cartao'),FG('f_compra'),FG('f_qtd'),FG('f_desc'),FG('f_valor'));
-  FG('f_valor').hidden=false;$('#f_valor').required=true;$('#f_conta').required=true;
-  B.append(FG('f_nlan'),FG('f_venc'),FG('f_pgto'),FG('f_status'),FG('f_parc'),$('#xl_hint'));
+  FG('f_valor').hidden=false;$('#f_valor').required=true;$('#f_conta').required=false;
+  B.append(FG('f_nlan'),FG('f_conta_g'),FG('f_venc'),FG('f_pgto'),FG('f_status'),FG('f_parc'),$('#xl_hint'));
  }
 }
 function prevParc(){
@@ -376,6 +376,7 @@ function selData(){
 function refreshGerais(){
  const parc=isParc(),despesa=$('#f_tipo').value==='Despesa',cd=cardAtual(),compra=$('#f_compra').value||TODAY;
  $('#f_status').disabled=true;
+ const cg=$('#f_conta_g');FG('f_conta_g').hidden=parc||!!editing;
  if(editing){
   $('#f_pgto').disabled=false;
   $('#f_venc').readOnly=!!(cd&&cd.diaPag);
@@ -389,9 +390,10 @@ function refreshGerais(){
   setv($('#f_nlan'),pad4(s.draft?nextN():r.n));
   setv($('#f_venc'),r.venc);$('#f_venc').readOnly=true;
   $('#f_pgto').disabled=false;setv($('#f_pgto'),r.pgto||'');setStatusUI(r.status);
+  if(!parc){setv(cg,r.conta||'');cg.disabled=!!r.conta;if(!r.conta)$('#f_pgto').disabled=true;if(managing)setv($('#f_conta'),r.conta||'')}
   if(parc){$('#f_conta').disabled=!s.draft;setv($('#f_conta'),r.conta||'');setv($('#f_parc'),s.draft?`${r.i+1}/${PD.length}`:(r.parc||''))}
   else $('#f_conta').disabled=!!managing;
-  $('#xl_hint').textContent=parc&&s.draft?'Escolha a conta bancária e, se já foi paga, a data de pagamento desta parcela. Clique na linha de novo para desmarcar.':'Informe a data de pagamento. Clique na linha de novo para desmarcar.';
+  $('#xl_hint').textContent=parc&&s.draft?'Escolha a conta bancária e, se já foi paga, a data de pagamento desta parcela. Clique na linha de novo para desmarcar.':(!parc&&!r.conta?'Escolha a conta bancária para registrar o pagamento. Clique na linha de novo para desmarcar.':'Informe a data de pagamento. Clique na linha de novo para desmarcar.');
  }else if(parc){
   setv($('#f_nlan'),pad4(managing||nextN()));setv($('#f_venc'),'');$('#f_venc').readOnly=true;
   $('#f_pgto').disabled=true;setv($('#f_pgto'),'');setStatusUI('pendente');
@@ -401,16 +403,28 @@ function refreshGerais(){
   $('#f_nlan').value=pad4(nextN());
   if(despesa)$('#f_venc').value=cd&&cd.diaPag?vencFatura(compra,cd.diaPag,cd.diaFech):compra;
   $('#f_venc').readOnly=despesa;
-  $('#f_pgto').disabled=true;setv($('#f_pgto'),'');setStatusUI('pendente');
+  const cv=$('#f_conta').value;
+  $('#f_pgto').disabled=true;setv($('#f_pgto'),cv?(uPgto||TODAY):'');setStatusUI(cv?'pago':'pendente');
+  setv(cg,cv);cg.disabled=true;
   $('#f_conta').disabled=!!managing;
-  $('#xl_hint').textContent=SESS.length?'Clique numa linha da lista para informar a data de pagamento.':'Preencha os dados do pagamento e clique em Adicionar.';
+  $('#xl_hint').textContent=SESS.length?'Clique numa linha da lista para informar a conta bancária / data de pagamento.':'Preencha os dados do pagamento e clique em Adicionar.';
  }
 }
 function selectRow(k){selRow=selRow===k?null:k;sessRender();refreshGerais();
  if(selRow!==null){const c=$('#f_conta');(!c.disabled&&isParc()?c:$('#f_pgto')).focus()}}
 ['input','change'].forEach(ev=>$('#f_conta').addEventListener(ev,()=>{
+ if(!isParc()&&isNew()&&selRow===null){const c=$('#f_conta').value;if(!c)uPgto='';else if(!uPgto)uPgto=TODAY}
  if(isParc()&&isNew()&&typeof selRow==='string'){const p=PD[+selRow.slice(1)];if(p){p.conta=$('#f_conta').value;sessRender()}}
 }));
+// Conta bancária em Dados Gerais (ÚNICO): ao escolher, a data de pagamento vira hoje e o status Pago
+$('#f_conta_g').addEventListener('change',()=>{
+ if(isParc()||editing)return;
+ const v=$('#f_conta_g').value,s=selData();if(!s||s.draft||!v||s.r.conta)return;
+ if(!CONTAS.includes(v)){toast('Escolha uma conta bancária ativa');$('#f_conta_g').value='';return}
+ const x=D.find(i=>i.n===s.r.n);if(!x)return;
+ x.conta=v;x.pgto=TODAY;x.status='pago';s.r.conta=v;s.r.pgto=TODAY;s.r.status='pago';
+ persist();months();render();sessRender();refreshGerais();toast('Conta bancária definida e lançamento pago');
+});
 // Data de pagamento: o status muda sozinho (hoje ou antes = Pago), linha por linha
 $('#f_pgto').addEventListener('input',()=>{
  const p=$('#f_pgto').value,st=stAuto(p);
@@ -435,6 +449,7 @@ function openF(n){
  const x0=n?D.find(i=>i.n===n):null,cur=x0&&x0.conta;
  const contaOpts=CONTAS.slice();if(cur&&!contaOpts.includes(cur))contaOpts.push(cur);
  $('#f_conta').innerHTML='<option value="">Selecione</option>'+contaOpts.map(c=>`<option value="${esc(c)}">${esc(c)}${CONTAS.includes(c)?'':' (inativa)'}</option>`).join('');
+ $('#f_conta_g').innerHTML=$('#f_conta').innerHTML;uPgto='';
  $('#f_cartao').innerHTML=opts(CARTOES,'Sem cartão');
  const x=x0||{tipo:'Despesa',status:'pendente',desc:'',valor:'',qtd:1,venc:TODAY,pgto:'',compra:TODAY,parc:'1/1',conta:'',cartao:''};
  $('#f_tipo').value=x.tipo;fillCat(x.cat,x.sub);
@@ -485,7 +500,7 @@ function sessLimpaCampos(){
  document.querySelector('input[name=tl][value=unico]').checked=true;$('#fs_cfg').hidden=true;$('#f_p1').value='';$('#f_npar').value='';$('#f_vtot').value='';$('#f_vfix').value='';document.querySelector('input[name=modo][value=total]').checked=true;PD=[];layoutLanc();
  fillCat();
  $('#f_cartao').value='';$('#f_compra').value=TODAY;$('#f_qtd').value='1';$('#f_desc').value='';
- $('#f_conta').value='';
+ $('#f_conta').value='';uPgto='';
  $('#f_valor').value='';$('#f_venc').value=TODAY;$('#f_pgto').value='';$('#f_parc').value='1/1';
  selRow=null;fgVis();buildPD();refreshGerais();sessRender();
 }
@@ -508,11 +523,13 @@ function save(e){
    SESS.push({n:nx,parc,venc:p.venc,pgto:p.pgto,conta:p.conta,valor:p.valor,status:p.status})});
   const q=PD.length;persist();months();render();sessLimpaCampos();toast(`${q} parcelas adicionadas`);return false;
  }
- if(!CONTAS.includes($('#f_conta').value)){toast('Escolha uma conta bancária ativa');return false}
- const o={tipo:$('#f_tipo').value,status:editing?stAuto($('#f_pgto').value):'pendente',desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:(editing&&editInit&&$('#f_valor').value===editInit.unit&&qtdF()===editInit.qtd)?editInit.total:Math.round((parseFloat($('#f_valor').value)||0)*qtdF()*100)/100,qtd:qtdF(),venc:$('#f_venc').value||$('#f_compra').value||TODAY,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
+ const cv=$('#f_conta').value;
+ if((editing||cv)&&!CONTAS.includes(cv)){toast('Escolha uma conta bancária ativa');return false}
+ const o={tipo:$('#f_tipo').value,status:editing?stAuto($('#f_pgto').value):(cv?'pago':'pendente'),desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:(editing&&editInit&&$('#f_valor').value===editInit.unit&&qtdF()===editInit.qtd)?editInit.total:Math.round((parseFloat($('#f_valor').value)||0)*qtdF()*100)/100,qtd:qtdF(),venc:$('#f_venc').value||$('#f_compra').value||TODAY,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
  if(o.tipo!=='Despesa'){o.compra=o.venc;o.parc='1/1';o.cartao=''}
  else if(!o.cartao){o.parc='1/1'}
  if(o.tipo==='Receita'&&o.status==='pago'){o.pgto=o.pgto||TODAY;o.venc=o.pgto}
+ if(!editing&&o.status==='pago')o.pgto=uPgto||TODAY;
  if(o.status==='pago'&&!o.pgto)o.pgto=TODAY;if(o.status==='pendente')o.pgto='';
  if(editing){Object.assign(D.find(i=>i.n===editing),o);persist();months();render();$('#dlg').close();toast('Lançamento atualizado');return false}
  o.n=Math.max(0,...D.map(i=>i.n))+1;D.push(o);
