@@ -48,7 +48,9 @@ function persist(){try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}}
 let D=load();
 let CARDS=null;try{CARDS=JSON.parse(localStorage.getItem('fluxo_cards'))}catch(e){}
 if(!Array.isArray(CARDS))CARDS=[];
-D.forEach(x=>{if(x.cartao&&!CARDS.some(c=>c.nome===x.cartao))CARDS.push({id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),nome:x.cartao,limite:0})});
+/* Cartões citados em lançamentos mas ausentes da lista: criados só na memória, com id fixo (igual em todos os aparelhos) */
+const hashNome=s=>{let n=7;for(const ch of s)n=(n*31+ch.charCodeAt(0))>>>0;return n.toString(36)};
+D.forEach(x=>{if(x.cartao&&!CARDS.some(c=>c.nome===x.cartao))CARDS.push({id:'c_'+hashNome(x.cartao),nome:x.cartao,limite:0})});
 function cardsSave(){try{localStorage.setItem('fluxo_cards',JSON.stringify(CARDS))}catch(e){}CARTOES.length=0;CARDS.forEach(c=>CARTOES.push(c.nome))}
 let BANKS=null,TR=null,BKE=null,TRE=null,FAT=null;
 try{FAT=JSON.parse(localStorage.getItem('fluxo_faturas'))}catch(e){}
@@ -130,7 +132,8 @@ function trSave(e){e.preventDefault();const v=parseMon($('#tr_v').value),o=$('#t
  trSave_();trRender();$('#trdlg').close();toast(TRE?'Transferência atualizada':'Transferência cadastrada');return false}
 function trDel(id){confirmar('Excluir esta transferência?').then(ok=>{if(ok){TR=TR.filter(x=>x.id!==id);trSave_();trRender();toast('Transferência excluída')}})}
 
-cardsSave();
+// Ao abrir a página NÃO grava nada na nuvem (gravar aqui fazia as contas se sobrescreverem e a página recarregar sem parar)
+CARTOES.length=0;CARDS.forEach(c=>CARTOES.push(c.nome));
 const st=x=>x.status==='pago'?'pago':(x.venc<TODAY?'atrasado':'pendente');
 const stLabel=x=>({pago:x.tipo==='Receita'?'Recebido':'Pago',pendente:'Em aberto',atrasado:'Atrasado'}[st(x)]);
 
@@ -876,8 +879,8 @@ const pt=(a,b)=>a.localeCompare(b,'pt'),pcSave=()=>{try{localStorage.setItem('fl
 try{PC=JSON.parse(localStorage.getItem('fluxo_pcats'))}catch(e){}
 if(!PC||!PC.Despesa||!PC.Receita)PC={Despesa:{},Receita:{}};
 PL=PL.filter(r=>PC[r.t]);PL.forEach(r=>{const C=PC[r.t];C[r.c]=C[r.c]||[];if(!C[r.c].includes(r.s))C[r.c].push(r.s)});
-function plSync(){const keep=[];['Despesa','Receita'].forEach(t=>Object.keys(PC[t]).forEach(c=>PC[t][c].forEach(sb=>{keep.push(PL.find(x=>x.t===t&&x.c===c&&x.s===sb)||{id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),t,c,s:sb,v:{}})})));PL=keep;plPersist();pcSave()}
-plSync();
+function plSync(soMemoria){const keep=[];['Despesa','Receita'].forEach(t=>Object.keys(PC[t]).forEach(c=>PC[t][c].forEach(sb=>{keep.push(PL.find(x=>x.t===t&&x.c===c&&x.s===sb)||{id:'p_'+hashNome(t+'|'+c+'|'+sb),t,c,s:sb,v:{}})})));PL=keep;if(!soMemoria){plPersist();pcSave()}}
+plSync(true); // ao abrir a página só ajusta na memória: gravar aqui fazia as contas se sobrescreverem e a tela recarregar sem parar
 const pcN=(t,c,sb)=>PL.filter(r=>r.t===t&&r.c===c&&(sb==null||r.s===sb)).reduce((a,r)=>a+Object.keys(r.v).length,0);
 function pcOpen(){$('#pcdlg').showModal();pcRender()}
 function setPT(t){PT=t;pcRender()}

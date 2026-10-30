@@ -123,16 +123,34 @@ function recarregarPagina() {
   location.reload();
 }
 
+// Aviso discreto (usado quando a página já recarregou várias vezes seguidas)
+function mostrarAvisoAtualizacao() {
+  if (document.getElementById("sync-aviso")) return;
+  const el = document.createElement("div");
+  el.id = "sync-aviso";
+  el.style.cssText = "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;background:#0f3d38;color:#fff;padding:10px 14px;border-radius:12px;font:600 13px system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;gap:12px;align-items:center";
+  el.innerHTML = '<span>Há dados novos de outra conta.</span><button type="button" style="background:#fff;color:#0f3d38;border:0;border-radius:8px;padding:6px 12px;font:700 13px system-ui,sans-serif;cursor:pointer">Atualizar</button>';
+  el.querySelector("button").onclick = () => { sessionStorage.removeItem("sync_reloads"); recarregarPagina(); };
+  document.body.appendChild(el);
+}
+
 function aplicarAtualizacao() {
   // Se há um pop-up aberto, espera fechar para não perder o que está sendo digitado
   if (document.querySelector("dialog[open]")) { recarregarAoFechar = true; return; }
+  // Trava de segurança: se já recarregou 3 vezes no último minuto, para de recarregar sozinho
+  const agora = Date.now();
+  let hist = [];
+  try { hist = JSON.parse(sessionStorage.getItem("sync_reloads") || "[]").filter(t => agora - t < 60000); } catch (e) {}
+  if (hist.length >= 3) { mostrarAvisoAtualizacao(); return; }
+  hist.push(agora);
+  try { sessionStorage.setItem("sync_reloads", JSON.stringify(hist)); } catch (e) {}
   recarregarPagina();
 }
 
 document.addEventListener("close", () => {
   if (recarregarAoFechar && !document.querySelector("dialog[open]")) {
     recarregarAoFechar = false;
-    recarregarPagina();
+    aplicarAtualizacao();
   }
 }, true);
 
