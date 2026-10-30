@@ -370,7 +370,7 @@ function setStatusUI(v){const s=$('#f_status');s.value=v;s.dataset.st=v}
 function selData(){
  if(selRow===null)return null;
  if(typeof selRow==='string'){const p=PD[+selRow.slice(1)];return p?{draft:true,r:p}:null}
- const r=SESS.find(s=>s.n===selRow);return r?{draft:false,r}:null;
+ const r=SESS.find(s=>s.n===selRow);if(r&&managing&&r.status==='pago'){selRow=null;return null}return r?{draft:false,r}:null;
 }
 // Dados Gerais / Dados da parcela: prévia, ou dados da linha selecionada na lista
 function refreshGerais(){
@@ -400,10 +400,10 @@ function refreshGerais(){
   $('#f_conta').disabled=true;setv($('#f_conta'),'');setv($('#f_parc'),'');
   $('#xl_hint').textContent=managing?'Clique numa parcela da lista para informar a data de pagamento.':PD.length?'Clique numa linha da lista para escolher a conta bancária e a data de pagamento da parcela.':'Informe o nº de parcelas e o valor para ver as parcelas na lista.';
  }else{
-  $('#f_nlan').value=pad4(nextN());
+  $('#f_nlan').value=pad4(managing||nextN());
   if(despesa)$('#f_venc').value=cd&&cd.diaPag?vencFatura(compra,cd.diaPag,cd.diaFech):compra;
   $('#f_venc').readOnly=despesa;
-  const cv=$('#f_conta').value;
+  const cv=managing?'':$('#f_conta').value;
   $('#f_pgto').disabled=true;setv($('#f_pgto'),cv?(uPgto||TODAY):'');setStatusUI(cv?'pago':'pendente');
   setv(cg,cv);cg.disabled=true;
   $('#f_conta').disabled=!!managing;
@@ -460,11 +460,12 @@ function openF(n){
 let SESS=[];
 function allRows(){
  const nx=Math.max(0,...D.map(i=>i.n))+1;
- return SESS.map(r=>({k:r.n,n:r.n,parc:r.parc||'1/1',venc:r.venc,pgto:r.pgto,conta:r.conta,valor:r.valor,status:r.status,d:false}))
+ return SESS.filter(r=>!managing||r.status!=='pago').map(r=>({k:r.n,n:r.n,parc:r.parc||'1/1',venc:r.venc,pgto:r.pgto,conta:r.conta,valor:r.valor,status:r.status,d:false}))
   .concat(PD.map(p=>({k:'d'+p.i,n:nx+p.i,parc:`${p.i+1}/${PD.length}`,venc:p.venc,pgto:p.pgto,conta:p.conta,valor:p.valor,status:p.status,d:true})));
 }
 function sessRender(){
  const rows=allRows(),tb=$('#f_prev_body');
+ if(managing&&!rows.length&&$('#dlg').open){setTimeout(()=>{if(managing&&!allRows().length)concluirLanc()},350)}
  const html=rows.length?rows.map(r=>`<tr data-n="${r.k}"${r.d?' data-d="1"':''}${String(r.k)===String(selRow)?' class="sel"':''}><td>${pad4(r.n)}</td><td>${esc(r.parc)}</td><td>${fd(r.venc)}</td><td>${r.pgto?fd(r.pgto):'—'}</td><td>${r.conta?esc(r.conta):'—'}</td><td class="r">${brl(r.valor)}</td><td><span class="xl-st ${r.status}">${r.status==='pago'?'Pago':'Em aberto'}</span></td></tr>`).join(''):'<tr><td colspan="7" class="xl-empty">Nenhum lançamento adicionado ainda.</td></tr>';
  if(tb._h!==html){tb.innerHTML=html;tb._h=html}
  const tot=rows.reduce((a,r)=>a+r.valor,0),pago=rows.filter(r=>r.status==='pago').reduce((a,r)=>a+r.valor,0);
@@ -483,14 +484,15 @@ function grupoDe(x){
 function rowOpen(ev,n){
  if(ev.target.closest('button,select,a,input,label,.act'))return;
  const x=D.find(i=>i.n===n);if(!x)return;
- const grp=grupoDe(x),gp=grp.length>1;
+ const grpAll=grupoDe(x),grp=grpAll.filter(i=>i.status!=='pago'),gp=grpAll.length>1;
+ if(!grp.length){toast('Todos os itens deste lançamento já estão pagos. Use o lápis (editar) para alterar.');return}
  openF(n);
- editing=null;managing=grp[0].n;SESS=grp.map(rowOf);PD=[];selRow=null;
+ editing=null;managing=grpAll[0].n;SESS=grp.map(rowOf);PD=[];selRow=null;
  document.querySelector(`input[name=tl][value=${gp?'parc':'unico'}]`).checked=true;
  layoutLanc();
- if(gp){$('#f_npar').value=grp.length;$('#f_p1').value=grp[0].venc;document.querySelector('input[name=modo][value=total]').checked=true;
-  $('#f_vtot').value=grp.reduce((t,i)=>t+i.valor,0).toFixed(2);$('#f_vfix').value=grp[0].valor.toFixed(2)}
- $('#dt').textContent='Lançamento '+pad4(grp[0].n);
+ if(gp){$('#f_npar').value=grpAll.length;$('#f_p1').value=grpAll[0].venc;document.querySelector('input[name=modo][value=total]').checked=true;
+  $('#f_vtot').value=grpAll.reduce((t,i)=>t+i.valor,0).toFixed(2);$('#f_vfix').value=grpAll[0].valor.toFixed(2)}
+ $('#dt').textContent='Lançamento '+pad4(grpAll[0].n);
  setLock(true);fgVis();
  if(!gp)selRow=SESS[0].n;
  $('#fs_cfg').hidden=!gp;sessRender();refreshGerais();
