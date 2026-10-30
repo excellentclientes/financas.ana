@@ -376,8 +376,9 @@ function selData(){
 function refreshGerais(){
  const parc=isParc(),despesa=$('#f_tipo').value==='Despesa',cd=cardAtual(),compra=$('#f_compra').value||TODAY;
  $('#f_status').disabled=true;
- const cg=$('#f_conta_g');FG('f_conta_g').hidden=parc||!!editing;
+ const cg=$('#f_conta_g');FG('f_conta_g').hidden=parc;
  if(editing){
+  $('#f_conta').disabled=false;setv(cg,$('#f_conta').value);cg.disabled=false;
   $('#f_pgto').disabled=false;
   $('#f_venc').readOnly=!!(cd&&cd.diaPag);
   if(cd&&cd.diaPag&&$('#f_compra').value)$('#f_venc').value=vencFatura(compra,cd.diaPag,cd.diaFech);
@@ -418,7 +419,8 @@ function selectRow(k){selRow=selRow===k?null:k;sessRender();refreshGerais();
 }));
 // Conta bancária em Dados Gerais (ÚNICO): ao escolher, a data de pagamento vira hoje e o status Pago
 $('#f_conta_g').addEventListener('change',()=>{
- if(isParc()||editing)return;
+ if(isParc())return;
+ if(editing){const v=$('#f_conta_g').value;$('#f_conta').value=v;if(v&&!$('#f_pgto').value){$('#f_pgto').value=TODAY}return}
  const v=$('#f_conta_g').value,s=selData();if(!s||s.draft||!v||s.r.conta)return;
  if(!CONTAS.includes(v)){toast('Escolha uma conta bancária ativa');$('#f_conta_g').value='';return}
  const x=D.find(i=>i.n===s.r.n);if(!x)return;
@@ -441,7 +443,7 @@ $('#f_status').addEventListener('change',fgVis);
 $('#f_compra').addEventListener('change',fgVis);
 $('#f_cartao').addEventListener('change',fgVis);
 function openF(n){
- selRow=null;managing=null;PD=[];setLock(false);if(!n){SESS=[]}
+ selRow=null;managing=null;PD=[];setLock(false);SESS=[]
  $('#f_nlan').value=n?String(n).padStart(4,'0'):String(Math.max(0,...D.map(i=>i.n))+1).padStart(4,'0');
  document.querySelector(`input[name=tl][value=${n?'unico':'unico'}]`).checked=true;$('#fs_cfg').hidden=true;$('#f_p1').value='';$('#f_npar').value='';$('#f_vtot').value='';$('#f_vfix').value='';document.querySelector('input[name=modo][value=total]').checked=true;layoutLanc();sessRender();
  if(!n&&semContaAtiva('Cadastre uma conta bancária antes de criar lançamentos'))return;
@@ -1071,3 +1073,6 @@ function pdfPlan(){
 months();render();
 // Mantém a aba aberta quando a página é atualizada pela sincronização
 (()=>{const sv=sessionStorage.getItem('fluxo_view');if(sv&&sv!=='l')try{setView(sv)}catch(e){}})();
+
+// Ao fechar o cadastro (X, Esc ou Concluir) limpa qualquer estado da visualização
+$('#dlg').addEventListener('close',()=>{SESS=[];PD=[];managing=null;selRow=null;editing=null;setLock(false);$('#f_conta').disabled=false;sessRender()});
