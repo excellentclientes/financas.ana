@@ -418,7 +418,7 @@ function selectRow(k){selRow=selRow===k?null:k;sessRender();refreshGerais();
  if(isParc()&&isNew()&&typeof selRow==='string'){const p=PD[+selRow.slice(1)];if(p){p.conta=$('#f_conta').value;sessRender()}}
 }));
 // Conta bancária em Dados Gerais (ÚNICO): ao escolher, a data de pagamento vira hoje e o status Pago
-$('#f_conta_g').addEventListener('change',()=>{
+['input','change'].forEach(ev=>$('#f_conta_g').addEventListener(ev,()=>{
  if(isParc())return;
  if(editing){const v=$('#f_conta_g').value;$('#f_conta').value=v;if(v&&!$('#f_pgto').value){$('#f_pgto').value=TODAY}return}
  const v=$('#f_conta_g').value,s=selData();if(!s||s.draft||!v||s.r.conta)return;
@@ -426,7 +426,7 @@ $('#f_conta_g').addEventListener('change',()=>{
  const x=D.find(i=>i.n===s.r.n);if(!x)return;
  x.conta=v;x.pgto=TODAY;x.status='pago';s.r.conta=v;s.r.pgto=TODAY;s.r.status='pago';
  persist();months();render();sessRender();refreshGerais();toast('Conta bancária definida e lançamento pago');
-});
+}));
 // Data de pagamento: o status muda sozinho (hoje ou antes = Pago), linha por linha
 $('#f_pgto').addEventListener('input',()=>{
  const p=$('#f_pgto').value,st=stAuto(p);
