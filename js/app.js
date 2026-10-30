@@ -154,7 +154,7 @@ const FIELDS={
  cat:x=>x.cat,
  sub:x=>x.sub,
  compra:x=>dtxt(x.compra),
- qtd:x=>String(x.qtd),
+ qtd:x=>fq(x.qtd),
  desc:x=>x.desc,
  valor:x=>vtxt(x.valor),
  status:x=>stLabel(x)+' '+st(x)+' '+(st(x)==='pago'?'quitado':'em aberto')
@@ -269,7 +269,7 @@ function render(){
   <td data-l="Cartão">${hl(x.cartao||'—','conta')}</td>
   <td data-l="Categoria">${hl(x.cat,'cat')}<small>${hl(x.sub,'sub')}</small></td>
   <td data-l="Data da Compra">${hl(fd(x.compra),'compra')}</td>
-  <td data-l="Qtd">${hl(String(x.qtd),'qtd')}</td>
+  <td data-l="Qtd">${hl(fq(x.qtd),'qtd')}</td>
   <td data-l="Descrição"><b style="font-weight:600">${hl(x.desc,'desc')}</b></td>
   <td data-l="Valor" class="v ${x.tipo==='Receita'?'rec':'des'}">${hl((x.tipo==='Receita'?'+':'−')+' '+brl(x.valor),'valor')}</td>
   <td data-l="Status"><span class="tag ${st(x)}">${stLabel(x)}</span></td>
@@ -285,7 +285,8 @@ function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Obje
 function fillSub(s){$('#f_sub').innerHTML=opts(CATS[$('#f_tipo').value][$('#f_cat').value]||[],'Selecione');if(s)$('#f_sub').value=s}
 let editing=null,selRow=null,editInit=null,uPgto='';
 const stAuto=p=>p&&p<=TODAY?'pago':'pendente';
-const qtdF=()=>Math.max(1,parseInt($('#f_qtd').value,10)||1);
+const qtdF=()=>{const q=parseMoney($('#f_qtd').value);return q>0?Math.round(q*1e6)/1e6:1};
+const fq=q=>{q=Number(q);if(!(q>0))q=1;return q.toLocaleString('pt-BR',{maximumFractionDigits:6,useGrouping:false})};
 // Vencimento da fatura: dia de pagamento do cartão no mês correto, conforme a data da compra
 function vencFatura(compra,diaPag,diaFech){
  let [y,mo,d]=compra.split('-').map(Number);
@@ -455,7 +456,7 @@ function openF(n){
  $('#f_cartao').innerHTML=opts(CARTOES,'Sem cartão');
  const x=x0||{tipo:'Despesa',status:'pendente',desc:'',valor:'',qtd:1,venc:TODAY,pgto:'',compra:TODAY,parc:'1/1',conta:'',cartao:''};
  $('#f_tipo').value=x.tipo;fillCat(x.cat,x.sub);
- $('#f_status').value=x.status;$('#f_desc').value=x.desc;editInit=x0?{unit:String(Number((x0.valor/(x0.qtd||1)).toFixed(2))),qtd:x0.qtd||1,total:x0.valor}:null;$('#f_valor').value=x0?editInit.unit:x.valor;$('#f_qtd').value=x.qtd;$('#f_venc').value=x.venc;
+ $('#f_status').value=x.status;$('#f_desc').value=x.desc;editInit=x0?{unit:String(Number((x0.valor/(x0.qtd||1)).toFixed(2))),qtd:x0.qtd||1,total:x0.valor}:null;$('#f_valor').value=x0?editInit.unit:x.valor;$('#f_qtd').value=fq(x.qtd);$('#f_venc').value=x.venc;
  $('#f_pgto').value=x.pgto||'';$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();buildPD();refreshGerais();
  $('#dlg').showModal();
 }
