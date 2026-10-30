@@ -390,11 +390,11 @@ function refreshGerais(){
   const r=s.r;
   setv($('#f_nlan'),pad4(s.draft?nextN():r.n));
   setv($('#f_venc'),r.venc);$('#f_venc').readOnly=true;
-  $('#f_pgto').disabled=false;setv($('#f_pgto'),r.pgto||'');setStatusUI(r.status);
+  $('#f_pgto').disabled=parc&&s.draft;setv($('#f_pgto'),r.pgto||'');setStatusUI(r.status);
   if(!parc){setv(cg,r.conta||'');cg.disabled=!!r.conta;if(!r.conta)$('#f_pgto').disabled=true;if(managing)setv($('#f_conta'),r.conta||'')}
   if(parc){$('#f_conta').disabled=!s.draft;setv($('#f_conta'),r.conta||'');setv($('#f_parc'),s.draft?`${r.i+1}/${PD.length}`:(r.parc||''))}
   else $('#f_conta').disabled=!!managing;
-  $('#xl_hint').textContent=parc&&s.draft?'Escolha a conta bancária e, se já foi paga, a data de pagamento desta parcela. Clique na linha de novo para desmarcar.':(!parc&&!r.conta?'Escolha a conta bancária para registrar o pagamento. Clique na linha de novo para desmarcar.':'Informe a data de pagamento. Clique na linha de novo para desmarcar.');
+  $('#xl_hint').textContent=parc&&s.draft?'Escolha a conta bancária: a data de pagamento vira hoje e o status Pago. Clique na linha de novo para desmarcar.':(!parc&&!r.conta?'Escolha a conta bancária para registrar o pagamento. Clique na linha de novo para desmarcar.':'Informe a data de pagamento. Clique na linha de novo para desmarcar.');
  }else if(parc){
   setv($('#f_nlan'),pad4(managing||nextN()));setv($('#f_venc'),'');$('#f_venc').readOnly=true;
   $('#f_pgto').disabled=true;setv($('#f_pgto'),'');setStatusUI('pendente');
@@ -415,7 +415,7 @@ function selectRow(k){selRow=selRow===k?null:k;sessRender();refreshGerais();
  if(selRow!==null){const c=$('#f_conta');(!c.disabled&&isParc()?c:$('#f_pgto')).focus()}}
 ['input','change'].forEach(ev=>$('#f_conta').addEventListener(ev,()=>{
  if(!isParc()&&isNew()&&selRow===null){const c=$('#f_conta').value;if(!c)uPgto='';else if(!uPgto)uPgto=TODAY}
- if(isParc()&&isNew()&&typeof selRow==='string'){const p=PD[+selRow.slice(1)];if(p){p.conta=$('#f_conta').value;sessRender()}}
+ if(isParc()&&isNew()&&typeof selRow==='string'){const p=PD[+selRow.slice(1)];if(p){p.conta=$('#f_conta').value;if(p.conta){p.pgto=TODAY;p.status='pago'}else{p.pgto='';p.status='pendente'}setv($('#f_pgto'),p.pgto);setStatusUI(p.status);sessRender()}}
 }));
 // Conta bancária em Dados Gerais (ÚNICO): ao escolher, a data de pagamento vira hoje e o status Pago
 ['input','change'].forEach(ev=>$('#f_conta_g').addEventListener(ev,()=>{
