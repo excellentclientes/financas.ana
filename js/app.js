@@ -149,7 +149,7 @@ const FIELDS={
  tipo:x=>x.tipo,
  venc:x=>dtxt(x.venc),
  pgto:x=>dtxt(x.pgto),
- parc:x=>x.parc||'',
+ parc:x=>parcTxt(x),
  conta:x=>x.conta+' '+(x.cartao||'sem cartao'),
  cat:x=>x.cat,
  sub:x=>x.sub,
@@ -202,7 +202,7 @@ function hl(s,key){
 function setQ(v){$('#q').value=v;render();$('#q').focus()}
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}});
 
-const FK={n:['Nº',x=>String(x.n).padStart(4,'0')],tipo:['Tipo',x=>x.tipo],venc:['Vencimento',x=>fd(x.venc)],pgto:['Pgto / Receb.',x=>x.pgto?fd(x.pgto):'—'],parc:['Parcela',x=>x.parc||'—'],conta:['Conta',x=>x.conta],cartao:['Cartão',x=>x.cartao||'—'],cat:['Categoria',x=>x.cat],compra:['Data da Compra',x=>x.compra?fd(x.compra):'—'],qtd:['Qtd',x=>String(x.qtd)],desc:['Descrição',x=>x.desc||'—'],valor:['Valor',x=>brl(x.valor)],status:['Status',x=>stLabel(x)]};
+const FK={n:['Nº',x=>String(x.n).padStart(4,'0')],tipo:['Tipo',x=>x.tipo],venc:['Vencimento',x=>fd(x.venc)],pgto:['Pgto / Receb.',x=>x.pgto?fd(x.pgto):'—'],parc:['Parcela',x=>parcTxt(x)],conta:['Conta',x=>x.conta],cartao:['Cartão',x=>x.cartao||'—'],cat:['Categoria',x=>x.cat],compra:['Data da Compra',x=>x.compra?fd(x.compra):'—'],qtd:['Qtd',x=>String(x.qtd)],desc:['Descrição',x=>x.desc||'—'],valor:['Valor',x=>brl(x.valor)],status:['Status',x=>stLabel(x)]};
 let FCOL={};
 function colBtns(){document.querySelectorAll('.thf').forEach(b=>b.classList.toggle('on',!!FCOL[b.dataset.k]))}
 function colFilter(k,btn){
@@ -264,7 +264,7 @@ function render(){
   <td data-l="Tipo"><span class="tag ${x.tipo}">${hl(x.tipo,'tipo')}</span></td>
   <td data-l="Vencimento">${hl(fd(x.venc),'venc')}</td>
   <td data-l="Pgto / Receb.">${hl(fd(x.pgto),'pgto')}</td>
-  <td data-l="Parcela">${hl(x.parc||'—','parc')}</td>
+  <td data-l="Parcela">${isParcelado(x)?`<span class="tag parcelado">Parcelado</span> <small class="pn">${hl(x.parc,'parc')}</small>`:`<span class="tag unico">${hl('Único','parc')}</span>`}</td>
   <td data-l="Conta">${hl(x.conta||'—','conta')}</td>
   <td data-l="Cartão">${hl(x.cartao||'—','conta')}</td>
   <td data-l="Categoria">${hl(x.cat,'cat')}<small>${hl(x.sub,'sub')}</small></td>
@@ -279,6 +279,8 @@ function render(){
  if(!$('#vG').hidden)grender();
 }
 
+const isParcelado=x=>{const m=/^\d+\/(\d+)$/.exec(x.parc||'');return !!(m&&+m[1]>1)};
+const parcTxt=x=>isParcelado(x)?'Parcelado '+x.parc:'Único';
 const opts=(a,b)=>(b!==undefined?`<option value="">${b}</option>`:'')+a.map(x=>`<option>${esc(x)}</option>`).join('');
 function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Object.keys(CATS[t]),'Selecione');if(c)$('#f_cat').value=c;fillSub(s);
  $('#f_status').options[1].text=t==='Receita'?'Recebido':'Pago'}
@@ -582,7 +584,7 @@ function pdf(){
   doc.setTextColor(...c);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(brl(v),x+14,141);doc.setFont('helvetica','normal')});
  doc.autoTable({startY:174,margin:{left:M,right:M,bottom:40},theme:'plain',
   head:[['Nº','Tipo','Venc.','Pgto/Receb.','Parc.','Conta / Cartão','Categoria','Descrição','Valor','Status']],
-  body:L.map(x=>[String(x.n).padStart(4,'0'),x.tipo,fd(x.venc),fd(x.pgto),x.parc,x.conta+(x.cartao?' / '+x.cartao:''),x.cat+' > '+x.sub,x.desc,(x.tipo==='Receita'?'+ ':'- ')+brl(x.valor),stLabel(x)]),
+  body:L.map(x=>[String(x.n).padStart(4,'0'),x.tipo,fd(x.venc),fd(x.pgto),parcTxt(x),x.conta+(x.cartao?' / '+x.cartao:''),x.cat+' > '+x.sub,x.desc,(x.tipo==='Receita'?'+ ':'- ')+brl(x.valor),stLabel(x)]),
   foot:[['','','','','','','','Saldo do período',brl(rec-des),'']],
   styles:{fontSize:8,cellPadding:{top:5,bottom:5,left:5,right:5},textColor:[20,32,30],lineColor:[229,234,232],lineWidth:{bottom:.5}},
   headStyles:{fillColor:[236,243,241],textColor:[15,95,88],fontStyle:'bold'},
