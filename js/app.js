@@ -530,7 +530,7 @@ function save(e){
   PD.forEach(p=>{nx++;const parc=`${p.i+1}/${PD.length}`;
    D.push({...base,n:nx,g,status:p.status,valor:p.valor,venc:p.venc,pgto:p.pgto,parc,conta:p.conta});
    SESS.push({n:nx,parc,venc:p.venc,pgto:p.pgto,conta:p.conta,valor:p.valor,status:p.status})});
-  const q=PD.length;persist();months();render();sessLimpaCampos();toast(`${q} parcelas adicionadas`);return false;
+  const q=PD.length;persist();months();render();sessLimpaCampos();okAnim();return false;
  }
  const cv=$('#f_conta').value;
  if(cv&&!CONTAS.includes(cv)){toast('Escolha uma conta bancária ativa');return false}
@@ -543,10 +543,20 @@ function save(e){
  if(editing){Object.assign(D.find(i=>i.n===editing),o);persist();months();render();$('#dlg').close();toast('Lançamento atualizado');return false}
  o.n=Math.max(0,...D.map(i=>i.n))+1;D.push(o);
  SESS.push({n:o.n,parc:'1/1',venc:o.venc,pgto:o.pgto,conta:o.conta,valor:o.valor,status:o.status});
- persist();months();render();sessRender();sessLimpaCampos();toast('Lançamento adicionado');return false;
+ persist();months();render();sessRender();sessLimpaCampos();okAnim();return false;
 }
 function setStatus(n,v){const x=D.find(i=>i.n===n);x.status=v;x.pgto=v==='pago'?(x.pgto||TODAY):'';persist();render();toast(v==='pago'?(x.tipo==='Receita'?'Marcado como recebido':'Marcado como pago'):'Voltou para pendente')}
 function del(n){confirmar('Excluir este lançamento?').then(ok=>{if(ok){D=D.filter(i=>i.n!==n);persist();months();render();toast('Lançamento excluído')}})}
+function okAnim(t){
+ let e=document.getElementById('ok-pop');
+ if(!e){e=document.createElement('div');e.id='ok-pop';e.setAttribute('popover','manual');document.body.appendChild(e)}
+ e.classList.remove('out');
+ e.innerHTML='<svg viewBox="0 0 100 100" aria-hidden="true"><circle class="okr" cx="50" cy="50" r="44"/><circle class="okc" cx="50" cy="50" r="44"/><path class="okk" d="M30 52 L45 66 L71 37"/></svg><div>'+esc(t||'Adicionado com sucesso')+'</div>';
+ try{e.hidePopover()}catch(_){}
+ try{e.showPopover()}catch(_){}
+ clearTimeout(e._t);clearTimeout(e._t2);
+ e._t=setTimeout(()=>{e.classList.add('out');e._t2=setTimeout(()=>{try{e.hidePopover()}catch(_){}},300)},1500);
+}
 function toast(t){
  let e=document.getElementById('toast-pop');
  if(!e){e=document.createElement('div');e.id='toast-pop';e.setAttribute('popover','manual');document.body.appendChild(e)}
