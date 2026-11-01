@@ -391,16 +391,16 @@ function refreshGerais(){
   const r=s.r;
   setv($('#f_nlan'),pad4(s.draft?nextN():r.n));
   setv($('#f_venc'),r.venc);$('#f_venc').readOnly=true;
-  $('#f_pgto').disabled=parc&&s.draft;setv($('#f_pgto'),r.pgto||'');setStatusUI(r.status);
+  $('#f_pgto').disabled=parc;setv($('#f_pgto'),r.pgto||'');setStatusUI(r.status);
   if(!parc){setv(cg,r.conta||'');cg.disabled=!!r.conta;if(!r.conta)$('#f_pgto').disabled=true;if(managing)setv($('#f_conta'),r.conta||'')}
-  if(parc){$('#f_conta').disabled=!s.draft;setv($('#f_conta'),r.conta||'');setv($('#f_parc'),s.draft?`${r.i+1}/${PD.length}`:(r.parc||''))}
+  if(parc){$('#f_conta').disabled=false;setv($('#f_conta'),r.conta||'');setv($('#f_parc'),s.draft?`${r.i+1}/${PD.length}`:(r.parc||''))}
   else $('#f_conta').disabled=!!managing;
-  $('#xl_hint').textContent=parc&&s.draft?'Escolha a conta bancária: a data de pagamento vira hoje e o status Pago. Clique na linha de novo para desmarcar.':(!parc&&!r.conta?'Escolha a conta bancária para registrar o pagamento. Clique na linha de novo para desmarcar.':'Informe a data de pagamento. Clique na linha de novo para desmarcar.');
+  $('#xl_hint').textContent=parc&&s.draft?'Escolha a conta bancária: a data de pagamento vira hoje e o status Pago. Clique na linha de novo para desmarcar.':(!parc&&!r.conta?'Escolha a conta bancária para registrar o pagamento. Clique na linha de novo para desmarcar.':(parc?'Escolha a conta bancária para pagar esta parcela. Clique na linha de novo para desmarcar.':'Informe a data de pagamento. Clique na linha de novo para desmarcar.'));
  }else if(parc){
   setv($('#f_nlan'),pad4(managing||nextN()));setv($('#f_venc'),'');$('#f_venc').readOnly=true;
   $('#f_pgto').disabled=true;setv($('#f_pgto'),'');setStatusUI('pendente');
   $('#f_conta').disabled=true;setv($('#f_conta'),'');setv($('#f_parc'),'');
-  $('#xl_hint').textContent=managing?'Clique numa parcela da lista para informar a data de pagamento.':PD.length?'Clique numa linha da lista para escolher a conta bancária e a data de pagamento da parcela.':'Informe o nº de parcelas e o valor para ver as parcelas na lista.';
+  $('#xl_hint').textContent=managing?'Clique numa parcela da lista e escolha a conta bancária para pagá-la.':PD.length?'Clique numa linha da lista para escolher a conta bancária e a data de pagamento da parcela.':'Informe o nº de parcelas e o valor para ver as parcelas na lista.';
  }else{
   $('#f_nlan').value=pad4(managing||nextN());
   if(despesa)$('#f_venc').value=cd&&cd.diaPag?vencFatura(compra,cd.diaPag,cd.diaFech):compra;
@@ -416,6 +416,10 @@ function selectRow(k){selRow=selRow===k?null:k;sessRender();refreshGerais();
  if(selRow!==null){const c=$('#f_conta');(!c.disabled&&isParc()?c:$('#f_pgto')).focus()}}
 ['input','change'].forEach(ev=>$('#f_conta').addEventListener(ev,()=>{
  if(!isParc()&&isNew()&&selRow===null){const c=$('#f_conta').value;if(!c)uPgto='';else if(!uPgto)uPgto=TODAY}
+ if(isParc()&&managing&&typeof selRow==='number'){const v=$('#f_conta').value,x=D.find(i=>i.n===selRow);
+  if(x&&v){if(!CONTAS.includes(v)){toast('Escolha uma conta bancária ativa');$('#f_conta').value='';return}
+   x.conta=v;x.pgto=TODAY;x.status='pago';const r=SESS.find(i=>i.n===selRow);if(r){r.conta=v;r.pgto=TODAY;r.status='pago'}
+   persist();months();render();sessRender();refreshGerais();toast(x.tipo==='Receita'?'Parcela recebida':'Parcela paga')}return}
  if(isParc()&&isNew()&&typeof selRow==='string'){const p=PD[+selRow.slice(1)];if(p){p.conta=$('#f_conta').value;if(p.conta){p.pgto=TODAY;p.status='pago'}else{p.pgto='';p.status='pendente'}setv($('#f_pgto'),p.pgto);setStatusUI(p.status);sessRender()}}
 }));
 // Conta bancária em Dados Gerais (ÚNICO): ao escolher, a data de pagamento vira hoje e o status Pago
@@ -519,17 +523,15 @@ function save(e){
   buildPD();
   if(!PD.length){toast('Informe o número de parcelas');return false}
   if(PD.some(p=>!(p.valor>0))){toast('Informe o Total Parcelado ou o Valor Fixo');return false}
-  const sem=PD.findIndex(p=>!CONTAS.includes(p.conta));
-  if(sem>=0){toast(`Escolha a conta bancária da parcela ${sem+1}: clique na linha da lista`);selRow='d'+sem;sessRender();refreshGerais();return false}
   const tipo=$('#f_tipo').value,cartao=tipo==='Despesa'?$('#f_cartao').value:'',g=nextN();let nx=g-1;
   const base={tipo,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,qtd:qtdF(),cartao,compra:$('#f_compra').value||TODAY};
   PD.forEach(p=>{nx++;const parc=`${p.i+1}/${PD.length}`;
    D.push({...base,n:nx,g,status:p.status,valor:p.valor,venc:p.venc,pgto:p.pgto,parc,conta:p.conta});
    SESS.push({n:nx,parc,venc:p.venc,pgto:p.pgto,conta:p.conta,valor:p.valor,status:p.status})});
-  const q=PD.length;persist();months();render();sessLimpaCampos();toast(`${q} parcelas adicionadas`);return false;
+  const q=PD.length;persist();months();render();SESS=[];PD=[];$('#dlg').close();toast(`${q} parcelas adicionadas`);return false;
  }
  const cv=$('#f_conta').value;
- if((editing||cv)&&!CONTAS.includes(cv)){toast('Escolha uma conta bancária ativa');return false}
+ if(cv&&!CONTAS.includes(cv)){toast('Escolha uma conta bancária ativa');return false}
  const o={tipo:$('#f_tipo').value,status:editing?stAuto($('#f_pgto').value):(cv?'pago':'pendente'),desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:(editing&&editInit&&$('#f_valor').value===editInit.unit&&qtdF()===editInit.qtd)?editInit.total:Math.round((parseFloat($('#f_valor').value)||0)*qtdF()*100)/100,qtd:qtdF(),venc:$('#f_venc').value||$('#f_compra').value||TODAY,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
  if(o.tipo!=='Despesa'){o.compra=o.venc;o.parc='1/1';o.cartao=''}
  else if(!o.cartao){o.parc='1/1'}
@@ -539,7 +541,7 @@ function save(e){
  if(editing){Object.assign(D.find(i=>i.n===editing),o);persist();months();render();$('#dlg').close();toast('Lançamento atualizado');return false}
  o.n=Math.max(0,...D.map(i=>i.n))+1;D.push(o);
  SESS.push({n:o.n,parc:'1/1',venc:o.venc,pgto:o.pgto,conta:o.conta,valor:o.valor,status:o.status});
- persist();months();render();sessRender();sessLimpaCampos();toast('Lançamento adicionado');return false;
+ persist();months();render();SESS=[];$('#dlg').close();toast('Lançamento adicionado');return false;
 }
 function setStatus(n,v){const x=D.find(i=>i.n===n);x.status=v;x.pgto=v==='pago'?(x.pgto||TODAY):'';persist();render();toast(v==='pago'?(x.tipo==='Receita'?'Marcado como recebido':'Marcado como pago'):'Voltou para pendente')}
 function del(n){confirmar('Excluir este lançamento?').then(ok=>{if(ok){D=D.filter(i=>i.n!==n);persist();months();render();toast('Lançamento excluído')}})}
