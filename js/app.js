@@ -423,6 +423,7 @@ function setContaRow(n,v){
 function selectRow(k){selRow=selRow===k?null:k;sessRender();refreshGerais();
  if(selRow!==null){const c=$('#f_conta');(!c.disabled&&isParc()?c:$('#f_pgto')).focus()}}
 ['input','change'].forEach(ev=>$('#f_conta').addEventListener(ev,()=>{
+ if(editing){const v=$('#f_conta').value;if(v){if(!$('#f_pgto').value)$('#f_pgto').value=TODAY}else $('#f_pgto').value='';setStatusUI(stAuto($('#f_pgto').value));return}
  if(!isParc()&&isNew()&&selRow===null){const c=$('#f_conta').value;if(!c)uPgto='';else if(!uPgto)uPgto=TODAY}
  if(isParc()&&managing&&typeof selRow==='number'){const v=$('#f_conta').value;if(setContaRow(selRow,v)===false)$('#f_conta').value='';return}
  if(isParc()&&isNew()&&typeof selRow==='string'){const p=PD[+selRow.slice(1)];if(p){p.conta=$('#f_conta').value;if(p.conta){p.pgto=TODAY;p.status='pago'}else{p.pgto='';p.status='pendente'}setv($('#f_pgto'),p.pgto);setStatusUI(p.status);sessRender()}}
@@ -430,7 +431,7 @@ function selectRow(k){selRow=selRow===k?null:k;sessRender();refreshGerais();
 // Conta bancária em Dados Gerais (ÚNICO): ao escolher, a data de pagamento vira hoje e o status Pago
 ['input','change'].forEach(ev=>$('#f_conta_g').addEventListener(ev,()=>{
  if(isParc())return;
- if(editing){const v=$('#f_conta_g').value;$('#f_conta').value=v;if(v&&!$('#f_pgto').value){$('#f_pgto').value=TODAY}return}
+ if(editing){const v=$('#f_conta_g').value;$('#f_conta').value=v;if(v){if(!$('#f_pgto').value)$('#f_pgto').value=TODAY}else $('#f_pgto').value='';setStatusUI(stAuto($('#f_pgto').value));return}
  const v=$('#f_conta_g').value,s=selData();if(!s||s.draft)return;
  if((s.r.conta||'')===v)return;
  if(setContaRow(s.r.n,v)===false)$('#f_conta_g').value=s.r.conta||'';
