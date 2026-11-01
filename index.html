@@ -343,6 +343,18 @@ main{flex:1;min-height:0;overflow:auto;width:100%;display:flex;flex-direction:co
 /* Avisos: aparecem sempre por cima de tudo, inclusive dos pop-ups */
 #toast-pop{margin:0;border:0;position:fixed;inset:auto;bottom:28px;left:50%;transform:translateX(-50%);max-width:min(440px,calc(100vw - 32px));background:linear-gradient(135deg,#0f2a27,#134e48);color:#fff;padding:13px 22px;border-radius:14px;font-weight:600;font-size:14px;line-height:1.4;text-align:center;box-shadow:0 14px 36px rgba(0,0,0,.28);z-index:2147483647;animation:tpIn .25s ease}
 #toast-pop::backdrop{background:transparent}
+#ok-pop{margin:0;border:0;position:fixed;inset:0;width:max-content;height:max-content;margin:auto;background:#fff;color:#0f2a27;padding:30px 44px 26px;border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.32);text-align:center;font-weight:700;font-size:17px;z-index:2147483647;animation:okIn .35s cubic-bezier(.2,1.3,.4,1)}
+#ok-pop::backdrop{background:rgba(15,42,39,.25)}
+#ok-pop.out{animation:okOut .3s ease forwards}
+#ok-pop svg{display:block;margin:0 auto 14px;width:92px;height:92px;overflow:visible}
+#ok-pop .okc{fill:#16a34a;transform-origin:center;animation:okPop .5s cubic-bezier(.2,1.4,.4,1) both}
+#ok-pop .okr{fill:none;stroke:#16a34a;stroke-width:3;opacity:.35;transform-origin:center;animation:okRing .9s ease-out .15s both}
+#ok-pop .okk{fill:none;stroke:#fff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:44;stroke-dashoffset:44;animation:okDraw .45s ease .35s forwards}
+@keyframes okIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+@keyframes okOut{to{opacity:0;transform:scale(.92)}}
+@keyframes okPop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes okRing{from{transform:scale(1);opacity:.5}to{transform:scale(1.45);opacity:0}}
+@keyframes okDraw{to{stroke-dashoffset:0}}
 @keyframes tpIn{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}
 </style>
 <style>
