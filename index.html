@@ -832,12 +832,12 @@ dialog.lanc{zoom:.8;max-height:none;overflow:visible}
   <div class="xl-col">
    <fieldset class="xl-fs" id="fs_b"><legend id="lg_b">Dados Gerais</legend>
     <div class="fg row"><label>Parcela</label><input id="f_parc" placeholder="1/1" value="1/1" readonly class="ro"></div>
-    <div class="fg row"><label><i class=req>*</i> Conta Bancária</label><select id="f_conta" required></select></div>
+    <div class="fg row"><label>Conta Bancária</label><select id="f_conta"></select></div>
     <div class="fg row" id="fg_contag" hidden><label>Conta Bancária</label><select id="f_conta_g"></select></div>
     <div class="xl-2" id="xl_w1" hidden><div class="fg row"><label><i class=req>*</i> Data Vencimento</label><input id="f_venc" type="date" required></div>
      <div class="fg row"><label><i class=req>*</i> Valor unitário</label><input id="f_valor" type="number" step="0.01" min="0" required></div></div>
-    <div class="xl-2" id="xl_w2" hidden><div class="fg row"><label><i class=req>*</i> Data Pagamento</label><input id="f_pgto" type="date"></div>
-     <div class="fg row"><label><i class=req>*</i> Status</label><select id="f_status"><option value="pendente">Em aberto</option><option value="pago">Pago</option></select></div></div>
+    <div class="xl-2" id="xl_w2" hidden><div class="fg row"><label>Data Pagamento</label><input id="f_pgto" type="date"></div>
+     <div class="fg row"><label>Status</label><select id="f_status"><option value="pendente">Em aberto</option><option value="pago">Pago</option></select></div></div>
      <div id="xl_hint" class="xl-hint2"></div>
    </fieldset>
    <fieldset class="xl-fs xl-prev-box" id="f_prev"><legend>Lançamentos adicionados</legend>
