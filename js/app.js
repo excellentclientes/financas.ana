@@ -1093,3 +1093,43 @@ months();render();
 
 // Ao fechar o cadastro (X, Esc ou Concluir) limpa qualquer estado da visualização
 $('#dlg').addEventListener('close',()=>{SESS=[];PD=[];managing=null;selRow=null;editing=null;setLock(false);$('#f_conta').disabled=false;sessRender()});
+
+/* Novo lançamento: arrastar pelo cabeçalho e redimensionar pelos cantos (proporcional) */
+(function(){
+ const dlg=$('#dlg'),W0=1000,MIN=.45;let S=.72,X=0,Y=0,H0=0;
+ try{const v=parseFloat(localStorage.getItem('lancScale'));if(v>0)S=v}catch(_){}
+ const free=()=>window.matchMedia('(min-width:821px)').matches;
+ const apply=()=>{dlg.style.transform=`translate(${X}px,${Y}px) scale(${S})`};
+ const maxS=()=>Math.min(1.25,(innerWidth-16)/W0,(innerHeight-16)/H0);
+ const clampPos=()=>{X=Math.min(Math.max(X,-W0*S+120),innerWidth-120);Y=Math.min(Math.max(Y,0),innerHeight-48)};
+ ['nw','ne','sw','se'].forEach(c=>{const d=document.createElement('div');d.className='rz '+c;d.dataset.c=c;dlg.appendChild(d)});
+ const orig=dlg.showModal.bind(dlg);
+ dlg.showModal=function(){
+  if(!free()){dlg.classList.remove('free');dlg.style.transform='';return orig()}
+  dlg.classList.add('free');orig();
+  H0=dlg.offsetHeight;S=Math.max(MIN,Math.min(S,maxS()));
+  X=(innerWidth-W0*S)/2;Y=(innerHeight-H0*S)/2;clampPos();apply();
+ };
+ const save=()=>{try{localStorage.setItem('lancScale',String(S))}catch(_){}};
+ // arrastar
+ dlg.querySelector('.xl-head').addEventListener('pointerdown',e=>{
+  if(!dlg.classList.contains('free')||e.target.closest('button'))return;
+  const sx=e.clientX,sy=e.clientY,x0=X,y0=Y,h=e.currentTarget;h.setPointerCapture(e.pointerId);e.preventDefault();
+  const mv=ev=>{X=x0+ev.clientX-sx;Y=y0+ev.clientY-sy;clampPos();apply()};
+  const up=()=>{h.removeEventListener('pointermove',mv);h.removeEventListener('pointerup',up);h.removeEventListener('pointercancel',up)};
+  h.addEventListener('pointermove',mv);h.addEventListener('pointerup',up);h.addEventListener('pointercancel',up);
+ });
+ // redimensionar (proporcional, pelo canto oposto fixo)
+ dlg.querySelectorAll('.rz').forEach(g=>g.addEventListener('pointerdown',e=>{
+  const c=g.dataset.c,r=dlg.getBoundingClientRect(),sx=e.clientX,sy=e.clientY,right=c[1]==='e',bottom=c[0]==='s';
+  H0=dlg.offsetHeight;g.setPointerCapture(e.pointerId);e.preventDefault();
+  const mv=ev=>{
+   const w=r.width+(right?1:-1)*(ev.clientX-sx),hh=r.height+(bottom?1:-1)*(ev.clientY-sy);
+   S=Math.max(MIN,Math.min(((w/W0)+(hh/H0))/2,maxS()));
+   X=right?r.left:r.right-W0*S;Y=bottom?r.top:r.bottom-H0*S;clampPos();apply();
+  };
+  const up=()=>{g.removeEventListener('pointermove',mv);g.removeEventListener('pointerup',up);g.removeEventListener('pointercancel',up);save()};
+  g.addEventListener('pointermove',mv);g.addEventListener('pointerup',up);g.addEventListener('pointercancel',up);
+ }));
+ addEventListener('resize',()=>{if(dlg.open&&dlg.classList.contains('free')){S=Math.min(S,maxS());clampPos();apply()}});
+})();
