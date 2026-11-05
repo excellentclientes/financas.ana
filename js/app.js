@@ -221,15 +221,28 @@ function colFilter(k,btn){
  if(btn){const r=btn.getBoundingClientRect(),w=d.offsetWidth,h=d.offsetHeight;
   let x=Math.min(r.left,window.innerWidth-w-12),y=r.bottom+8;if(y+h>window.innerHeight-12)y=Math.max(12,r.top-h-8);
   d.style.left=Math.max(12,x)+'px';d.style.top=y+'px';}
- d.style.visibility='';
+ d.style.visibility='';colSyncBtn();
 }
 function colApply(e){
  e.preventDefault();const k=$('#cf_k').value;
  const todos=[...$('#cf_list').querySelectorAll('input')],sel=todos.filter(i=>i.checked).map(i=>i.value);
- if(sel.length===todos.length)delete FCOL[k];else FCOL[k]=new Set(sel);
+ if(!sel.length||sel.length===todos.length)delete FCOL[k];else FCOL[k]=new Set(sel);
  colBtns();$('#coldlg').close();render();return false;
 }
-function colClear(){delete FCOL[$('#cf_k').value];colBtns();$('#coldlg').close();render()}
+function colClear(){
+ const inp=[...$('#cf_list').querySelectorAll('input')];if(!inp.length)return;
+ const alguma=inp.some(i=>i.checked);
+ inp.forEach(i=>i.checked=!alguma);colSyncBtn();
+}
+function colSyncBtn(){
+ const b=document.querySelector('#coldlg .cf-clr');if(!b)return;
+ if(!b.dataset.ic)b.dataset.ic=b.innerHTML;
+ const alguma=[...$('#cf_list').querySelectorAll('input')].some(i=>i.checked);
+ const t=alguma?'Limpar filtro':'Selecionar tudo';
+ b.title=t;b.setAttribute('aria-label',t);
+ b.innerHTML=alguma?b.dataset.ic:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 7 6 10 11 5"/><polyline points="3 17 6 20 11 15"/><line x1="15" y1="8" x2="21" y2="8"/><line x1="15" y1="18" x2="21" y2="18"/></svg>';
+}
+document.addEventListener('change',e=>{if(e.target.closest&&e.target.closest('#cf_list'))colSyncBtn()});
 function filtered(tab=TAB){
  const Q=getQ(),t=$('#ft').value,m=$('#fm').value,yr=$('#fy').value;
  return D.filter(x=>Object.keys(FCOL).every(k=>FCOL[k].has(String(FK[k][1](x)))))
@@ -687,12 +700,12 @@ function gMes(){const bm={};gf(['from','to']).forEach(x=>{const m=x.venc.slice(0
 function gSal(L){const bm={};L.forEach(x=>{const m=x.venc.slice(0,7);bm[m]=(bm[m]||0)+(x.tipo==='Receita'?x.valor:-x.valor)});
  const ks=Object.keys(bm).sort();if(!ks.length)return EMPTY;let c=0;const cum=ks.map(k=>c+=bm[k]),n=ks.length;
  const el=document.getElementById('g_sal'),W=Math.max(300,(el&&el.clientWidth)||420),H=210,pl=44,pr=12,hasNeg=cum.some(v=>v<0),lo=Math.min(0,...cum),hi=Math.max(1,...cum),sw=(W-pl-pr)/n,bw=Math.min(30,Math.max(6,sw*.6)),e=Math.max(1,Math.ceil(46/sw));
- let pt=16,pb=hasNeg?46:26,Y,gr,items;
+ let pt=16,pb=hasNeg?12:26,Y,gr,items,Ht=H;
  for(let p=0;p<5;p++){[Y,gr]=grid(W,H,pl,pr,pt,pb,lo,hi);items=[];
   cum.forEach((v,i)=>{const cx=pl+sw*(i+.5),y=Math.min(Y(v),Y(0)),h=Math.max(1,Math.abs(Y(v)-Y(0))),t=(v<0?'-':'')+'R$ '+kfmt(Math.abs(v));
    items.push(v>=0?{cx,y:y-5-G_PH,t,c:'#0f766e',dir:-1}:{cx,y:y+h+5,t,c:'#be123c',dir:1})});
-  gPlace(items,W);const mn=Math.min(...items.map(i=>i.y),99),mxb=Math.max(...items.map(i=>i.y+G_PH),0);let ch=0;if(mn<2){pt+=2-mn+4;ch=1}if(mxb>H-22){pb+=mxb-(H-22)+2;ch=1}if(!ch)break}
- return`<svg viewBox="0 0 ${W} ${H}">${GDEF}${gr}`+cum.map((v,i)=>{const cx=pl+sw*(i+.5),y=Math.min(Y(v),Y(0)),h=Math.max(1,Math.abs(Y(v)-Y(0)));return`<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${h}" rx="4" fill="url(#${v>=0?'gR':'gD'})"><title>${mlabel(ks[i])}: ${brl(v)}</title></rect>${i%e===0?`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" fill="#667571">${mshort(ks[i])}</text>`:''}`}).join('')+items.map(it=>gPill(it,W)).join('')+'</svg>'}
+  gPlace(items,W);const mn=Math.min(...items.map(i=>i.y),99),mxb=Math.max(...items.map(i=>i.y+G_PH),0);let ch=0;if(mn<2){pt+=2-mn+4;ch=1}Ht=Math.max(H,Math.ceil(mxb)+24);if(!ch)break}
+ return`<svg viewBox="0 0 ${W} ${Ht}">${GDEF}${gr}`+cum.map((v,i)=>{const cx=pl+sw*(i+.5),y=Math.min(Y(v),Y(0)),h=Math.max(1,Math.abs(Y(v)-Y(0)));return`<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${h}" rx="4" fill="url(#${v>=0?'gR':'gD'})"><title>${mlabel(ks[i])}: ${brl(v)}</title></rect>${i%e===0?`<text x="${cx}" y="${Ht-8}" text-anchor="middle" font-size="10" fill="#667571">${mshort(ks[i])}</text>`:''}`}).join('')+items.map(it=>gPill(it,W)).join('')+'</svg>'}
 (()=>{let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(()=>{if(typeof VIEW!=='undefined'&&VIEW==='g')grender()},150)})})();
 function gDonut(rows){const tot=rows.reduce((s,r)=>s+r[1],0);if(!tot)return EMPTY;const C=2*Math.PI*60;let acc=0;
  const arcs=rows.map(([c,v],i)=>{const len=v/tot*C,o=`<circle cx="90" cy="90" r="60" fill="none" stroke="${PAL[i%8]}" stroke-width="26" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-acc}" transform="rotate(-90 90 90)" data-g="cat" data-v="${esc(c)}" style="cursor:pointer;opacity:${G.cat&&G.cat!==c?.25:1}"><title>${esc(c)}: ${brl(v)}</title></circle>`;acc+=len;return o}).join('');
