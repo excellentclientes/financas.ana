@@ -889,6 +889,19 @@ dialog.lanc.free .rz{display:block;position:absolute;width:22px;height:22px;z-in
  #vL .tbs td[data-l="Status"]{white-space:nowrap}
 }
 </style>
+<style>
+/* Ajustes pontuais: rodapé da tabela de lançamentos, coluna Status e rótulos do Saldo acumulado */
+@media(min-width:821px){
+ main #vL>.tw{display:flex !important;flex-direction:column !important;overflow:hidden !important}
+ main #vL>.tw>.tbs{flex:1 1 0 !important;min-height:0 !important;height:auto !important;max-height:none !important;overflow:auto !important}
+ main #vL>.tw>.foot{position:static !important;flex:none !important;transform:none !important}
+ #vL .tbs th{white-space:normal !important;line-height:1.2}
+ #vL .tbs th,#vL .tbs td{padding-left:3px !important;padding-right:3px !important}
+ #vL .tbs table{table-layout:auto}
+ #vL .tbs .tag{padding:2px 6px}
+}
+#g_sal svg{max-height:none !important}
+</style>
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
