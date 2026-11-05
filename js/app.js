@@ -686,12 +686,12 @@ function gMes(){const bm={};gf(['from','to']).forEach(x=>{const m=x.venc.slice(0
  return o+items.map(it=>gPill(it,W)).join('')+'</svg>'}
 function gSal(L){const bm={};L.forEach(x=>{const m=x.venc.slice(0,7);bm[m]=(bm[m]||0)+(x.tipo==='Receita'?x.valor:-x.valor)});
  const ks=Object.keys(bm).sort();if(!ks.length)return EMPTY;let c=0;const cum=ks.map(k=>c+=bm[k]),n=ks.length;
- const el=document.getElementById('g_sal'),W=Math.max(300,(el&&el.clientWidth)||420),H=210,pl=44,pr=12,hasNeg=cum.some(v=>v<0),pb=hasNeg?46:26,lo=Math.min(0,...cum),hi=Math.max(1,...cum),sw=(W-pl-pr)/n,bw=Math.min(30,Math.max(6,sw*.6)),e=Math.max(1,Math.ceil(46/sw));
- let pt=16,Y,gr,items;
- for(let p=0;p<2;p++){[Y,gr]=grid(W,H,pl,pr,pt,pb,lo,hi);items=[];
+ const el=document.getElementById('g_sal'),W=Math.max(300,(el&&el.clientWidth)||420),H=210,pl=44,pr=12,hasNeg=cum.some(v=>v<0),lo=Math.min(0,...cum),hi=Math.max(1,...cum),sw=(W-pl-pr)/n,bw=Math.min(30,Math.max(6,sw*.6)),e=Math.max(1,Math.ceil(46/sw));
+ let pt=16,pb=hasNeg?46:26,Y,gr,items;
+ for(let p=0;p<5;p++){[Y,gr]=grid(W,H,pl,pr,pt,pb,lo,hi);items=[];
   cum.forEach((v,i)=>{const cx=pl+sw*(i+.5),y=Math.min(Y(v),Y(0)),h=Math.max(1,Math.abs(Y(v)-Y(0))),t=(v<0?'-':'')+'R$ '+kfmt(Math.abs(v));
    items.push(v>=0?{cx,y:y-5-G_PH,t,c:'#0f766e',dir:-1}:{cx,y:y+h+5,t,c:'#be123c',dir:1})});
-  gPlace(items,W);const mn=Math.min(...items.map(i=>i.y),99);if(mn>=2)break;pt+=2-mn+4}
+  gPlace(items,W);const mn=Math.min(...items.map(i=>i.y),99),mxb=Math.max(...items.map(i=>i.y+G_PH),0);let ch=0;if(mn<2){pt+=2-mn+4;ch=1}if(mxb>H-22){pb+=mxb-(H-22)+2;ch=1}if(!ch)break}
  return`<svg viewBox="0 0 ${W} ${H}">${GDEF}${gr}`+cum.map((v,i)=>{const cx=pl+sw*(i+.5),y=Math.min(Y(v),Y(0)),h=Math.max(1,Math.abs(Y(v)-Y(0)));return`<rect x="${cx-bw/2}" y="${y}" width="${bw}" height="${h}" rx="4" fill="url(#${v>=0?'gR':'gD'})"><title>${mlabel(ks[i])}: ${brl(v)}</title></rect>${i%e===0?`<text x="${cx}" y="${H-8}" text-anchor="middle" font-size="10" fill="#667571">${mshort(ks[i])}</text>`:''}`}).join('')+items.map(it=>gPill(it,W)).join('')+'</svg>'}
 (()=>{let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(()=>{if(typeof VIEW!=='undefined'&&VIEW==='g')grender()},150)})})();
 function gDonut(rows){const tot=rows.reduce((s,r)=>s+r[1],0);if(!tot)return EMPTY;const C=2*Math.PI*60;let acc=0;
