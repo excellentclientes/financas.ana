@@ -804,9 +804,8 @@ function ccRender(){
 function faturaDe(x){
  const card=CARDS.find(c=>c.nome===x.cartao);
  if(!card||!card.diaPag)return{m:x.venc.slice(0,7)};
- /* parcelas: o vencimento de cada parcela já é a data da fatura; compra única: recalcula pela data da compra e dia de fechamento */
- if(isParcelado(x)||!(x.compra||x.venc))return{m:x.venc.slice(0,7)};
- return{m:vencFatura(x.compra||x.venc,card.diaPag,card.diaFech).slice(0,7)};
+ /* a fatura sempre segue o Vencimento do lançamento (parcelado ou único) */
+ return{m:x.venc.slice(0,7)};
 }
 
 const faturaTotal=(c,m)=>D.filter(x=>x.tipo==='Despesa'&&x.cartao===c&&faturaDe(x).m===m).reduce((a,x)=>a+x.valor,0);
