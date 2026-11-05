@@ -682,7 +682,7 @@ dialog.lanc.free .rz{display:block;position:absolute;width:22px;height:22px;z-in
 </div>
 <div id="vC" hidden>
  <div class="pl-top"><div><h2>Cartão de Crédito</h2><p>Limite de cada cartão e valores a pagar mês a mês.</p></div>
-  <div class="pl-act"><button class="btn p" type="button" onclick="fatOpen()">Pagar fatura</button><button class="btn" type="button" onclick="fatHist()">Histórico de faturas</button><select id="kyr" onchange="KY=+this.value;ccRender()" aria-label="Ano"></select><select id="kmo" onchange="KM=this.value;ccRender()" aria-label="Mês"></select></div></div>
+  <div class="pl-act"><button class="btn p" type="button" onclick="fatOpen()">Pagar fatura</button><button class="btn" type="button" onclick="fatHist()">Histórico de faturas</button><select id="kyr" onchange="ccAno(this.value)" aria-label="Ano"></select><select id="kmo" onchange="ccMes(this.value)" aria-label="Mês"></select></div></div>
 <div class="cchs"><div class="cch" id="cch1"></div></div>
  <div class="card pl-card"><div class="pl-h"><h2>Cartões</h2><span id="ctA"></span></div><div class="pw" id="cwA"></div></div>
  <div class="card pl-card"><div class="pl-h"><h2 id="ctBt">A pagar por mês</h2><span id="ctB"></span></div><div class="pw" id="cwB"></div></div>
@@ -870,6 +870,21 @@ dialog.lanc.free .rz{display:block;position:absolute;width:22px;height:22px;z-in
  </div>
  <div class="xl-foot"><span class="xl-obg"><i class=req>*</i> Campos obrigatórios</span><div id="f_tot" class="xl-tot"></div><div class="xl-btns"><button class="xl-add" id="xl_add">Adicionar</button><button type="button" class="xl-conc" onclick="concluirLanc()">Concluir</button></div></div>
 </form></dialog>
+<style>
+/* Correção da tabela de lançamentos: rodapé preso embaixo (não no meio) e coluna Status visível */
+@media(min-width:821px){
+ #vL>.tw{display:block !important;position:relative}
+ #vL>.tw .tbs{display:block;overflow:visible !important;height:auto !important;min-height:0}
+ #vL>.tw .foot{position:sticky;bottom:0;z-index:6;background:#fff;display:flex}
+ #vL .tbs table{width:100%}
+ #vL .tbs th,#vL .tbs td{padding-left:4px;padding-right:4px}
+ #vL .tbs td[data-l="Descrição"]{white-space:normal;min-width:120px;max-width:200px}
+ #vL .tbs td[data-l="Categoria"]{white-space:normal;max-width:130px}
+ #vL .tbs td[data-l="Cartão"],#vL .tbs td[data-l="Conta"]{white-space:normal;max-width:110px}
+ #vL .tbs .thf{width:20px;height:20px;margin-left:3px}
+ #vL .tbs td[data-l="Status"],#vL .tbs thead th:nth-child(13){white-space:nowrap;min-width:84px}
+}
+</style>
 <div class="toast" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
