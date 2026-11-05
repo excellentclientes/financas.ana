@@ -749,6 +749,8 @@ const IC=(d)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
  I_ED=IC('<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'),I_DEL=IC('<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/>'),I_X=IC('<path d="M6 6l12 12M18 6 6 18"/>'),I_PL=IC('<path d="M12 5v14M5 12h14"/>');
 let CT='Despesa';
 let KY=new Date().getFullYear(),KM='',KE=null;
+function ccAno(v){KY=+v||new Date().getFullYear();ccRender()}
+function ccMes(v){KM=v||'';ccRender()}
 function ccRender(){
  const yr=$('#kyr'),now=new Date();if(!yr.options.length)for(let y=now.getFullYear()-2;y<=now.getFullYear()+3;y++)yr.add(new Option(y,y));yr.value=KY;
  const mo=$('#kmo');if(mo&&!mo.options.length){mo.add(new Option('Todos os meses',''));MN.forEach((n,i)=>mo.add(new Option(n,String(i+1).padStart(2,'0'))))}if(mo)mo.value=KM;
