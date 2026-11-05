@@ -756,6 +756,8 @@ function ccRender(){
  CARDS.forEach(c=>{used[c.nome]=0;mon[c.nome]=Array(12).fill(0)});
  D.forEach(x=>{if(x.tipo!=='Despesa'||!x.cartao||!(x.cartao in used))return;used[x.cartao]+=x.valor;const f=faturaDe(x);if(f.m.slice(0,4)===String(KY))mon[x.cartao][+f.m.slice(5,7)-1]+=x.valor});
  CARDS.forEach(c=>{used[c.nome]=Math.max(0,used[c.nome]-FAT.filter(f=>f.cartao===c.nome).reduce((a,f)=>a+f.valor,0));for(let m=0;m<12;m++)mon[c.nome][m]=faturaRestante(c.nome,`${KY}-${String(m+1).padStart(2,'0')}`)});
+ /* Filtros de ano/mês: o valor gasto passa a ser o que falta pagar das faturas do período escolhido */
+ CARDS.forEach(c=>{used[c.nome]=KM?mon[c.nome][+KM-1]:mon[c.nome].reduce((s,v)=>s+v,0)});
  const cs=CARDS.slice().sort((a,b)=>a.nome.localeCompare(b.nome,'pt')),pc=(g,l)=>l>0?g/l*100:null,
   bar=p=>p==null?'<span style="color:var(--mut)">Sem limite</span>':`<div class="ub"><span><i class="${p>=90?'hi':p>=70?'mid':''}" style="width:${Math.min(100,p)}%"></i></span><b>${p.toFixed(1).replace('.',',')}%</b></div>`;
  let tl=0,tg=0;
@@ -764,7 +766,7 @@ function ccRender(){
  $('#cwA').innerHTML=`<table class="ct"><thead><tr><th>Cartão</th><th class="r">Limite</th><th class="r">Valor gasto</th><th class="r">Limite disponível</th><th>Limite utilizado</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="empty" style="padding:22px">Nenhum cartão cadastrado. Use “Novo cartão” para cadastrar.</td></tr>'}${cs.length?`<tr class="tot"><td>Total</td><td class="r">${brl(tl)}</td><td class="r">${brl(rd(tg))}</td><td class="r${tl-tg<0?' neg':''}">${brl(rd(tl-tg))}</td><td>${bar(pc(tg,tl))}</td><td></td></tr>`:''}</tbody></table>`;
  $('#ctA').textContent='';
  {const mxL=Math.max(1,...cs.map(c=>c.limite)),pcn=(v,m)=>Math.min(100,v/m*100),fm=v=>brl(rd(v));
-  $('#cch1').innerHTML=`<h4><span>Limite utilizado</span><span>${KY}</span></h4><div class="cpr">${cs.map(c=>{const p=pc(used[c.nome],c.limite);return`<div class="cpr-r" title="${esc(c.nome)}\nLimite: ${fm(c.limite)}\nUsado: ${fm(used[c.nome])}"><div class="cpr-h"><s>${esc(c.nome)}</s><b>${fm(used[c.nome])} / ${fm(c.limite)}</b></div><div class="ub"><span><i class="${p>=90?'hi':p>=70?'mid':''}" style="width:${Math.min(100,p)}%"></i></span><b>${p.toFixed(1).replace('.',',')}%</b></div></div>`}).join('')||'<span style="color:var(--mut);font-size:11px">Sem cartões</span>'}</div>`;}
+  $('#cch1').innerHTML=`<h4><span>Limite utilizado</span><span>${KM?MN[+KM-1]+' de ':''}${KY}</span></h4><div class="cpr">${cs.map(c=>{const p=pc(used[c.nome],c.limite);return`<div class="cpr-r" title="${esc(c.nome)}\nLimite: ${fm(c.limite)}\nUsado: ${fm(used[c.nome])}"><div class="cpr-h"><s>${esc(c.nome)}</s><b>${fm(used[c.nome])} / ${fm(c.limite)}</b></div><div class="ub"><span><i class="${p>=90?'hi':p>=70?'mid':''}" style="width:${Math.min(100,p)}%"></i></span><b>${p.toFixed(1).replace('.',',')}%</b></div></div>`}).join('')||'<span style="color:var(--mut);font-size:11px">Sem cartões</span>'}</div>`;}
   const mxM=Math.max(1,...tot0),ML=['J','F','M','A','M','J','J','A','S','O','N','D'];
  const W0=200,tw=W0+80*12,tot=Array(12).fill(0);
  let body=cs.map(c=>`<tr><td class="pl-t" style="font-weight:700;box-shadow:1px 0 0 var(--line);overflow:hidden;text-overflow:ellipsis" title="${esc(c.nome)}">${esc(c.nome)}</td>${mon[c.nome].map((v,m)=>{v=rd(v);tot[m]+=v;return`<td class="cv${m===cur?' cur':''}">${v?pm(v):'<i>—</i>'}</td>`}).join('')}</tr>`).join('');
