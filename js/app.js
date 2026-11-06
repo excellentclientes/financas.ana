@@ -57,9 +57,10 @@ function fixParc(){
    if(m&&+m[1]>1)return;
    x.parc=(i+1)+'/'+N;const r=ok.find(y=>y.compra);if(r)x.compra=r.compra;ch=true})
  });
- if(ch)persist();
+ return ch;
 }
-fixParc();
+/* roda depois da sincronização com a nuvem (evita briga com o firebase-sync e recarregamentos) */
+setTimeout(()=>{try{if(fixParc()){persist();months();render()}}catch(e){console.error('fixParc',e)}},4000);
 let CARDS=null;try{CARDS=JSON.parse(localStorage.getItem('fluxo_cards'))}catch(e){}
 if(!Array.isArray(CARDS))CARDS=[];
 /* Cartões citados em lançamentos mas ausentes da lista: criados só na memória, com id fixo (igual em todos os aparelhos) */
