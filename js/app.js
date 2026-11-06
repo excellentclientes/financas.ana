@@ -46,6 +46,20 @@ function seed(){
 function load(){try{const s=localStorage.getItem(K);if(s)return JSON.parse(s)}catch(e){}return []}
 function persist(){try{localStorage.setItem(K,JSON.stringify(D))}catch(e){}}
 let D=load();
+function fixParc(){
+ const R=/^\d+\/(\d+)$/,gr={};let ch=false;
+ D.forEach(x=>{if(x.g)(gr[x.g]=gr[x.g]||[]).push(x)});
+ Object.values(gr).forEach(a=>{
+  a.sort((p,q)=>p.n-q.n);const N=a.length;if(N<2)return;
+  const ok=a.filter(x=>{const m=R.exec(x.parc||'');return m&&+m[1]===N});
+  if(!ok.length)return;
+  a.forEach((x,i)=>{const m=R.exec(x.parc||'');if(m&&+m[1]===N)return;
+   if(m&&+m[1]>1)return;
+   x.parc=(i+1)+'/'+N;const r=ok.find(y=>y.compra);if(r)x.compra=r.compra;ch=true})
+ });
+ if(ch)persist();
+}
+fixParc();
 let CARDS=null;try{CARDS=JSON.parse(localStorage.getItem('fluxo_cards'))}catch(e){}
 if(!Array.isArray(CARDS))CARDS=[];
 /* Cartões citados em lançamentos mas ausentes da lista: criados só na memória, com id fixo (igual em todos os aparelhos) */
@@ -558,8 +572,9 @@ function save(e){
  const cv=$('#f_conta').value;
  if(cv&&!CONTAS.includes(cv)){toast('Escolha uma conta bancária ativa');return false}
  const o={tipo:$('#f_tipo').value,status:editing?stAuto($('#f_pgto').value):(cv?'pago':'pendente'),desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:(editing&&editInit&&$('#f_valor').value===editInit.unit&&qtdF()===editInit.qtd)?editInit.total:Math.round((parseFloat($('#f_valor').value)||0)*qtdF()*100)/100,qtd:qtdF(),venc:$('#f_venc').value||$('#f_compra').value||TODAY,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
- if(o.tipo!=='Despesa'){o.compra=o.venc;o.parc='1/1';o.cartao=''}
- else if(!o.cartao){o.parc='1/1'}
+ const exEd=editing?D.find(i=>i.n===editing):null,keepP=!!(exEd&&isParcelado(exEd));
+ if(o.tipo!=='Despesa'){o.compra=keepP?exEd.compra:o.venc;o.parc=keepP?exEd.parc:'1/1';o.cartao=''}
+ else if(!o.cartao){o.parc=keepP?exEd.parc:'1/1'}
  if(o.tipo==='Receita'&&o.status==='pago'){o.pgto=o.pgto||TODAY;o.venc=o.pgto}
  if(!editing&&o.status==='pago')o.pgto=uPgto||TODAY;
  if(o.status==='pago'&&!o.pgto)o.pgto=TODAY;if(o.status==='pendente')o.pgto='';
