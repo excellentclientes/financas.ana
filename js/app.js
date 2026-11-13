@@ -660,7 +660,7 @@ function setView(v){
  $('#hnew').style.visibility=(v==='p')?'hidden':'';['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;sessionStorage.setItem('fluxo_view',v);$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
 function resumoCards(L){
  const at=fBanks(),ini=at.reduce((a,b)=>a+b.saldo,0),hoje=TODAY.slice(0,7),cc=x=>true;/* despesas de cartão também entram nos cards */
- const LP=[...new Map(L.flatMap(x=>isParcelado(x)?grupoDe(x):[x]).map(i=>[i.n,i])).values()];/* parcelado: soma o parcelamento inteiro */
+ const LP=L;/* geral: soma todas as parcelas (valor × nº de parcelas); com filtro de ano/mês/tipo, soma só o que está filtrado */
  const rec=sum(LP,x=>x.tipo==='Receita'),des=sum(LP,x=>x.tipo==='Despesa'&&cc(x));
  const recM=sum(L,x=>x.tipo==='Receita'&&x.venc.slice(0,7)===hoje),desM=sum(L,x=>x.tipo==='Despesa'&&cc(x)&&x.venc.slice(0,7)===hoje);
  const cards=[['Saldo inicial',brl(ini),'',1],['Receitas',brl(rec),'rec',0],['Despesas',brl(des),'des',0],['Saldo do mês',brl(recM-desM),'',0],['Saldo acumulado',brl(saldoPer(L)),'',0]];
