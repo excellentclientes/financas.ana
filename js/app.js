@@ -642,7 +642,7 @@ function pdf(){
  doc.save('relatorio-financeiro.pdf');toast('Relatório PDF gerado');
 }
 /* ===== Aba de Gráficos ===== */
-const G={from:'',to:'',tipo:'',status:'',conta:'',cartao:'',cat:'',sub:'',q:'',qtd:''};
+const G={from:'',to:'',tipo:'',status:'',conta:'',cartao:'',cat:'',sub:'',q:'',item:''};
 /* F = botão "Filtros": filtro ESTRITO (todos os gráficos/cards mostram somente o que foi escolhido, sem esmaecer nada).
    G = clique nos gráficos: continua destacando/esmaecendo como antes. */
 const F={from:'',to:'',tipo:'',status:'',conta:'',cartao:'',cat:'',sub:''},FKS=Object.keys(F);
@@ -692,7 +692,7 @@ function gset(k,v){F[k]=v;if(k==='cat')F.sub='';if(k==='from'&&v&&F.to&&v>F.to)F
 document.getElementById('gfdlg').addEventListener('close',gfCount);
 gfCount();
 function gf(ign=[]){const Q=parseQ(G.q),I=k=>ign.includes(k);
- return D.filter(x=>{if(!fOK(x))return false;const m=x.venc.slice(0,7);return(I('from')||!G.from||m>=G.from)&&(I('to')||!G.to||m<=G.to)&&(!G.tipo||x.tipo===G.tipo)&&(I('status')||!G.status||st(x)===G.status)&&(I('conta')||!G.conta||x.conta===G.conta)&&(I('cartao')||!G.cartao||x.cartao===G.cartao)&&(I('cat')||!G.cat||x.cat===G.cat)&&(I('sub')||!G.sub||x.sub===G.sub)&&(I('qtd')||!G.qtd||fq(x.qtd)===G.qtd)&&matchQ(x,Q)})}
+ return D.filter(x=>{if(!fOK(x))return false;const m=x.venc.slice(0,7);return(I('from')||!G.from||m>=G.from)&&(I('to')||!G.to||m<=G.to)&&(!G.tipo||x.tipo===G.tipo)&&(I('status')||!G.status||st(x)===G.status)&&(I('conta')||!G.conta||x.conta===G.conta)&&(I('cartao')||!G.cartao||x.cartao===G.cartao)&&(I('cat')||!G.cat||x.cat===G.cat)&&(I('sub')||!G.sub||x.sub===G.sub)&&(I('item')||!G.item||x.desc===G.item)&&matchQ(x,Q)})}
 const hbars=(rows,g,sel)=>{const mx=rows[0]?rows[0][1]:1;return rows.map(([l,v,k])=>`<div class="bar sel${sel&&sel!==(k||l)?' dim':''}" data-g="${g}" data-v="${esc(k||l)}" title="${esc(l)}"><span>${esc(l)}</span><div><i style="width:${v/mx*100}%"></i></div><b>${brl(v)}</b></div>`).join('')||EMPTY};
 function grid(W,H,pl,pr,pt,pb,lo,top){const Y=v=>pt+(top-v)/(top-lo)*(H-pt-pb);let o='';for(let i=0;i<=4;i++){const v=lo+(top-lo)*i/4;o+=`<line x1="${pl}" x2="${W-pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="#e5eae8"/><text x="${pl-5}" y="${Y(v)+3}" text-anchor="end" font-size="9.5" fill="#667571">${afmt(v)}</text>`}return[Y,o]}
 const GDEF='<defs><linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2dd4bf"/><stop offset="1" stop-color="#0f766e"/></linearGradient><linearGradient id="gD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fb7185"/><stop offset="1" stop-color="#be123c"/></linearGradient><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14b8a6" stop-opacity=".45"/><stop offset="1" stop-color="#14b8a6" stop-opacity="0"/></linearGradient><filter id="glw" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
@@ -731,13 +731,24 @@ function gSal(L){const bm={};L.forEach(x=>{const m=x.venc.slice(0,7);bm[m]=(bm[m
 function gDonut(rows){const tot=rows.reduce((s,r)=>s+r[1],0);if(!tot)return EMPTY;const C=2*Math.PI*60;let acc=0;
  const arcs=rows.map(([c,v],i)=>{const len=v/tot*C,o=`<circle cx="90" cy="90" r="60" fill="none" stroke="${PAL[i%8]}" stroke-width="26" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-acc}" transform="rotate(-90 90 90)" data-g="cat" data-v="${esc(c)}" style="cursor:pointer;opacity:${G.cat&&G.cat!==c?.25:1}"><title>${esc(c)}: ${brl(v)}</title></circle>`;acc+=len;return o}).join('');
  return`<div class="dn"><svg viewBox="0 0 180 180">${arcs}<text x="90" y="86" text-anchor="middle" font-size="11" fill="#667571">Total</text><text x="90" y="104" text-anchor="middle" font-size="15" font-weight="800" fill="#14201e">R$ ${kfmt(tot)}</text></svg><div class="lg2">${rows.map(([c,v],i)=>`<div class="lgr" data-g="cat" data-v="${esc(c)}" style="opacity:${G.cat&&G.cat!==c?.4:1}"><u style="background:${PAL[i%8]}"></u>${esc(c)}<b>${brl(v)} <em>${Math.round(v/tot*100)}%</em></b></div>`).join('')}</div></div>`}
+// Quantidade por item (Despesas/Receitas): soma a quantidade de cada item e o valor; filtro próprio do gráfico
+function accRender(){
+ const DT=G.tipo||'Despesa',q=nrm(($('#g_accq')||{}).value||'').trim(),o={};
+ gf(['item']).filter(x=>x.tipo===DT).forEach(x=>{const k=nrm((x.desc||'—').trim()),r=o[k]=o[k]||{l:(x.desc||'—').trim(),d:x.desc,v:0,q:0,t:''};
+  r.v+=x.valor;
+  // parcelado: a quantidade da compra conta uma vez só (parcela 1)
+  if(!isParcelado(x)||/^1\//.test(x.parc||'')){if(typeof x.qtd==='number')r.q+=x.qtd;else if(!r.t)r.t=String(x.qtd||'')}});
+ let rows=Object.values(o).filter(r=>!q||nrm(r.l).includes(q)).sort((a,b)=>b.v-a.v);
+ const mx=rows[0]?rows[0].v:1;
+ $('#g_acc').innerHTML=rows.map(r=>{const qt=r.q>0?fq(r.q):(r.t||'—');return`<div class="bar sel${G.item&&G.item!==r.d?' dim':''}" data-g="item" data-v="${esc(r.d)}" title="${esc(r.l)} · ${esc(qt)} · ${brl(r.v)}"><span>${esc(r.l)}</span><div><i style="width:${r.v/mx*100}%"></i></div><b><em>${esc(qt)}</em>${brl(r.v)}</b></div>`}).join('')||EMPTY;
+}
 function grender(){
  const mo=[...new Set(D.map(x=>x.venc.slice(0,7)))].sort(),opt=(a,all,f=x=>x)=>`<option value="">${all}</option>`+a.map(x=>`<option value="${esc(x)}">${esc(f(x))}</option>`).join(''),set=(id,h,v)=>{const e=$(id);e.innerHTML=h;e.value=v};
  set('#gm1',opt(mo,'De (início)',mlabel),F.from);set('#gm2',opt(mo,'Até (fim)',mlabel),F.to);
  set('#gcat',opt([...new Set(D.map(x=>x.cat))].sort(),'Todas as categorias'),F.cat);
  set('#gsub',opt([...new Set(D.filter(x=>!F.cat||x.cat===F.cat).map(x=>x.sub))].sort(),'Todas as subcategorias'),F.sub);
  set('#gcon',opt(CONTAS,'Todas as contas'),F.conta);set('#gcar',opt(CARTOES,'Todos os cartões'),F.cartao);$('#gt').value=F.tipo;$('#gs').value=F.status;
- const lab={tipo:'Tipo',status:'Status',conta:'Conta',cartao:'Cartão',cat:'Categoria',sub:'Subcategoria',qtd:'Quantidade',q:'Busca'},ch=[];
+ const lab={tipo:'Tipo',status:'Status',conta:'Conta',cartao:'Cartão',cat:'Categoria',sub:'Subcategoria',item:'Item',q:'Busca'},ch=[];
  const SLB={pago:'Pago/Recebido',pendente:'Em aberto',atrasado:'Atrasado'};
  if(F.from||F.to)ch.push(['F:per','Filtro · Período',(F.from?mshort(F.from):'início')+' → '+(F.to?mshort(F.to):'fim')]);
  Object.keys(lab).forEach(k=>F[k]&&ch.push(['F:'+k,'Filtro · '+lab[k],k==='status'?SLB[F[k]]:F[k]]));
@@ -750,7 +761,7 @@ function grender(){
  $('#g_mes').innerHTML=gMes();
  $('#g_t1').textContent=P+' por categoria';$('#g_cat').innerHTML=gDonut(sumBy(gf(['cat','sub']).filter(x=>x.tipo===DT),x=>x.cat));
  $('#g_t2').textContent=P+' por subcategoria';$('#g_sub').innerHTML=hbars(sumBy(gf(['sub']).filter(x=>x.tipo===DT),x=>x.cat+'|'+x.sub).slice(0,8).map(([k,v])=>[k.split('|')[1],v,k]),'sub',G.sub?G.cat+'|'+G.sub:'');
- $('#g_t3').textContent=P+' por quantidade';$('#g_acc').innerHTML=hbars(sumBy(gf(['qtd']).filter(x=>x.tipo===DT),x=>fq(x.qtd)),'qtd',G.qtd);
+ $('#g_t3').textContent=P+': quantidade por item';accRender();
  $('#g_t4').textContent=P+' por cartão de crédito';$('#g_car').innerHTML=hbars(sumBy(gf(['cartao']).filter(x=>x.tipo===DT&&x.cartao),x=>x.cartao),'cartao',G.cartao);
  $('#g_t6').textContent='Situação dos saldos';$('#g_saldo').innerHTML=hbars(fBanks().map(b=>[b.nome,saldoAtual(b),b.nome]).sort((a,b)=>b[1]-a[1]),'conta',G.conta);
   $('#g_t5').textContent='Receitas por categoria';$('#g_sta').innerHTML=hbars(sumBy(gf(['cat','sub']).filter(x=>x.tipo==='Receita'),x=>x.cat),'cat',G.cat);
