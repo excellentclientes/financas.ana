@@ -663,7 +663,7 @@ function resumoCards(L){
  const LP=L;/* geral: soma todas as parcelas (valor × nº de parcelas); com filtro de ano/mês/tipo, soma só o que está filtrado */
  const rec=sum(LP,x=>x.tipo==='Receita'),des=sum(LP,x=>x.tipo==='Despesa'&&cc(x));
  const recM=sum(L,x=>x.tipo==='Receita'&&x.venc.slice(0,7)===hoje),desM=sum(L,x=>x.tipo==='Despesa'&&cc(x)&&x.venc.slice(0,7)===hoje);
- const cards=[['Saldo inicial',brl(ini),'',1],['Receitas',brl(rec),'rec',0],['Despesas',brl(des),'des',0],['Saldo do mês',brl(recM-desM),'',0],['Saldo acumulado',brl(saldoPer(L)),'',0]];
+ const cards=[['Saldo inicial',brl(ini),'',1],['Receitas',brl(rec),'rec',0],['Despesas',brl(des),'des',0],['Saldo do mês',brl(recM-desM),'',0],['Saldo acumulado',brl(ini+rec-des),'',0]/* inicial + receitas − despesas (pagas e em aberto) */];
  return cards.map(([l,v,c,main])=>`<div class="card kpi${main?' main':''}"><span>${l}</span><b class="${c}">${v}</b></div>`).join('');
 }
 function saldoPer(L){
