@@ -288,8 +288,7 @@ function render(){
  try{plRender()}catch(e){}
  const L=filtered(''),T=filtered(),rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),pend=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago'),atr=L.filter(x=>x.tipo==='Despesa'&&st(x)==='atrasado').length;
  const saldoIni=bkAtivos().reduce((a,b)=>a+b.saldo,0);
- {const yr=$('#fy').value,mm=$('#fm').value,mn=L.reduce((a,x)=>!a||x.venc<a?x.venc:a,'');
-  $('#kpis').innerHTML=resumoCards(L,yr&&mm?mm+'-01':yr?yr+'-01-01':mm&&mn?mn.slice(0,7)+'-01':'')}
+ $('#kpis').innerHTML=resumoCards(L);
  $('#kmini').innerHTML=`<div class="km main" style="cursor:pointer" onclick="setView('b')"><span>Saldo</span><b>${brl(saldoPer(L))}</b></div><div class="km"><span>Receitas</span><b class="rec">${brl(rec)}</b></div><div class="km"><span>Despesas</span><b class="des">${brl(des)}</b></div><div class="km"><span>Despesas em aberto</span><b>${brl(pend)}</b></div>`;
  const bc={};L.filter(x=>x.tipo==='Despesa').forEach(x=>bc[x.cat]=(bc[x.cat]||0)+x.valor);
  const top=Object.entries(bc).sort((a,b)=>b[1]-a[1]).slice(0,6),mx=top[0]?top[0][1]:1;
@@ -659,9 +658,8 @@ const afmt=v=>Math.abs(v)<1000?(Math.round(v*100)/100).toLocaleString('pt-BR',{m
 const sumBy=(a,f)=>{const o={};a.forEach(x=>{const k=f(x);o[k]=(o[k]||0)+x.valor});return Object.entries(o).sort((p,q)=>q[1]-p[1])};
 function setView(v){
  $('#hnew').style.visibility=(v==='p')?'hidden':'';['l','p','c','t','b','g'].forEach(k=>{$('#v'+k.toUpperCase()).hidden=v!==k});document.querySelectorAll('.views button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));if(v==='g')grender();if(v==='p')plRender(1);if(v==='c')ccRender();if(v==='t')trRender();if(v==='b')bkRender();VIEW=v;sessionStorage.setItem('fluxo_view',v);$('#hnew .t').textContent=v==='p'?'Novo cadastro':v==='c'?'Novo cartão':v==='t'?'Nova transferência':v==='b'?'Nova conta':'Novo lançamento'}
-function resumoCards(L,start=''){
- /* Saldo inicial dinâmico: saldo das contas + (receitas − despesas) de tudo que vence antes do início do período filtrado */
- const at=fBanks(),ini=at.reduce((a,b)=>a+b.saldo,0)+(start?D.filter(x=>x.venc<start).reduce((a,x)=>a+(x.tipo==='Receita'?x.valor:-x.valor),0):0),hoje=TODAY.slice(0,7),cc=x=>true;/* despesas de cartão também entram nos cards */
+function resumoCards(L){
+ const at=fBanks(),ini=at.reduce((a,b)=>a+b.saldo,0),hoje=TODAY.slice(0,7),cc=x=>true;/* despesas de cartão também entram nos cards */
  const LP=L;/* geral: soma todas as parcelas (valor × nº de parcelas); com filtro de ano/mês/tipo, soma só o que está filtrado */
  const rec=sum(LP,x=>x.tipo==='Receita'),des=sum(LP,x=>x.tipo==='Despesa'&&cc(x));
  const recM=sum(L,x=>x.tipo==='Receita'&&x.venc.slice(0,7)===hoje),desM=sum(L,x=>x.tipo==='Despesa'&&cc(x)&&x.venc.slice(0,7)===hoje);
@@ -759,7 +757,7 @@ function grender(){
  $('#gchips').innerHTML=ch.length?ch.map(([k,l,v])=>`<button class="chip on" data-x="${k}">${l}: <b>${esc(v)}</b> ✕</button>`).join('')+'<button class="chip" data-x="all">Limpar tudo</button>':'<span>Clique nos gráficos para filtrar · ou use os filtros acima</span>';
  const L=gf(),DT=G.tipo||'Despesa',P=DT+'s',rec=sum(L,x=>x.tipo==='Receita'),des=sum(L,x=>x.tipo==='Despesa'&&!x.cartao),ab=sum(L,x=>x.tipo==='Despesa'&&st(x)!=='pago');
  const saldoIniG=fBanks().reduce((a,b)=>a+b.saldo,0);
- {const fr=[F.from,G.from].filter(Boolean).sort().pop();$('#gkpis').innerHTML=resumoCards(L,fr?fr+'-01':'')}
+ $('#gkpis').innerHTML=resumoCards(L);
  $('#g_mes').innerHTML=gMes();
  $('#g_t1').textContent=P+' por categoria';$('#g_cat').innerHTML=gDonut(sumBy(gf(['cat','sub']).filter(x=>x.tipo===DT),x=>x.cat));
  $('#g_t2').textContent=P+' por subcategoria';$('#g_sub').innerHTML=hbars(sumBy(gf(['sub']).filter(x=>x.tipo===DT),x=>x.cat+'|'+x.sub).slice(0,8).map(([k,v])=>[k.split('|')[1],v,k]),'sub',G.sub?G.cat+'|'+G.sub:'');
