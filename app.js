@@ -179,10 +179,11 @@ const FIELDS={
  compra:x=>dtxt(x.compra),
  qtd:x=>fq(x.qtd),
  desc:x=>x.desc,
+ local:x=>x.local||'',
  valor:x=>vtxt(x.valor),
  status:x=>stLabel(x)+' '+st(x)+' '+(st(x)==='pago'?'quitado':'em aberto')
 };
-const COLS={n:['n','no','nº','num','numero'],tipo:['tipo'],venc:['venc','vencimento'],pgto:['pgto','pagamento','recebimento','receb','pago'],parc:['parc','parcela'],conta:['conta','cartao','banco'],cat:['cat','categoria'],sub:['sub','subcategoria'],compra:['compra'],qtd:['qtd','quantidade'],desc:['desc','descricao'],valor:['valor'],status:['status','situacao']};
+const COLS={n:['n','no','nº','num','numero'],tipo:['tipo'],venc:['venc','vencimento'],pgto:['pgto','pagamento','recebimento','receb','pago'],parc:['parc','parcela'],conta:['conta','cartao','banco'],cat:['cat','categoria'],sub:['sub','subcategoria'],compra:['compra'],qtd:['qtd','quantidade'],desc:['desc','descricao'],local:['local','localdacompra','loja'],valor:['valor'],status:['status','situacao']};
 const COLK={};Object.entries(COLS).forEach(([k,a])=>a.forEach(n=>COLK[n]=k));
 const pnum=t=>{t=t.replace(/[^\d.,]/g,'');if(t.includes(','))t=t.replace(/\./g,'').replace(',','.');return parseFloat(t)};
 function parseQ(s){
@@ -225,7 +226,7 @@ function hl(s,key){
 function setQ(v){$('#q').value=v;render();$('#q').focus()}
 document.addEventListener('keydown',e=>{if(e.key==='/'&&!e.ctrlKey&&!e.metaKey&&!/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$('#q').focus()}});
 
-const FK={n:['Nº',x=>String(x.n).padStart(4,'0')],tipo:['Tipo',x=>x.tipo],venc:['Vencimento',x=>fd(x.venc)],pgto:['Pgto / Receb.',x=>x.pgto?fd(x.pgto):'—'],parc:['Parcela',x=>parcTxt(x)],conta:['Conta',x=>x.conta],cartao:['Cartão',x=>x.cartao||'—'],cat:['Categoria',x=>x.cat],compra:['Data da Compra',x=>x.compra?fd(x.compra):'—'],qtd:['Qtd',x=>String(x.qtd)],desc:['Descrição',x=>x.desc||'—'],valor:['Valor',x=>brl(x.valor)],status:['Status',x=>stLabel(x)]};
+const FK={n:['Nº',x=>String(x.n).padStart(4,'0')],tipo:['Tipo',x=>x.tipo],venc:['Vencimento',x=>fd(x.venc)],pgto:['Pgto / Receb.',x=>x.pgto?fd(x.pgto):'—'],parc:['Parcela',x=>parcTxt(x)],conta:['Conta',x=>x.conta],cartao:['Cartão',x=>x.cartao||'—'],cat:['Categoria',x=>x.cat],compra:['Data da Compra',x=>x.compra?fd(x.compra):'—'],qtd:['Qtd',x=>fq(x.qtd)],desc:['Descrição',x=>x.desc||'—'],local:['Local da compra',x=>x.local||'—'],valor:['Valor',x=>brl(x.valor)],status:['Status',x=>stLabel(x)]};
 let FCOL={};
 function colBtns(){document.querySelectorAll('.thf').forEach(b=>b.classList.toggle('on',!!FCOL[b.dataset.k]))}
 function colFilter(k,btn){
@@ -307,9 +308,10 @@ function render(){
   <td data-l="Data da Compra">${hl(fd(x.compra),'compra')}</td>
   <td data-l="Qtd">${hl(fq(x.qtd),'qtd')}</td>
   <td data-l="Descrição"><b style="font-weight:600">${hl(x.desc,'desc')}</b></td>
+  <td data-l="Local da compra">${hl(x.local||'—','local')}</td>
   <td data-l="Valor" class="v ${x.tipo==='Receita'?'rec':'des'}">${hl((x.tipo==='Receita'?'+':'−')+' '+brl(x.valor),'valor')}</td>
   <td data-l="Status"><span class="tag ${st(x)}">${stLabel(x)}</span></td>
-  <td class="act"><button class="ic" onclick="openF(${x.n})" title="Editar" aria-label="Editar">✎</button><button class="ic" onclick="del(${x.n})" title="Excluir" aria-label="Excluir">🗑</button></td></tr>`).join('')||'<tr><td class="empty" colspan="13">Nenhum lançamento encontrado. Ajuste os filtros ou crie um novo.</td></tr>';
+  <td class="act"><button class="ic" onclick="openF(${x.n})" title="Editar" aria-label="Editar">✎</button><button class="ic" onclick="del(${x.n})" title="Excluir" aria-label="Excluir">🗑</button></td></tr>`).join('')||'<tr><td class="empty" colspan="14">Nenhum lançamento encontrado. Ajuste os filtros ou crie um novo.</td></tr>';
  document.querySelectorAll('.tabs button').forEach(b=>{b.classList.toggle('on',b.dataset.t===TAB);b.querySelector('em').textContent=filtered(b.dataset.t).length});
  $('#cnt').textContent=`${T.length} lançamentos`;$('#tot').innerHTML=`Saldo desta lista: <b style="color:var(--ink)">${brl(sum(T,x=>x.tipo==='Receita')-sum(T,x=>x.tipo==='Despesa'))}</b>`;
  if(!$('#vG').hidden)grender();
@@ -323,8 +325,10 @@ function fillCat(c,s){const t=$('#f_tipo').value;$('#f_cat').innerHTML=opts(Obje
 function fillSub(s){$('#f_sub').innerHTML=opts(CATS[$('#f_tipo').value][$('#f_cat').value]||[],'Selecione');if(s)$('#f_sub').value=s}
 let editing=null,selRow=null,editInit=null,uPgto='';
 const stAuto=p=>p&&p<=TODAY?'pago':'pendente';
-const qtdF=()=>{const q=parseMoney($('#f_qtd').value);return q>0?Math.round(q*1e6)/1e6:1};
-const fq=q=>{q=Number(q);if(!(q>0))q=1;return q.toLocaleString('pt-BR',{maximumFractionDigits:6,useGrouping:false})};
+// Quantidade aceita palavras (ex.: Parcelado), inteiros e fracionados (1,00 / 1,235)
+const qtdNum=q=>typeof q==='number'&&q>0?q:1; // multiplicador do valor (texto conta como 1)
+const qtdF=()=>{const raw=$('#f_qtd').value.trim();if(!raw)return 1;const q=parseMoney(raw);if(!isNaN(q)&&/^[\d.,\s]+$/.test(raw))return q>0?Math.round(q*1e6)/1e6:1;return raw.slice(0,20)};
+const fq=q=>{if(typeof q==='string'&&q.trim()&&isNaN(Number(q.replace(',','.'))))return q;q=Number(q);if(!(q>0))q=1;return q.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:6,useGrouping:false})};
 // Vencimento da fatura: dia de pagamento do cartão no mês correto, conforme a data da compra
 function vencFatura(compra,diaPag,diaFech){
  let [y,mo,d]=compra.split('-').map(Number);
@@ -368,7 +372,7 @@ function layoutLanc(){
  if(parc){
   $('#lg_a').textContent='Dados Gerais';$('#lg_b').textContent='Dados da parcela';
   w5.append(FG('f_nlan'),FG('f_qtd'));w6.append(FG('f_cat'),FG('f_sub'));w3.append(FG('f_cartao'),FG('f_compra'));
-  A.append(w5,w6,w3,FG('f_desc'),FG('f_valor'));
+  A.append(w5,w6,w3,FG('f_desc'),FG('f_local'),FG('f_valor'));
   FG('f_valor').hidden=true;$('#f_valor').required=false;$('#f_conta').required=false;
   w1.append(FG('f_venc'),FG('f_pgto'));w2.append(FG('f_parc'),FG('f_status'));
   B.append(FG('f_conta'),w1,w2,$('#xl_hint'));FG('f_conta_g').hidden=true;
@@ -377,7 +381,7 @@ function layoutLanc(){
  }else{
   $('#lg_a').textContent='Dados do pagamento';$('#lg_b').textContent='Dados Gerais';
   w1.hidden=w2.hidden=w3.hidden=w5.hidden=w6.hidden=true;cfg.hidden=true;
-  A.append(FG('f_conta'),FG('f_cat'),FG('f_sub'),FG('f_cartao'),FG('f_compra'),FG('f_qtd'),FG('f_desc'),FG('f_valor'));
+  A.append(FG('f_conta'),FG('f_cat'),FG('f_sub'),FG('f_cartao'),FG('f_compra'),FG('f_qtd'),FG('f_desc'),FG('f_local'),FG('f_valor'));
   FG('f_valor').hidden=false;$('#f_valor').required=true;$('#f_conta').required=false;
   B.append(FG('f_nlan'),FG('f_conta_g'),FG('f_venc'),FG('f_pgto'),FG('f_status'),FG('f_parc'),$('#xl_hint'));
  }
@@ -502,7 +506,7 @@ function openF(n){
  $('#f_cartao').innerHTML=opts(CARTOES,'Sem cartão');
  const x=x0||{tipo:'Despesa',status:'pendente',desc:'',valor:'',qtd:1,venc:TODAY,pgto:'',compra:TODAY,parc:'1/1',conta:'',cartao:''};
  $('#f_tipo').value=x.tipo;fillCat(x.cat,x.sub);
- $('#f_status').value=x.status;$('#f_desc').value=x.desc;editInit=x0?{unit:String(Number((x0.valor/(x0.qtd||1)).toFixed(2))),qtd:x0.qtd||1,total:x0.valor}:null;$('#f_valor').value=x0?editInit.unit:x.valor;$('#f_qtd').value=fq(x.qtd);$('#f_venc').value=x.venc;
+ $('#f_status').value=x.status;$('#f_desc').value=x.desc;editInit=x0?{unit:String(Number((x0.valor/qtdNum(x0.qtd)).toFixed(2))),qtd:qtdNum(x0.qtd)===1&&typeof x0.qtd==='string'?x0.qtd:qtdNum(x0.qtd),total:x0.valor}:null;$('#f_valor').value=x0?editInit.unit:x.valor;$('#f_qtd').value=fq(x.qtd);$('#f_local').value=x.local||'';$('#f_venc').value=x.venc;
  $('#f_pgto').value=x.pgto||'';$('#f_compra').value=x.compra||x.venc;$('#f_parc').value=x.parc||'1/1';$('#f_conta').value=x.conta;$('#f_cartao').value=x.cartao;fgVis();buildPD();refreshGerais();
  $('#dlg').showModal();
 }
@@ -519,7 +523,7 @@ function sessRender(){
  const tot=rows.reduce((a,r)=>a+r.valor,0),pago=rows.filter(r=>r.status==='pago').reduce((a,r)=>a+r.valor,0);
  $('#f_tot').innerHTML=`<span>Total Geral<b>${brl(tot)}</b></span><span>Total Pago<b>${brl(pago)}</b></span><span>Total em Aberto<b>${brl(tot-pago)}</b></span>`;
 }
-const LOCKIDS=['f_tipo','f_cat','f_sub','f_cartao','f_compra','f_qtd','f_desc','f_valor','f_npar','f_p1','f_vtot','f_vfix'];
+const LOCKIDS=['f_tipo','f_cat','f_sub','f_cartao','f_compra','f_qtd','f_desc','f_local','f_valor','f_npar','f_p1','f_vtot','f_vfix'];
 function setLock(b){LOCKIDS.forEach(id=>$('#'+id).disabled=b);document.querySelectorAll('input[name=tl],input[name=modo]').forEach(x=>x.disabled=b);$('#xl_add').hidden=b}
 const rowOf=x=>({n:x.n,parc:x.parc||'1/1',venc:x.venc,pgto:x.pgto||'',conta:x.conta,valor:x.valor,status:x.status==='pago'?'pago':'pendente'});
 // Todas as parcelas do mesmo lançamento
@@ -548,7 +552,7 @@ function sessLimpaCampos(){
  // Volta o formulário ao estado de um lançamento novo (mantém só o Tipo: Despesa/Receita)
  document.querySelector('input[name=tl][value=unico]').checked=true;$('#fs_cfg').hidden=true;$('#f_p1').value='';$('#f_npar').value='';$('#f_vtot').value='';$('#f_vfix').value='';document.querySelector('input[name=modo][value=total]').checked=true;PD=[];layoutLanc();
  fillCat();
- $('#f_cartao').value='';$('#f_compra').value=TODAY;$('#f_qtd').value='1';$('#f_desc').value='';
+ $('#f_cartao').value='';$('#f_compra').value=TODAY;$('#f_qtd').value='1';$('#f_desc').value='';$('#f_local').value='';
  $('#f_conta').value='';uPgto='';
  $('#f_valor').value='';$('#f_venc').value=TODAY;$('#f_pgto').value='';$('#f_parc').value='1/1';
  selRow=null;fgVis();buildPD();refreshGerais();sessRender();
@@ -564,7 +568,7 @@ function save(e){
   if(!PD.length){toast('Informe o número de parcelas');return false}
   if(PD.some(p=>!(p.valor>0))){toast('Informe o Total Parcelado ou o Valor Fixo');return false}
   const tipo=$('#f_tipo').value,cartao=tipo==='Despesa'?$('#f_cartao').value:'',g=nextN();let nx=g-1;
-  const base={tipo,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,qtd:qtdF(),cartao,compra:$('#f_compra').value||TODAY};
+  const base={tipo,desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,qtd:qtdF(),local:$('#f_local').value.trim(),cartao,compra:$('#f_compra').value||TODAY};
   PD.forEach(p=>{nx++;const parc=`${p.i+1}/${PD.length}`;
    D.push({...base,n:nx,g,status:p.status,valor:p.valor,venc:p.venc,pgto:p.pgto,parc,conta:p.conta});
    SESS.push({n:nx,parc,venc:p.venc,pgto:p.pgto,conta:p.conta,valor:p.valor,status:p.status})});
@@ -572,7 +576,7 @@ function save(e){
  }
  const cv=$('#f_conta').value;
  if(cv&&!CONTAS.includes(cv)){toast('Escolha uma conta bancária ativa');return false}
- const o={tipo:$('#f_tipo').value,status:editing?stAuto($('#f_pgto').value):(cv?'pago':'pendente'),desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:(editing&&editInit&&$('#f_valor').value===editInit.unit&&qtdF()===editInit.qtd)?editInit.total:Math.round((parseFloat($('#f_valor').value)||0)*qtdF()*100)/100,qtd:qtdF(),venc:$('#f_venc').value||$('#f_compra').value||TODAY,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
+ const o={tipo:$('#f_tipo').value,status:editing?stAuto($('#f_pgto').value):(cv?'pago':'pendente'),desc:$('#f_desc').value.trim(),cat:$('#f_cat').value,sub:$('#f_sub').value,valor:(editing&&editInit&&$('#f_valor').value===editInit.unit&&qtdF()===editInit.qtd)?editInit.total:Math.round((parseFloat($('#f_valor').value)||0)*qtdNum(qtdF())*100)/100,qtd:qtdF(),local:$('#f_local').value.trim(),venc:$('#f_venc').value||$('#f_compra').value||TODAY,pgto:$('#f_pgto').value,compra:$('#f_compra').value,parc:$('#f_parc').value||'1/1',conta:$('#f_conta').value,cartao:$('#f_cartao').value};
  const exEd=editing?D.find(i=>i.n===editing):null,keepP=!!(exEd&&isParcelado(exEd));
  if(o.tipo!=='Despesa'){o.compra=keepP?exEd.compra:o.venc;o.parc=keepP?exEd.parc:'1/1';o.cartao=''}
  else if(!o.cartao){o.parc=keepP?exEd.parc:'1/1'}
@@ -620,16 +624,16 @@ function pdf(){
   doc.setFillColor(...c);doc.rect(x,112,3,34,'F');doc.setTextColor(102,117,113);doc.setFontSize(9.5);doc.text(l,x+14,120);
   doc.setTextColor(...c);doc.setFont('helvetica','bold');doc.setFontSize(15);doc.text(brl(v),x+14,141);doc.setFont('helvetica','normal')});
  doc.autoTable({startY:174,margin:{left:M,right:M,bottom:40},theme:'plain',
-  head:[['Nº','Tipo','Venc.','Pgto/Receb.','Parc.','Conta / Cartão','Categoria','Descrição','Valor','Status']],
-  body:L.map(x=>[String(x.n).padStart(4,'0'),x.tipo,fd(x.venc),fd(x.pgto),parcTxt(x),x.conta+(x.cartao?' / '+x.cartao:''),x.cat+' > '+x.sub,x.desc,(x.tipo==='Receita'?'+ ':'- ')+brl(x.valor),stLabel(x)]),
-  foot:[['','','','','','','','Saldo do período',brl(rec-des),'']],
+  head:[['Nº','Tipo','Venc.','Pgto/Receb.','Parc.','Conta / Cartão','Categoria','Descrição','Local da compra','Valor','Status']],
+  body:L.map(x=>[String(x.n).padStart(4,'0'),x.tipo,fd(x.venc),fd(x.pgto),parcTxt(x),x.conta+(x.cartao?' / '+x.cartao:''),x.cat+' > '+x.sub,x.desc,x.local||'—',(x.tipo==='Receita'?'+ ':'- ')+brl(x.valor),stLabel(x)]),
+  foot:[['','','','','','','','Saldo do período','',brl(rec-des),'']],
   styles:{fontSize:8,cellPadding:{top:5,bottom:5,left:5,right:5},textColor:[20,32,30],lineColor:[229,234,232],lineWidth:{bottom:.5}},
   headStyles:{fillColor:[236,243,241],textColor:[15,95,88],fontStyle:'bold'},
   footStyles:{fillColor:[236,243,241],textColor:[20,32,30],fontStyle:'bold'},
-  alternateRowStyles:{fillColor:[250,251,250]},columnStyles:{8:{halign:'right',fontStyle:'bold'}},
-  didParseCell:d=>{if(d.section==='head'&&d.column.index===8)d.cell.styles.halign='right';if(d.section==='foot'&&d.column.index===8)d.cell.styles.halign='right';
-   if(d.section==='body'){const x=L[d.row.index];if(d.column.index===8)d.cell.styles.textColor=x.tipo==='Receita'?[4,120,87]:[190,18,60];
-    if(d.column.index===9){const s=st(x);d.cell.styles.textColor=s==='pago'?[4,120,87]:s==='atrasado'?[190,18,60]:[180,83,9];d.cell.styles.fontStyle='bold'}}},
+  alternateRowStyles:{fillColor:[250,251,250]},columnStyles:{9:{halign:'right',fontStyle:'bold'}},
+  didParseCell:d=>{if(d.section==='head'&&d.column.index===9)d.cell.styles.halign='right';if(d.section==='foot'&&d.column.index===9)d.cell.styles.halign='right';
+   if(d.section==='body'){const x=L[d.row.index];if(d.column.index===9)d.cell.styles.textColor=x.tipo==='Receita'?[4,120,87]:[190,18,60];
+    if(d.column.index===10){const s=st(x);d.cell.styles.textColor=s==='pago'?[4,120,87]:s==='atrasado'?[190,18,60]:[180,83,9];d.cell.styles.fontStyle='bold'}}},
   didDrawPage:d=>{const h=doc.internal.pageSize.getHeight();doc.setFontSize(8.5);doc.setTextColor(140);doc.text('Fluxo · Relatório financeiro',M,h-18);doc.text('Página '+doc.internal.getNumberOfPages(),W-M,h-18,{align:'right'})}});
  {const GS={};L.forEach(x=>{const k=x.tipo+'|'+x.cat+'|'+x.sub;const g=GS[k]=GS[k]||{t:x.tipo,c:x.cat,s:x.sub,n:0,v:0};g.n++;g.v+=x.valor});
  const rowsS=Object.values(GS).sort((a,b)=>a.t.localeCompare(b.t)||a.c.localeCompare(b.c,'pt')||a.s.localeCompare(b.s,'pt')).map(g=>[g.t,g.c,g.s,String(g.n),brl(g.v)]);
@@ -768,7 +772,7 @@ $('#vG').addEventListener('click',e=>{
 
 (function(){const v=$('#vL'),e=$('#stky'),k=$('#kpis'),t=()=>{const kr=k.getBoundingClientRect(),vr=v.getBoundingClientRect();e.classList.toggle('scr',v.scrollTop>0&&kr.height>0&&vr.height>0&&kr.bottom<=vr.top+1)};v.addEventListener('scroll',t,{passive:true});addEventListener('resize',t);if(window.ResizeObserver){const ro=new ResizeObserver(t);ro.observe(k);ro.observe(v)}t();setTimeout(t,0)})();
 (function(){const e=$('#stky'),f=()=>$('#vL').style.setProperty('--stk',e.offsetHeight+'px');f();if(window.ResizeObserver)new ResizeObserver(f).observe(e);addEventListener('resize',f)})();
-const COLN=['Nº','Tipo','Vencimento','Pgto / Receb.','Parcela','Conta','Cartão','Categoria','Data da Compra','Qtd','Descrição','Valor','Status'];let HC=[];try{HC=JSON.parse(localStorage.getItem('fluxo_cols')||'[]')}catch(e){}
+const COLN=['Nº','Tipo','Vencimento','Pgto / Receb.','Parcela','Conta','Cartão','Categoria','Data da Compra','Qtd','Descrição','Local da compra','Valor','Status'];let HC=[];try{HC=JSON.parse(localStorage.getItem('fluxo_cols')||'[]');if(localStorage.getItem('fluxo_cols_v')!=='2'){HC=HC.map(i=>i>=11?i+1:i);localStorage.setItem('fluxo_cols',JSON.stringify(HC));localStorage.setItem('fluxo_cols_v','2')}}catch(e){}
 function applyCols(){$('#colcss').textContent=HC.length?HC.map(i=>`.tbs th:nth-child(${i+1}),.tbs td:not(.empty):nth-child(${i+1})`).join(',')+'{display:none!important}':''}
 function saveCols(){try{localStorage.setItem('fluxo_cols',JSON.stringify(HC))}catch(e){}applyCols()}
 function openCols(){$('#cbody').innerHTML=COLN.map((n,i)=>`<label class="cfg-i"><input type="checkbox" data-i="${i}"${HC.includes(i)?'':' checked'}>${n}</label>`).join('');$('#cdlg').showModal();cfgTab('k')}
