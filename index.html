@@ -681,7 +681,7 @@ body.foco main #vL>.tw>.foot{position:static!important;flex:none!important}
  </section>
 
  <div class="stky" id="stky">
- <div class="trow"><div class="tabs"><button data-t="" onclick="setTab('')">Todos <em>0</em></button><button data-t="pago" onclick="setTab('pago')">Pagos / Recebidos <em>0</em></button><button data-t="pendente" onclick="setTab('pendente')">Em aberto <em>0</em></button></div><button class="btn expb" id="btnExp" type="button" onclick="document.body.classList.add('foco');var t=document.querySelector('#vL .tbs');if(t)t.scrollTop=0" title="Expandir a tabela para a tela toda">Expandir tabela</button><div class="kmini" id="kmini"></div><button class="btn cfgb" onclick="openCols()" title="Escolher as colunas da tabela"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="t">Configurar tabela</span></button></div>
+ <div class="trow"><div class="tabs"><button data-t="" onclick="setTab('')">Todos <em>0</em></button><button data-t="pago" onclick="setTab('pago')">Pagos / Recebidos <em>0</em></button><button data-t="pendente" onclick="setTab('pendente')">Em aberto <em>0</em></button></div><button class="btn expb" id="btnExp" type="button" onclick="document.body.classList.add('foco');var t=document.querySelector('#vL .tbs');if(t)t.scrollTop=0" title="Expandir a tabela para a tela toda">Expandir tabela</button><div class="kmini" id="kmini"></div><button class="btn cfgb" onclick="openCols()" title="Escolher as colunas da tabela"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="t">Configurar tabela</span></button><button class="btn lmpb" id="btnLimpar" type="button" onclick="limparLancamentos()" title="Apagar todos os lançamentos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></svg><span class="t">Apagar todos</span></button></div>
  <div class="filters">
   <input id="q" class="qbusca" type="search" placeholder="Pesquise qualquer coisa: descrição, valor, data, mês, conta, status…" oninput="render()" autocomplete="off" aria-label="Pesquisar em todas as colunas">
   <select id="fy" onchange="fyChange()" aria-label="Ano"></select>
@@ -1081,5 +1081,53 @@ dialog.pf::backdrop{background:rgba(15,30,28,.38);backdrop-filter:blur(3px)}
 }
 </style>
 <script>document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.body.classList.contains('foco')&&!document.querySelector('dialog[open]'))document.body.classList.remove('foco')});</script>
+
+<style>
+.btn.lmpb{display:inline-flex;align-items:center;gap:6px;color:#b42318;border-color:#f3c9c4;background:#fff}
+.btn.lmpb svg{width:16px;height:16px;flex:none}
+.btn.lmpb:hover{background:#fdecea;border-color:#e7a29a}
+dialog.lmp{border:0;border-radius:22px;padding:0;width:min(400px,calc(100vw - 32px));box-shadow:0 30px 80px rgba(0,0,0,.28);background:#fff;z-index:2147483646;overflow:visible}
+dialog.lmp::backdrop{background:rgba(15,30,28,.45);backdrop-filter:blur(4px)}
+dialog.lmp[open]{animation:lmpIn .22s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes lmpIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
+.lmp-x{position:absolute;top:10px;right:12px;width:32px;height:32px;border:0;border-radius:50%;background:transparent;color:#7a8a86;font-size:22px;line-height:1;cursor:pointer}
+.lmp-x:hover{background:#f1f5f4;color:#1f2d2a}
+.lmp-in{padding:30px 26px 22px;text-align:center}
+.lmp-ic{width:58px;height:58px;border-radius:50%;margin:0 auto 14px;background:#fdecea;color:#b42318;display:flex;align-items:center;justify-content:center}
+.lmp-ic svg{width:28px;height:28px}
+.lmp-in h3{margin:0 0 8px;font-size:18px;color:#1f2d2a}
+.lmp-in p{margin:0 0 20px;color:#5d6d69;font-size:14px;line-height:1.55}
+.lmp-in p b{color:#b42318}
+.lmp-word{display:inline-block;margin:2px 0 14px;padding:10px 22px;border-radius:14px;background:#f4f7f6;border:1px dashed #c3cdca;font:700 24px/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.06em;color:#1f2d2a;user-select:none;-webkit-user-select:none}
+.lmp-in input{width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid #dfe6e3;border-radius:12px;font:inherit;font-size:16px;text-align:center;outline:none;transition:border-color .15s,box-shadow .15s}
+.lmp-in input:focus{border-color:#b42318;box-shadow:0 0 0 3px rgba(180,35,24,.12)}
+.lmp-in input.bad{border-color:#b42318;animation:lmpShake .35s}
+@keyframes lmpShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.lmp-err{min-height:18px;margin:8px 0 14px;color:#b42318;font-size:13px;font-weight:600}
+.lmp-foot{display:flex;gap:10px}
+.lmp-foot .cfd-btn{flex:1}
+.cfd-btn:disabled{opacity:.55;cursor:default}
+</style>
+<dialog id="lmp1" class="lmp" aria-labelledby="lmp1-t">
+ <button class="lmp-x" type="button" aria-label="Fechar" data-lmp-x>&times;</button>
+ <div class="lmp-in">
+  <div class="lmp-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></svg></div>
+  <h3 id="lmp1-t">Apagar todos os lançamentos?</h3>
+  <p>Você está prestes a remover <b id="lmp1-n">0 lançamentos</b> de uma só vez. Contas, cartões e transferências não serão afetados. <b>Esta ação não pode ser desfeita.</b></p>
+  <div class="lmp-foot"><button class="cfd-btn" type="button" data-lmp-x>Cancelar</button><button class="cfd-btn cfd-del" type="button" id="lmp1-ok">Sim, apagar tudo</button></div>
+ </div>
+</dialog>
+<dialog id="lmp2" class="lmp" aria-labelledby="lmp2-t">
+ <button class="lmp-x" type="button" aria-label="Fechar" data-lmp-x>&times;</button>
+ <form class="lmp-in" id="lmp2-f" autocomplete="off" novalidate>
+  <div class="lmp-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2.5 20h19z"/><path d="M12 10v4.5M12 17.4v.1"/></svg></div>
+  <h3 id="lmp2-t">Confirmação de segurança</h3>
+  <p>Para confirmar, digite a palavra abaixo exatamente como aparece, em letras minúsculas.</p>
+  <div class="lmp-word" id="lmp2-w" aria-live="polite"></div>
+  <input id="lmp2-i" type="text" inputmode="text" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Digite a palavra de confirmação" placeholder="digite a palavra aqui">
+  <div class="lmp-err" id="lmp2-e" role="alert"></div>
+  <div class="lmp-foot"><button class="cfd-btn" type="button" data-lmp-x>Cancelar</button><button class="cfd-btn cfd-del" type="submit" id="lmp2-ok">Apagar tudo</button></div>
+ </form>
+</dialog>
 </body>
 </html>
