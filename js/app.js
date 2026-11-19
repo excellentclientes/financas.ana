@@ -1211,3 +1211,42 @@ function focoTab(on){
  const t=document.querySelector('#vL .tbs');if(t)t.scrollTop=0;
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('foco')&&!document.querySelector('dialog[open]'))focoTab(false)});
+
+/* ===== Apagar todos os lançamentos (dupla confirmação) ===== */
+const LMP_WORDS=['girassol','montanha','janela','biblioteca','tartaruga','horizonte','violino','caminhao','laranja','estrela','pescador','travesseiro','lanterna','abacaxi','bicicleta','cachoeira','trovao','marmelada','guarda-sol','sorvete'];
+function limparLancamentos(){
+ const n=D.length;
+ if(!n){toast('Não há lançamentos para apagar');return}
+ const d1=$('#lmp1'),d2=$('#lmp2'),inp=$('#lmp2-i'),err=$('#lmp2-e');
+ let word='',busy=false;
+ const fechar=()=>{try{d1.close()}catch(_){}try{d2.close()}catch(_){}};
+ /* qualquer fechamento (X, Cancelar, Esc, clique fora) cancela tudo, mesmo depois do "sim" */
+ [d1,d2].forEach(d=>{
+  d.querySelectorAll('[data-lmp-x]').forEach(b=>b.onclick=fechar);
+  d.oncancel=e=>{e.preventDefault();fechar()};
+  d.onclick=e=>{if(e.target===d)fechar()};
+ });
+ $('#lmp1-n').textContent=n+(n===1?' lançamento':' lançamentos');
+ $('#lmp1-ok').onclick=()=>{
+  d1.close();
+  word=LMP_WORDS[Math.floor(Math.random()*LMP_WORDS.length)];
+  $('#lmp2-w').textContent=word;inp.value='';err.textContent='';inp.classList.remove('bad');
+  d2.showModal();inp.focus();
+ };
+ inp.onpaste=e=>e.preventDefault();
+ inp.oninput=()=>{err.textContent='';inp.classList.remove('bad')};
+ $('#lmp2-f').onsubmit=e=>{
+  e.preventDefault();if(busy)return;
+  if(inp.value.trim()!==word){
+   err.textContent='Palavra incorreta. Confira e tente novamente.';
+   inp.classList.remove('bad');void inp.offsetWidth;inp.classList.add('bad');inp.focus();inp.select();
+   return;
+  }
+  busy=true;
+  D=[];persist();months();render();
+  try{sessRender()}catch(_){}try{refreshGerais()}catch(_){}
+  d2.close();busy=false;
+  okAnim('Lançamentos apagados');
+ };
+ d1.showModal();$('#lmp1').querySelector('.cfd-btn:not(.cfd-del)').focus();
+}
