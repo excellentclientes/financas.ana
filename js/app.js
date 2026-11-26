@@ -361,7 +361,7 @@ function buildPD(){
  const v=parseMoney((modo==='total'?vt:vf).value),c=v>0?Math.round(v*100):0;
  const each=modo==='total'?Math.floor(c/n):c,last=modo==='total'?c-each*(n-1):c;
  const old=PD;
- PD=Array.from({length:n},(_,i)=>{const o=old[i]||{};return{i,venc:addMeses(base,i),valor:(i===n-1?last:each)/100,conta:o.conta||'',pgto:o.pgto||'',status:stAuto(o.pgto||'')}});
+ PD=Array.from({length:n},(_,i)=>{const o=old[i]||{},ov=o.ov>0?o.ov:null;return{i,venc:addMeses(base,i),valor:ov!==null?ov:(i===n-1?last:each)/100,ov,conta:o.conta||'',pgto:o.pgto||'',status:stAuto(o.pgto||'')}});
  // o campo não selecionado mostra o valor equivalente
  if(modo==='total')vf.value=c>0?(each/100).toFixed(2):'';else vt.value=c>0?(c*n/100).toFixed(2):'';
 }
@@ -520,6 +520,7 @@ function sessRender(){
  const rows=allRows(),tb=$('#f_prev_body');
  const html=rows.length?rows.map(r=>`<tr data-n="${r.k}"${r.d?' data-d="1"':''}${String(r.k)===String(selRow)?' class="sel"':''}><td>${pad4(r.n)}</td><td>${esc(r.parc)}</td><td>${fd(r.venc)}</td><td>${r.pgto?fd(r.pgto):'—'}</td><td>${r.conta?esc(r.conta):'—'}</td><td class="r">${brl(r.valor)}</td><td><span class="xl-st ${r.status}">${r.status==='pago'?'Pago':'Em aberto'}</span></td></tr>`).join(''):'<tr><td colspan="7" class="xl-empty">Nenhum lançamento adicionado ainda.</td></tr>';
  if(tb._h!==html){tb.innerHTML=html;tb._h=html}
+ $('#xl_bulk').hidden=rows.length<2;
  const tot=rows.reduce((a,r)=>a+r.valor,0),pago=rows.filter(r=>r.status==='pago').reduce((a,r)=>a+r.valor,0);
  $('#f_tot').innerHTML=`<span>Total Geral<b>${brl(tot)}</b></span><span>Total Pago<b>${brl(pago)}</b></span><span>Total em Aberto<b>${brl(tot-pago)}</b></span>`;
 }
@@ -558,6 +559,53 @@ function sessLimpaCampos(){
  selRow=null;fgVis();buildPD();refreshGerais();sessRender();
 }
 function xlTitulo(){$('#dt').textContent=$('#f_tipo').value==='Receita'?'Lançamento de Receita':'Lançamento de Despesa'}
+// ===== Alterar valores em lote (só os meses marcados) =====
+let BK=[],BKSEL=new Set();
+function bulkOpen(){
+ BK=allRows();
+ if(BK.length<2){toast('Não há lançamentos suficientes para alterar em lote');return}
+ BKSEL=new Set();$('#bk_v').value='';bulkDraw();
+ $('#bdlg').showModal();setTimeout(()=>$('#bk_v').focus(),30);
+}
+function bulkClose(){$('#bdlg').close()}
+function bulkPick(m){
+ BKSEL=new Set(m==='all'?BK.map(r=>r.k):m==='open'?BK.filter(r=>r.status!=='pago').map(r=>r.k):[]);
+ bulkDraw();
+}
+function bulkToggle(k){BKSEL.has(k)?BKSEL.delete(k):BKSEL.add(k);bulkDraw()}
+function bulkDraw(){
+ const v=parseMoney($('#bk_v').value),ok=v>0,nv=ok?Math.round(v*100)/100:null;
+ const sc=document.querySelector('.bk-tw'),top=sc.scrollTop;
+ $('#bk_body').innerHTML=BK.map(r=>{const on=BKSEL.has(r.k);
+  return `<tr data-k="${r.k}" class="${on?'on':''}"><td><input type="checkbox" tabindex="-1" ${on?'checked':''} aria-label="Selecionar parcela ${esc(r.parc)}"></td><td>${pad4(r.n)}</td><td>${esc(r.parc)}</td><td>${fd(r.venc)}</td><td class="r">${brl(r.valor)}</td><td class="r bk-new">${on&&ok?brl(nv):on?'—':brl(r.valor)}</td><td><span class="xl-st ${r.status}">${r.status==='pago'?'Pago':'Em aberto'}</span></td></tr>`}).join('');
+ sc.scrollTop=top;
+ const sel=BK.filter(r=>BKSEL.has(r.k)),cur=BK.reduce((t,r)=>t+r.valor,0),
+  nw=BK.reduce((t,r)=>t+(BKSEL.has(r.k)&&ok?nv:r.valor),0),dif=Math.round((nw-cur)*100)/100;
+ $('#bk_sum').innerHTML=`<span>Marcados<b> ${sel.length} de ${BK.length}</b></span><span>Total atual<b> ${brl(cur)}</b></span><span>Novo total<b> ${brl(nw)}</b></span><span>Diferença<b> ${dif>0?'+':''}${brl(dif)}</b></span>`;
+ $('#bk_ok').textContent=sel.length?`Confirmar alteração (${sel.length})`:'Confirmar alteração';
+}
+$('#bk_body').addEventListener('click',e=>{const tr=e.target.closest('tr[data-k]');if(!tr)return;const k=tr.dataset.k;bulkToggle(/^d/.test(k)?k:parseInt(k,10))});
+function bulkApply(e){
+ e.preventDefault();
+ const v=parseMoney($('#bk_v').value);
+ if(!BKSEL.size){toast('Marque ao menos um mês');return false}
+ if(!(v>0)){toast('Informe o novo valor');$('#bk_v').focus();return false}
+ const nv=Math.round(v*100)/100;let n=0;
+ BKSEL.forEach(k=>{
+  if(typeof k==='string'){const p=PD[+k.slice(1)];if(p){p.valor=nv;p.ov=nv;n++}}   // parcela ainda não gravada: vira valor personalizado
+  else{const x=D.find(i=>i.n===k);if(x){x.valor=nv;const r=SESS.find(i=>i.n===k);if(r)r.valor=nv;n++}}  // parcela já gravada
+ });
+ if(!n){toast('Nenhuma parcela alterada');return false}
+ persist();months();render();
+ if(managing&&isParc()&&SESS.length){$('#f_vtot').value=SESS.reduce((t,r)=>t+r.valor,0).toFixed(2);$('#f_vfix').value=SESS[0].valor.toFixed(2)}
+ sessRender();refreshGerais();bulkClose();
+ toast(`${n} ${n===1?'valor alterado':'valores alterados'} para ${brl(nv)}`);
+ return false;
+}
+// Mexer no total / valor fixo / nº de parcelas recalcula tudo: descarta os valores personalizados das parcelas em rascunho
+function bulkReset(){if(PD.some(p=>p.ov)){PD.forEach(p=>p.ov=null);toast('Valores personalizados descartados: parcelas recalculadas')}}
+['f_vtot','f_vfix','f_npar'].forEach(id=>$('#'+id).addEventListener('input',bulkReset));
+document.querySelectorAll('input[name=modo]').forEach(r=>r.addEventListener('change',bulkReset));
 function concluirLanc(){SESS=[];PD=[];managing=null;selRow=null;setLock(false);$('#dlg').close();render()}
 function save(e){
  e.preventDefault();
