@@ -891,10 +891,49 @@ body.foco main #vL>.tw>.foot{position:static!important;flex:none!important}
    </fieldset>
    <fieldset class="xl-fs xl-prev-box" id="f_prev"><legend>Lançamentos adicionados</legend>
     <div class="xl-tw"><table class="pc-t"><thead><tr><th>Nº</th><th>Parc.</th><th>Venc.</th><th>Pgto.</th><th>Conta</th><th class="r">Valor</th><th>Status</th></tr></thead><tbody id="f_prev_body"></tbody></table></div>
+    <button type="button" class="xl-bulk" id="xl_bulk" onclick="bulkOpen()" hidden>✎ Alterar valores em lote</button>
    </fieldset>
   </div>
  </div>
  <div class="xl-foot"><span class="xl-obg"><i class=req>*</i> Campos obrigatórios</span><div id="f_tot" class="xl-tot"></div><div class="xl-btns"><button class="xl-add" id="xl_add">Adicionar</button><button type="button" class="xl-conc" onclick="concluirLanc()">Concluir</button></div></div>
+</form></dialog>
+<style>
+/* Alterar valores em lote */
+.xl-bulk{margin-top:8px;width:100%;background:#fff;color:#0f766e;border:1px dashed #0f766e;border-radius:3px;padding:7px 10px;font-weight:700;font-size:13px;cursor:pointer}
+.xl-bulk:hover{background:#eef6f4}
+dialog.bulk{width:min(700px,96vw)}
+dialog.bulk[open]{display:flex;flex-direction:column;overflow:hidden}
+dialog.bulk>form{display:flex;flex-direction:column;min-height:0;flex:1}
+.bk-top{padding:14px 22px 10px;display:grid;gap:12px;border-bottom:1px solid var(--line)}
+.bk-hint{font-size:13px;color:var(--mut);line-height:1.4;margin:0}
+.bk-sel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--mut)}
+.bk-sel button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--ink);cursor:pointer}
+.bk-sel button:hover{border-color:#0f766e;color:#0f766e;background:#eef6f4}
+.bk-val label{display:block;font-size:12px;font-weight:600;color:var(--mut);margin-bottom:5px}
+.bk-val input{width:100%;box-sizing:border-box;font-size:16px;font-weight:700}
+.bk-tw{flex:1 1 auto;min-height:120px;max-height:42vh;overflow:auto;padding:0 22px}
+.bk-tw .pc-t th{position:sticky;top:0;background:#eaf1ef;z-index:1}
+.bk-tw .pc-t td,.bk-tw .pc-t th{white-space:nowrap}
+.bk-tw tr[data-k]{cursor:pointer}
+.bk-tw tr[data-k]:hover td{background:#eef7f5}
+.bk-tw tr.on td{background:#d5eee8}
+.bk-tw input[type=checkbox]{width:16px;height:16px;accent-color:#0f766e}
+.bk-new{font-weight:700;color:#0f766e}
+.bk-tw tr:not(.on) .bk-new{color:var(--mut);font-weight:400}
+.bk-sum{padding:10px 22px;font-size:13px;color:var(--mut);display:flex;flex-wrap:wrap;gap:6px 18px}
+.bk-sum b{color:var(--ink)}
+@media(max-width:700px){.bk-tw .pc-t th:nth-child(2),.bk-tw .pc-t td:nth-child(2){display:none}.bk-tw .pc-t th,.bk-tw .pc-t td{padding:6px 4px;font-size:12px}.bk-tw .xl-st{font-size:10px;padding:2px 6px}.bk-tw{max-height:none;padding:0 12px}.bk-top,.bk-sum{padding-left:14px;padding-right:14px}}
+</style>
+<dialog id="bdlg" class="bulk"><form onsubmit="return bulkApply(event)">
+ <div class="dh"><h2>Alterar valores em lote</h2><button type="button" class="ic" onclick="bulkClose()" aria-label="Fechar">✕</button></div>
+ <div class="bk-top">
+  <p class="bk-hint">Marque os meses que vão mudar, informe o novo valor e confirme. Só as linhas marcadas são alteradas; as outras ficam como estão.</p>
+  <div class="bk-sel"><span>Selecionar:</span><button type="button" onclick="bulkPick('all')">Todos</button><button type="button" onclick="bulkPick('open')">Só em aberto</button><button type="button" onclick="bulkPick('none')">Nenhum</button></div>
+  <div class="bk-val"><label for="bk_v">Novo valor de cada mês marcado (R$)</label><input id="bk_v" inputmode="decimal" autocomplete="off" placeholder="0,00" oninput="bulkDraw()"></div>
+ </div>
+ <div class="bk-tw"><table class="pc-t"><thead><tr><th></th><th>Nº</th><th>Parc.</th><th>Venc.</th><th class="r">Valor atual</th><th class="r">Novo valor</th><th>Status</th></tr></thead><tbody id="bk_body"></tbody></table></div>
+ <div class="bk-sum" id="bk_sum"></div>
+ <div class="df"><button type="button" class="btn" onclick="bulkClose()">Cancelar</button><button class="btn p" id="bk_ok">Confirmar alteração</button></div>
 </form></dialog>
 <style>
 /* Tabela de lançamentos (desktop): só a área das linhas rola; cabeçalho e rodapé ficam fixos e a tabela cabe na largura */
